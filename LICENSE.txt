@@ -1,0 +1,6 @@
+
+Copyright 2025 msg-programs and all contributors as per the git commit history
+
+Unless stated otherwise:
+- all assets (documentation, textures, atlases, tilemaps, palettes) are licensed CC-BY-NC-4.0
+- all other files are licensed using Apache 2.0 as per the LICENSE-SOURCE.txt file in this directory

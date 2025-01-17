@@ -1,0 +1,14 @@
+zig-out
+zig-cache
+.zig-cache
+src/assets/posts/*
+src/assets/posts/done/*
+*.pixi
+*.tmx
+*.tsx
+*.tiled-project
+*.tiled-session
+.old_git
+examples/demo
+examples/sampleutil/TileWriter.zig
+performance.md

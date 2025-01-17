@@ -1,0 +1,10 @@
+pub const map = @embedFile("./maps/debug.json");
+pub const pal = @embedFile("./palettes/debugpal.hex");
+pub const gfx = @embedFile("./atlases/tiles.png");
+pub const gfx2 = @embedFile("./atlases/tiles2.png");
+pub const gfx3 = @embedFile("./atlases/tiles3.png");
+pub const gfx4 = @embedFile("./atlases/tiles4.png");
+pub const gfx_obj = @embedFile("./atlases/objs.png");
+pub const gfx_obj2 = @embedFile("./atlases/objs2.png");
+pub const gfx_obj3 = @embedFile("./atlases/objs3.png");
+pub const gfx_obj4 = @embedFile("./atlases/objs4.png");

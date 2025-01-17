@@ -1,0 +1,23 @@
+.{
+    .name = "mode8",
+    .version = "1.0.0",
+
+    .dependencies = .{
+        .mach = .{
+            .url = "https://pkg.machengine.org/mach/0049f0303578e8203af03c20c969a9fb3ab9a36f.tar.gz",
+            .hash = "1220203cdb9c66998abf55c99d4c84a78f11a7d0db2992adf3840a24f2d2bb829edc",
+        },
+        .zigimg = .{
+            .url = "https://github.com/zigimg/zigimg/archive/cbb0c64caffd5b02863aadd62bab48cef7f86ceb.tar.gz",
+            .hash = "1220c0980dc05816b12a8188546b4847bcf38e5e99defc0ea79a8d6bd4809049a029",
+        },
+    },
+
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        //"LICENSE",
+        //"README.md",
+    },
+}
