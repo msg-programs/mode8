@@ -23,10 +23,11 @@ See the `docs` directory. Currently WIP.
 * Near future:
     * Finish/polish documentation. Add images.
     * Clean up compute shader buffers, use uniforms where feasible.
-    * Integrate more nicely into the mach object system.
+    * Integrate more nicely into the Mach object system.
     * Skip updating big buffers when nothing has changed.
     * Remove `std.mem.copyForwards` from BSP functions if possible.
 * Eventually:
     * Actually write a game using mode8.
 
-Special thanks to the folks on the [Mach Discord server](https://discord.gg/XNG3NZgCqp)!
+mode8 is built on top of the [Mach game engine](https://machengine.org/).
+Many thanks to the folks on the [Mach Discord server](https://discord.gg/XNG3NZgCqp)!
