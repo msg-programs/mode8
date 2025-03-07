@@ -86,7 +86,7 @@ pub fn build(b: *std.Build) !void {
     exe2.root_module.addImport("sampleutils", su_mod);
     exe2.root_module.addImport("mode8", m8_mod);
     exe2.root_module.addImport("zigimg", zigimg_dep.module("zigimg"));
-    @import("mach").link(mach_dep.builder, exe2);
+    exe2.linkLibC();
 
     b.installArtifact(exe2);
 

@@ -4,20 +4,23 @@
 
     .dependencies = .{
         .mach = .{
-            .url = "https://pkg.machengine.org/mach/0049f0303578e8203af03c20c969a9fb3ab9a36f.tar.gz",
-            .hash = "1220203cdb9c66998abf55c99d4c84a78f11a7d0db2992adf3840a24f2d2bb829edc",
+            .url = "https://pkg.machengine.org/mach/f9e1a9087f8ffa9a3f7cd3ba122b088bbf610e91.tar.gz",
+            .hash = "122092af23a9e9346b15032fc6ff896630a3729209f36efa1e7881363c3342303eca",
         },
         .zigimg = .{
-            .url = "https://github.com/zigimg/zigimg/archive/cbb0c64caffd5b02863aadd62bab48cef7f86ceb.tar.gz",
-            .hash = "1220c0980dc05816b12a8188546b4847bcf38e5e99defc0ea79a8d6bd4809049a029",
+            .url = "https://github.com/zigimg/zigimg/archive/9fca33434ed1dbc1d34ebaefcf046a8702f9b1cb.tar.gz",
+            .hash = "1220ad1b5a659cae9cf50e936b2d82778defe52f70a2f266c1afe96be809f604287a",
         },
     },
 
     .paths = .{
+        "docs",
+        "examples",
+        "src",
         "build.zig",
         "build.zig.zon",
-        "src",
-        //"LICENSE",
-        //"README.md",
+        "LICENSE-SOURCE.txt",
+        "LICENSE.txt",
+        "README.md",
     },
 }

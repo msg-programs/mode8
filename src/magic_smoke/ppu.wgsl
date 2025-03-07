@@ -69,6 +69,28 @@ const DEBUG_ARG_SHOW_MAIN = 6;
 const DEBUG_ARG_SHOW_SUB = 7;
 const DEBUG_ARG_NONE = 15;
 
+// temp fix for sysgpu bug
+const OxFFFF: u32 = 65535;
+const OxFF: u32 = 255;
+const OxF: u32 = 15;
+const Ox0FFF: u32 = 4095;
+const OxFF0000: u32 = 16711680;
+const Ox0000000F: u32 = 15;
+const Ox000000F0: u32 = 240;
+const Ox00000F00: u32 = 3840;
+const Ox0000F000: u32 = 61440;
+const Ox000F0000: u32 = 938040;
+const Ox00F00000: u32 = 15728640;
+const Ox0F000000: u32 = 251658240;
+const OxF0000000: u32 = 4026531840;
+const Ox01FFFF: u32 = 131071;
+const Ox0FFE0000: u32 = 268304384;
+const Ox001F: u32 = 31;
+const Ox000000FF: u32 = 255;
+const Ox0000FF00: u32 = 65280;
+const Ox00FF0000: u32 = 16711680;
+const OxFF000000: u32 = 4278190080;
+
 const OBJ_DIMS_PIX: array<vec2<u32>, 8> = array(
         vec2(8, 8),
         vec2(16, 16),
@@ -237,14 +259,24 @@ var<private> debug_arg: u32;
 /// SETTINGS UNPACKING FUNCTIONS
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+// apparently not a builtin...
+fn unpack4xU8(in: u32) -> vec4<u32> {
+    return vec4(
+        (in & Ox000000FF) >> 0,
+        (in & Ox0000FF00) >> 8,
+        (in & Ox00FF0000) >> 16,
+        (in & OxFF000000) >> 24,
+    );
+}
+
 fn readCompSettings() {
 
-    let comp_settings_raw = settings_raw[0];
-
-    let prio_remap: u32 = (comp_settings_raw & 0x000000FF) >> 0;
-    let fix_sub: u32 =    (comp_settings_raw & 0x0000FF00) >> 8;
-    let to_main: u32 =    (comp_settings_raw & 0x00FF0000) >> 16;
-    let to_sub: u32 =     (comp_settings_raw & 0xFF000000) >> 24;
+    let comp_settings_raw: vec4<u32> = unpack4xU8(settings_raw[0]);
+ 
+    let prio_remap: u32 = comp_settings_raw.x;
+    let fix_sub: u32 =    comp_settings_raw.y;
+    let to_main: u32 =    comp_settings_raw.z;
+    let to_sub: u32 =     comp_settings_raw.w;
 
     comp_settings = CompSettings(
         (prio_remap & (1 << 0)) != 0,
@@ -273,31 +305,31 @@ fn readBGSettings() {
 
     let bg_settings_raw = array(settings_raw[3], settings_raw[4], settings_raw[5], settings_raw[6], settings_raw[7]);
 
-    let mosiac = bg_settings_raw[0] & 0xFFFF;
-    let oob_setting = (bg_settings_raw[0] & 0xFF0000) >> 16;
-    let bgsize = bg_settings_raw[1];
+    let mosiac = bg_settings_raw[0] & OxFFFF;
+    let oob_setting = (bg_settings_raw[0] & OxFF0000) >> 16;
+    let bgsize = unpack4xU8(bg_settings_raw[1]);
     let bgoffs = bg_settings_raw[2];
-    let oobdat_lo = bg_settings_raw[3];
-    let oobdat_hi = bg_settings_raw[4];
+    let oobdat_lo = unpack4xU8(bg_settings_raw[3]);
+    let oobdat_hi = unpack4xU8(bg_settings_raw[4]);
 
     bg_settings = BGSettings(
         array(
-            ((mosiac & 0x000F) >> 0) + 1,
-            ((mosiac & 0x00F0) >> 4) + 1,
-            ((mosiac & 0x0F00) >> 8) + 1,
-            ((mosiac & 0xF000) >> 12) + 1,
+            ((mosiac & Ox0000000F) >> 0) + 1,
+            ((mosiac & Ox000000F0) >> 4) + 1,
+            ((mosiac & Ox00000F00) >> 8) + 1,
+            ((mosiac & Ox0000F000) >> 12) + 1,
         ),
         array(
-            (((bgsize & 0x000000FF) >> 0) + 1) * 2,
-            (((bgsize & 0x0000FF00) >> 8) + 1) * 2,
-            (((bgsize & 0x00FF0000) >> 16) + 1) * 2,
-            (((bgsize & 0xFF000000) >> 24) + 1) * 2,
+            (bgsize.x + 1) * 2,
+            (bgsize.y + 1) * 2,
+            (bgsize.z + 1) * 2,
+            (bgsize.w + 1) * 2,
         ),
         array(
-            vec2u(((bgoffs & 0x0000000F) >> 0) * 32, ((bgoffs & 0x000000F0) >> 4) * 32),
-            vec2u(((bgoffs & 0x00000F00) >> 8) * 32, ((bgoffs & 0x0000F000) >> 12) * 32),
-            vec2u(((bgoffs & 0x000F0000) >> 16) * 32, ((bgoffs & 0x00F00000) >> 20) * 32),
-            vec2u(((bgoffs & 0x0F000000) >> 24) * 32, ((bgoffs & 0xF0000000) >> 28) * 32),
+            vec2u(((bgoffs & Ox0000000F) >> 0) * 32, ((bgoffs & Ox000000F0) >> 4) * 32),
+            vec2u(((bgoffs & Ox00000F00) >> 8) * 32, ((bgoffs & Ox0000F000) >> 12) * 32),
+            vec2u(((bgoffs & Ox000F0000) >> 16) * 32, ((bgoffs & Ox00F00000) >> 20) * 32),
+            vec2u(((bgoffs & Ox0F000000) >> 24) * 32, ((bgoffs & OxF0000000) >> 28) * 32),
         ),
         array(
             ((oob_setting & 0x03) >> 0),
@@ -306,10 +338,10 @@ fn readBGSettings() {
             ((oob_setting & 0xC0) >> 6),
         ),
         array(
-            ((oobdat_lo & 0x000000FF) >> 0) | (((oobdat_hi & 0x000000FF) >> 0) << 8),
-            ((oobdat_lo & 0x0000FF00) >> 8) | (((oobdat_hi & 0x0000FF00) >> 8) << 8),
-            ((oobdat_lo & 0x00FF0000) >> 16) | (((oobdat_hi & 0x00FF0000) >> 16) << 8),
-            ((oobdat_lo & 0xFF000000) >> 24) | (((oobdat_hi & 0xFF000000) >> 24) << 8),
+            oobdat_lo.x | (oobdat_hi.x << 8),
+            oobdat_lo.y | (oobdat_hi.y << 8),
+            oobdat_lo.z | (oobdat_hi.z << 8),
+            oobdat_lo.w | (oobdat_hi.w << 8),
         ),
     );
 }
@@ -385,8 +417,8 @@ fn readDMASwitches() {
             (dma_switches_raw[1] & 0x000000400) != 0,
             (dma_switches_raw[1] & 0x000000800) != 0
         ),
-        (dma_switches_raw[1] & 0x00FF0000) != 0, // fixcol main
-        (dma_switches_raw[1] & 0xFF000000) != 0, // fixcol sub
+        (dma_switches_raw[1] & OxFF0000) != 0, // fixcol main
+        (dma_switches_raw[1] & OxFF000000) != 0, // fixcol sub
     );
 }
 
@@ -396,12 +428,12 @@ fn readWinSettings() {
         win_settings_raw.win_start,
         win_settings_raw.win_end,
         array(
-            (win_settings_raw.win_compose & 0x0000000F) >> 0,
-            (win_settings_raw.win_compose & 0x000000F0) >> 4,
-            (win_settings_raw.win_compose & 0x00000F00) >> 8,
-            (win_settings_raw.win_compose & 0x0000F000) >> 12,
-            (win_settings_raw.win_compose & 0x000F0000) >> 16,
-            (win_settings_raw.win_compose & 0x00F00000) >> 20
+            (win_settings_raw.win_compose & Ox0000000F) >> 0,
+            (win_settings_raw.win_compose & Ox000000F0) >> 4,
+            (win_settings_raw.win_compose & Ox00000F00) >> 8,
+            (win_settings_raw.win_compose & Ox0000F000) >> 12,
+            (win_settings_raw.win_compose & Ox000F0000) >> 16,
+            (win_settings_raw.win_compose & Ox00F00000) >> 20
         ),
         array(
             (win_settings_raw.win_to_scrns & 0x00000001) != 0,
@@ -417,8 +449,8 @@ fn readWinSettings() {
             (win_settings_raw.win_to_scrns & 0x00000800) != 0,
             (win_settings_raw.win_to_scrns & 0x00001000) != 0,
         ),
-        (win_settings_raw.win_to_scrns & 0x000F0000) >> 16,
-        (win_settings_raw.win_to_scrns & 0x00F00000) >> 20,
+        (win_settings_raw.win_to_scrns & Ox000F0000) >> 16,
+        (win_settings_raw.win_to_scrns & Ox00F00000) >> 20,
     );
 }
 
@@ -434,11 +466,11 @@ fn readCMathSettings() {
             (bg_transform.cmsr.math_debug_settings & 0x00000010) != 0,
             (bg_transform.cmsr.math_debug_settings & 0x00000020) != 0,
         ),
-        (bg_transform.cmsr.math_debug_settings & 0x0000FF00) >> 8,
-        (bg_transform.cmsr.math_debug_settings & 0x00FF0000) >> 16
+        (bg_transform.cmsr.math_debug_settings & Ox0000FF00) >> 8,
+        (bg_transform.cmsr.math_debug_settings & Ox00FF0000) >> 16
     );
-    debug_mode = (bg_transform.cmsr.math_debug_settings & 0x0F000000) >> 24;
-    debug_arg = (bg_transform.cmsr.math_debug_settings & 0xF0000000) >> 28;
+    debug_mode = (bg_transform.cmsr.math_debug_settings & Ox0F000000) >> 24;
+    debug_arg = (bg_transform.cmsr.math_debug_settings & OxF0000000) >> 28;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -448,7 +480,7 @@ fn readCMathSettings() {
 // given a packed color, unpack it into a vec4f
 fn unpackColor(p_col: u32) -> vec4f {
     var res: vec4<f32>;
-    res.r = f32((p_col & 0x001F) >> 0) / 31.0;
+    res.r = f32((p_col & Ox001F) >> 0) / 31.0;
     res.g = f32((p_col & 0x03E0) >> 5) / 31.0;
     res.b = f32((p_col & 0x7C00) >> 10) / 31.0;
     res.a = f32((p_col & 0x8000) >> 15);
@@ -464,7 +496,7 @@ fn isPackedColorOpaque(p_col: u32) -> bool {
 fn lookupPaletteColor(idx: u32) -> u32 {
     let idx_u32 = idx / 2;
     let shift = 16 * (idx % 2);
-    let p_col = (GCM[idx_u32] >> shift) & 0xFFFF;
+    let p_col = (GCM[idx_u32] >> shift) & OxFFFF;
     return p_col;
 }
 
@@ -500,7 +532,7 @@ fn fetchTilePixel(viewpos: vec2<u32>, tile_attrs: Tile) -> u32 {
     // mult by "stride" = bit length of data entry
     let tgmshift = 8 * (pixidx % 4);
     // shift and mask for data
-    return (TGM[tgmoffs_u32] >> tgmshift) & 0xFF;
+    return (TGM[tgmoffs_u32] >> tgmshift) & OxFF;
 }
 
 // given a viewpos and a BG, get the tile that is being viewed from the TAM
@@ -515,9 +547,9 @@ fn fetchTileAttrs(bg: u32, bgsz: u32, bgoffs: vec2<u32>, viewpos: vec2<u32>) -> 
     // shift by either 0 or 16 bits
     let tamshift = 16 * (tileidx % 2);
     // shift and mask for data
-    let tam_data = (TAM[tamoffs_u32] >> tamshift) & 0xFFFF;
+    let tam_data = (TAM[tamoffs_u32] >> tamshift) & OxFFFF;
     return Tile(
-        (tam_data & 0x0FFF) >> 0,
+        (tam_data & Ox0FFF) >> 0,
         (tam_data & 0x1000) != 0,
         (tam_data & 0x2000) != 0,
         (tam_data & 0x4000) != 0,
@@ -589,13 +621,13 @@ fn calcBGPixel(screenpos: vec2<u32>, bg: u32) -> BGPixel {
         }
         case OOB_SETTING_COLOR: {
             return BGPixel(
-                bg_settings.oob_data[bg] & 0xFFFF,
+                bg_settings.oob_data[bg] & OxFFFF,
                 false
             );
         }
         case OOB_SETTING_TILE: {
             let dummy = Tile(
-                (bg_settings.oob_data[bg] & 0x0FFF) >> 0,
+                (bg_settings.oob_data[bg] & Ox0FFF) >> 0,
                 (bg_settings.oob_data[bg] & 0x1000) != 0,
                 (bg_settings.oob_data[bg] & 0x2000) != 0,
                 (bg_settings.oob_data[bg] & 0x4000) != 0,
@@ -636,13 +668,13 @@ fn fetchObjAttrs(obj_idx: u32) -> Obj {
     let packed_1 = OAM[obj_idx]; // rejoice! no unpacking needed
     let oamoffs2_u32 = obj_idx / 8;
     let oam2shift = 4 * (obj_idx % 8);
-    let packed_2 = (OAM[256 + oamoffs2_u32] >> oam2shift) & 0xF; // argh
+    let packed_2 = (OAM[256 + oamoffs2_u32] >> oam2shift) & OxF; // argh
 
-    let pos_raw: u32 = (packed_1 & 0x01FFFF);
+    let pos_raw: u32 = (packed_1 & Ox01FFFF);
     return Obj(
         // correct for obj playfield (360^2) vs screen dim (256^2)
         vec2((pos_raw % OBJ_POS_DIM_PIX), (pos_raw / OBJ_POS_DIM_PIX)),
-        (packed_1 & 0x0FFE0000) >> 17,
+        (packed_1 & Ox0FFE0000) >> 17,
         (packed_1 & 0x10000000) != 0,
         (packed_1 & 0x20000000) != 0,
         (packed_1 & 0xC0000000) >> 30,
@@ -681,10 +713,10 @@ fn fetchObjPixel(screenpos: vec2<u32>, obj_attrs: Obj) -> u32 {
     }
 
     if (relpos.x < 0 || relpos.y < 0) {
-        return 0xFFFFFFFF;
+        return OxFFFFFFFF;
     }
     if (relpos.x >= objsize.x || relpos.y >= objsize.y) {
-        return 0xFFFFFFFF;
+        return OxFFFFFFFF;
     }
 
     let tilepos: vec2<u32> = relpos / 8;
@@ -694,7 +726,7 @@ fn fetchObjPixel(screenpos: vec2<u32>, obj_attrs: Obj) -> u32 {
     let pixidx = pixpos.y * OBJ_GFX_UNIT_DIM_PIX + pixpos.x + (obj_attrs.gfxid + gfxid_offset) * OBJ_GFX_UNIT_PIX_NUM;
     let ogmoffs_u32 = pixidx / 4;
     let ogmshift = 8 * (pixidx % 4);
-    return (OGM[ogmoffs_u32] >> ogmshift) & 0xFF;
+    return (OGM[ogmoffs_u32] >> ogmshift) & OxFF;
 }
 
 // given the screenpos, search for the obj with the highest prio (highest OAM index == tiebreaker).
@@ -712,7 +744,7 @@ fn calcObjsPixel(screenpos: vec2<u32>) -> ObjPixel {
         let oam_data = fetchObjAttrs(i);
 
         let objcol_index = fetchObjPixel(screenpos, oam_data);
-        if (objcol_index == 0xFFFFFFFF) {
+        if (objcol_index == OxFFFFFFFF) {
             continue;
         }
         let col = lookupPaletteColor(objcol_index);
@@ -744,16 +776,16 @@ fn isPixelInWin(screenpos: vec2<u32>, win: u32) -> bool {
 
     var start: u32;
     if (dma_switches.win_start_do_dma[win]) {
-        start = (win_settings.win_start[win][index / 4] >> shift) & 0xFF;
+        start = (win_settings.win_start[win][index / 4] >> shift) & OxFF;
     } else {
-        start = (win_settings.win_start[win][0]) & 0xFF;
+        start = (win_settings.win_start[win][0]) & OxFF;
     }
 
     var end: u32;
     if (dma_switches.win_end_do_dma[win]) {
-        end = (win_settings.win_end[win][index / 4] >> shift) & 0xFF;
+        end = (win_settings.win_end[win][index / 4] >> shift) & OxFF;
     } else {
-        end = (win_settings.win_end[win][0]) & 0xFF;
+        end = (win_settings.win_end[win][0]) & OxFF;
     }
 
     if (dma_switches.dma_dir_ex[win]) {
@@ -904,8 +936,8 @@ fn getFixcol(screenpos: vec2u, for_main: bool) -> u32 {
     let shift: u32 = (index % 2) * 16;
 
     return select(
-        (cmath_settings.fixcol_sub[offs] >> shift) & 0xFFFF,
-        (cmath_settings.fixcol_main[offs] >> shift) & 0xFFFF,
+        (cmath_settings.fixcol_sub[offs] >> shift) & OxFFFF,
+        (cmath_settings.fixcol_main[offs] >> shift) & OxFFFF,
         for_main
     );
 }

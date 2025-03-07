@@ -26,25 +26,27 @@ var setting_buffer: Buffer = undefined;
 var bgxform_buffer: Buffer = undefined;
 var window_buffer: Buffer = undefined;
 
-pub fn init(core: *mach.Core.Mod) void {
+pub fn init(core: *mach.Core, winid: mach.ObjectID) void {
+    const window = core.windows.getValue(winid);
+
     const generic_compute = BufferParams.genericCompute();
-    gcm_buffer = Buffer.init(core, 0, con.GCM_SZE_BYT, "GCM", generic_compute);
-    tgm_buffer = Buffer.init(core, 1, con.TGM_SZE_BYT, "TGM", generic_compute);
-    tam_buffer = Buffer.init(core, 2, con.TAM_SZE_BYT, "TAM", generic_compute);
-    ogm_buffer = Buffer.init(core, 3, con.OGM_SZE_BYT, "OGM", generic_compute);
-    oam_buffer = Buffer.init(core, 4, con.OAM_SZE_BYT, "OAM", generic_compute);
+    gcm_buffer = Buffer.init(window, 0, con.GCM_SZE_BYT, "GCM", generic_compute);
+    tgm_buffer = Buffer.init(window, 1, con.TGM_SZE_BYT, "TGM", generic_compute);
+    tam_buffer = Buffer.init(window, 2, con.TAM_SZE_BYT, "TAM", generic_compute);
+    ogm_buffer = Buffer.init(window, 3, con.OGM_SZE_BYT, "OGM", generic_compute);
+    oam_buffer = Buffer.init(window, 4, con.OAM_SZE_BYT, "OAM", generic_compute);
 
     const comp_buffer_size = 4 * 8;
     const bgxf_buffer_size = ((con.DMA_NUM * con.BG_NUM) * 4 * 8) + (2 * 2 * con.DMA_NUM) + 4;
     const window_buffer_size = (con.DMA_NUM * con.WINDOW_NUM) * 2 + 4 + 4 + 4;
 
-    setting_buffer = Buffer.init(core, 0, comp_buffer_size, "Settings", generic_compute);
-    bgxform_buffer = Buffer.init(core, 1, bgxf_buffer_size, "BG transform + CMath", generic_compute);
-    window_buffer = Buffer.init(core, 2, window_buffer_size, "Windows", generic_compute);
+    setting_buffer = Buffer.init(window, 0, comp_buffer_size, "Settings", generic_compute);
+    bgxform_buffer = Buffer.init(window, 1, bgxf_buffer_size, "BG transform + CMath", generic_compute);
+    window_buffer = Buffer.init(window, 2, window_buffer_size, "Windows", generic_compute);
 
-    setupTexture(core);
-    setupPipeline(core);
-    setupBindGroups(core);
+    setupTexture(window);
+    setupPipeline(window);
+    setupBindGroups(window);
 }
 
 pub fn deinit() void {
@@ -66,21 +68,21 @@ pub fn deinit() void {
     window_buffer.release();
 }
 
-fn setupPipeline(core: *mach.Core.Mod) void {
-    const ppu_module = core.state().device.createShaderModuleWGSL("ppu.wgsl", @embedFile("ppu.wgsl"));
+fn setupPipeline(window: anytype) void {
+    const ppu_module = window.device.createShaderModuleWGSL("ppu.wgsl", @embedFile("ppu.wgsl"));
     defer ppu_module.release();
 
-    const output_group = core.state().device.createBindGroupLayout(
+    const output_group = window.device.createBindGroupLayout(
         &gpu.BindGroupLayout.Descriptor.init(.{
             .label = "Quad texture",
             .entries = &.{
-                gpu.BindGroupLayout.Entry.storageTexture(0, .{ .compute = true }, .write_only, .rgba8_unorm, .dimension_2d),
+                gpu.BindGroupLayout.Entry.initStorageTexture(0, .{ .compute = true }, .write_only, .rgba8_unorm, .dimension_2d),
             },
         }),
     );
     defer output_group.release();
 
-    const memory_group = core.state().device.createBindGroupLayout(
+    const memory_group = window.device.createBindGroupLayout(
         &gpu.BindGroupLayout.Descriptor.init(.{
             .label = "Memory",
             .entries = &.{
@@ -94,7 +96,7 @@ fn setupPipeline(core: *mach.Core.Mod) void {
     );
     defer memory_group.release();
 
-    const rendering_group = core.state().device.createBindGroupLayout(
+    const rendering_group = window.device.createBindGroupLayout(
         &gpu.BindGroupLayout.Descriptor.init(.{
             .label = "Rendering",
             .entries = &.{
@@ -106,7 +108,7 @@ fn setupPipeline(core: *mach.Core.Mod) void {
     );
     defer rendering_group.release();
 
-    const pipeline_layout = core.state().device.createPipelineLayout(
+    const pipeline_layout = window.device.createPipelineLayout(
         &gpu.PipelineLayout.Descriptor.init(.{
             .bind_group_layouts = &.{
                 output_group,
@@ -117,7 +119,7 @@ fn setupPipeline(core: *mach.Core.Mod) void {
     );
     defer pipeline_layout.release();
 
-    compute_pipeline = core.state().device.createComputePipeline(&.{
+    compute_pipeline = window.device.createComputePipeline(&.{
         .compute = gpu.ProgrammableStageDescriptor.init(.{
             .module = ppu_module,
             .entry_point = "main",
@@ -126,7 +128,7 @@ fn setupPipeline(core: *mach.Core.Mod) void {
     });
 }
 
-fn setupBindGroups(core: *mach.Core.Mod) void {
+fn setupBindGroups(window: anytype) void {
     const output_bind_group_layout = compute_pipeline.getBindGroupLayout(0);
     defer output_bind_group_layout.release();
     const memory_bind_group_layout = compute_pipeline.getBindGroupLayout(1);
@@ -134,17 +136,17 @@ fn setupBindGroups(core: *mach.Core.Mod) void {
     const rendering_bind_group_layout = compute_pipeline.getBindGroupLayout(2);
     defer rendering_bind_group_layout.release();
 
-    output_bind_group = core.state().device.createBindGroup(
+    output_bind_group = window.device.createBindGroup(
         &gpu.BindGroup.Descriptor.init(.{
             .label = "Quad texture",
             .layout = output_bind_group_layout,
             .entries = &.{
-                gpu.BindGroup.Entry.textureView(0, texture_view),
+                gpu.BindGroup.Entry.initTextureView(0, texture_view),
             },
         }),
     );
 
-    memory_bind_group = core.state().device.createBindGroup(
+    memory_bind_group = window.device.createBindGroup(
         &gpu.BindGroup.Descriptor.init(.{
             .label = "Memory",
             .layout = memory_bind_group_layout,
@@ -157,7 +159,7 @@ fn setupBindGroups(core: *mach.Core.Mod) void {
             },
         }),
     );
-    rendering_bind_group = core.state().device.createBindGroup(
+    rendering_bind_group = window.device.createBindGroup(
         &gpu.BindGroup.Descriptor.init(.{
             .label = "Rendering",
             .layout = rendering_bind_group_layout,
@@ -170,8 +172,8 @@ fn setupBindGroups(core: *mach.Core.Mod) void {
     );
 }
 
-fn setupTexture(core: *mach.Core.Mod) void {
-    texture = core.state().device.createTexture(&.{
+fn setupTexture(window: anytype) void {
+    texture = window.device.createTexture(&.{
         .size = .{
             .width = con.SCREEN_DIM_PIX,
             .height = con.SCREEN_DIM_PIX,
@@ -191,27 +193,27 @@ fn setupTexture(core: *mach.Core.Mod) void {
     });
 }
 
-fn updateTAM() void {
-    tam_buffer.write(0, mem.TAM[0..]);
+fn updateTAM(window: anytype) void {
+    window.queue.writeBuffer(tam_buffer.buffer, 0, mem.TAM[0..]);
 }
 
-fn updateTGM() void {
-    tgm_buffer.write(0, mem.TGM[0..]);
+fn updateTGM(window: anytype) void {
+    window.queue.writeBuffer(tgm_buffer.buffer, 0, mem.TGM[0..]);
 }
 
-fn updateOGM() void {
-    ogm_buffer.write(0, mem.OGM[0..]);
+fn updateOGM(window: anytype) void {
+    window.queue.writeBuffer(ogm_buffer.buffer, 0, mem.OGM[0..]);
 }
 
-fn updateOAM() void {
-    oam_buffer.write(0, mem.OAM[0..]);
+fn updateOAM(window: anytype) void {
+    window.queue.writeBuffer(oam_buffer.buffer, 0, mem.OAM[0..]);
 }
 
-fn updateGCM() void {
-    gcm_buffer.write(0, mem.GCM[0..]);
+fn updateGCM(window: anytype) void {
+    window.queue.writeBuffer(gcm_buffer.buffer, 0, mem.GCM[0..]);
 }
 
-fn updateSett() void {
+fn updateSett(window: anytype) void {
     var data: [8]u32 = .{
         bsp.bits.sto4x8in32(
             reg.prio_remap,
@@ -262,35 +264,34 @@ fn updateSett() void {
             reg.oob_data[3][1],
         ),
     };
-
-    setting_buffer.write(0, data[0..]);
+    window.queue.writeBuffer(setting_buffer.buffer, 0, data[0..]);
 }
 
-fn updateBGXForm() void {
-    bgxform_buffer.write(con.DMA_NUM * con.BG_NUM * 4 * 0, reg.xscroll[0..]);
-    bgxform_buffer.write(con.DMA_NUM * con.BG_NUM * 4 * 1, reg.yscroll[0..]);
-    bgxform_buffer.write(con.DMA_NUM * con.BG_NUM * 4 * 2, reg.affine_x0[0..]);
-    bgxform_buffer.write(con.DMA_NUM * con.BG_NUM * 4 * 3, reg.affine_y0[0..]);
-    bgxform_buffer.write(con.DMA_NUM * con.BG_NUM * 4 * 4, reg.affine_a[0..]);
-    bgxform_buffer.write(con.DMA_NUM * con.BG_NUM * 4 * 5, reg.affine_b[0..]);
-    bgxform_buffer.write(con.DMA_NUM * con.BG_NUM * 4 * 6, reg.affine_c[0..]);
-    bgxform_buffer.write(con.DMA_NUM * con.BG_NUM * 4 * 7, reg.affine_d[0..]);
-    bgxform_buffer.write(con.DMA_NUM * con.BG_NUM * 4 * 8, reg.fixcol_main[0..]);
-    bgxform_buffer.write((con.DMA_NUM * con.BG_NUM * 4 * 8) + (con.DMA_NUM * 2), reg.fixcol_sub[0..]);
+fn updateBGXForm(window: anytype) void {
+    window.queue.writeBuffer(bgxform_buffer.buffer, con.DMA_NUM * con.BG_NUM * 4 * 0, reg.xscroll[0..]);
+    window.queue.writeBuffer(bgxform_buffer.buffer, con.DMA_NUM * con.BG_NUM * 4 * 1, reg.yscroll[0..]);
+    window.queue.writeBuffer(bgxform_buffer.buffer, con.DMA_NUM * con.BG_NUM * 4 * 2, reg.affine_x0[0..]);
+    window.queue.writeBuffer(bgxform_buffer.buffer, con.DMA_NUM * con.BG_NUM * 4 * 3, reg.affine_y0[0..]);
+    window.queue.writeBuffer(bgxform_buffer.buffer, con.DMA_NUM * con.BG_NUM * 4 * 4, reg.affine_a[0..]);
+    window.queue.writeBuffer(bgxform_buffer.buffer, con.DMA_NUM * con.BG_NUM * 4 * 5, reg.affine_b[0..]);
+    window.queue.writeBuffer(bgxform_buffer.buffer, con.DMA_NUM * con.BG_NUM * 4 * 6, reg.affine_c[0..]);
+    window.queue.writeBuffer(bgxform_buffer.buffer, con.DMA_NUM * con.BG_NUM * 4 * 7, reg.affine_d[0..]);
+    window.queue.writeBuffer(bgxform_buffer.buffer, con.DMA_NUM * con.BG_NUM * 4 * 8, reg.fixcol_main[0..]);
+    window.queue.writeBuffer(bgxform_buffer.buffer, (con.DMA_NUM * con.BG_NUM * 4 * 8) + (con.DMA_NUM * 2), reg.fixcol_sub[0..]);
     const d: [1]u32 = .{bsp.bits.sto4x8in32(
         reg.math_enable,
         reg.math_algo,
         reg.math_normalize,
         reg.debug,
     )};
-    bgxform_buffer.write((con.DMA_NUM * con.BG_NUM * 4 * 8) + (con.DMA_NUM * 4), d[0..]);
+    window.queue.writeBuffer(bgxform_buffer.buffer, (con.DMA_NUM * con.BG_NUM * 4 * 8) + (con.DMA_NUM * 4), d[0..]);
 }
 
-fn updateWindow() void {
+fn updateWindow(window: anytype) void {
     var offs: u64 = 0;
-    window_buffer.write(offs, reg.win_start[0..]);
+    window.queue.writeBuffer(window_buffer.buffer, offs, reg.win_start[0..]);
     offs += (con.DMA_NUM * con.WINDOW_NUM);
-    window_buffer.write(offs, reg.win_end[0..]);
+    window.queue.writeBuffer(window_buffer.buffer, offs, reg.win_end[0..]);
     offs += (con.DMA_NUM * con.WINDOW_NUM);
 
     const data: [2]u32 = .{
@@ -308,18 +309,18 @@ fn updateWindow() void {
         ),
     };
 
-    window_buffer.write(offs, data[0..]);
+    window.queue.writeBuffer(window_buffer.buffer, offs, data[0..]);
 }
 
-pub fn doComputePass(encoder: *gpu.CommandEncoder) void {
-    updateGCM();
-    updateTAM();
-    updateTGM();
-    updateOAM();
-    updateOGM();
-    updateSett();
-    updateBGXForm();
-    updateWindow();
+pub fn doComputePass(window: anytype, encoder: *gpu.CommandEncoder) void {
+    updateGCM(window);
+    updateTAM(window);
+    updateTGM(window);
+    updateOAM(window);
+    updateOGM(window);
+    updateSett(window);
+    updateBGXForm(window);
+    updateWindow(window);
 
     const pass = encoder.beginComputePass(null);
     defer pass.release();

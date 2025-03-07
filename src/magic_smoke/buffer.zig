@@ -8,15 +8,13 @@ pub const Buffer = struct {
     size: u32,
     params: BufferParams,
     buffer: *gpu.Buffer,
-    core: *mach.Core.Mod,
 
-    pub fn init(core: *mach.Core.Mod, binding: u32, size: u32, name: ?[*:0]const u8, params: BufferParams) Buffer {
+    pub fn init(window: anytype, binding: u32, size: u32, name: ?[*:0]const u8, params: BufferParams) Buffer {
         return Buffer{
             .binding = binding,
             .size = size,
             .params = params,
-            .core = core,
-            .buffer = core.state().device.createBuffer(&gpu.Buffer.Descriptor{
+            .buffer = window.device.createBuffer(&gpu.Buffer.Descriptor{
                 .label = name,
                 .mapped_at_creation = params.mapped_at_creation,
                 .usage = params.usage_flags,
@@ -26,15 +24,15 @@ pub const Buffer = struct {
     }
 
     pub fn getBindGroupLayoutEntry(self: Buffer) gpu.BindGroupLayout.Entry {
-        return gpu.BindGroupLayout.Entry.buffer(self.binding, self.params.visibility, self.params.binding_type, false, self.size);
+        return gpu.BindGroupLayout.Entry.initBuffer(self.binding, self.params.visibility, self.params.binding_type, false, self.size);
     }
 
     pub fn getBindGroupEntry(self: Buffer) gpu.BindGroup.Entry {
-        return gpu.BindGroup.Entry.buffer(self.binding, self.buffer, 0, self.size);
+        return gpu.BindGroup.Entry.initBuffer(self.binding, self.buffer, 0, self.size, 1);
     }
 
-    pub fn write(self: Buffer, offs_bytes: u64, data_slice: anytype) void {
-        self.core.state().queue.writeBuffer(self.buffer, offs_bytes, data_slice);
+    pub fn write(self: Buffer, window: anytype, offs_bytes: u64, data_slice: anytype) void {
+        window.queue.writeBuffer(self.buffer, offs_bytes, data_slice);
     }
 
     pub fn release(self: Buffer) void {

@@ -22,11 +22,12 @@ var vertex_buffer: *gpu.Buffer = undefined;
 var index_buffer: *gpu.Buffer = undefined;
 var bind_group: *gpu.BindGroup = undefined;
 
-pub fn init(core: *mach.Core.Mod) void {
-    setupVertexBuffer(core);
-    setupIndexBuffer(core);
-    setupOutputPipeline(core);
-    setupBindGroup(core);
+pub fn init(core: *mach.Core, window: mach.ObjectID) void {
+    const win = core.windows.getValue(window);
+    setupVertexBuffer(win);
+    setupIndexBuffer(win);
+    setupOutputPipeline(win);
+    setupBindGroup(win);
 }
 
 pub fn deinit() void {
@@ -36,13 +37,13 @@ pub fn deinit() void {
     bind_group.release();
 }
 
-fn setupOutputPipeline(core: *mach.Core.Mod) void {
+fn setupOutputPipeline(window: anytype) void {
     const vertex_attributes = [_]gpu.VertexAttribute{
         .{ .format = .float32x4, .offset = @offsetOf(Vertex, "pos"), .shader_location = 0 },
         .{ .format = .float32x2, .offset = @offsetOf(Vertex, "uv"), .shader_location = 1 },
     };
 
-    const output_module = core.state().device.createShaderModuleWGSL("output.wgsl", @embedFile("output.wgsl"));
+    const output_module = window.device.createShaderModuleWGSL("output.wgsl", @embedFile("output.wgsl"));
     defer output_module.release();
 
     const vertex_buffer_layout = gpu.VertexBufferLayout.init(.{
@@ -52,7 +53,7 @@ fn setupOutputPipeline(core: *mach.Core.Mod) void {
     });
 
     const color_target = gpu.ColorTargetState{
-        .format = mach.core.descriptor.format,
+        .format = window.framebuffer_format,
         .blend = &.{},
         .write_mask = gpu.ColorWriteMaskFlags.all,
     };
@@ -71,11 +72,11 @@ fn setupOutputPipeline(core: *mach.Core.Mod) void {
         .primitive = .{ .cull_mode = .back },
     };
 
-    render_pipeline = core.state().device.createRenderPipeline(&pipeline_descriptor);
+    render_pipeline = window.device.createRenderPipeline(&pipeline_descriptor);
 }
 
-fn setupVertexBuffer(core: *mach.Core.Mod) void {
-    vertex_buffer = core.state().device.createBuffer(&.{
+fn setupVertexBuffer(window: anytype) void {
+    vertex_buffer = window.device.createBuffer(&.{
         .usage = .{ .vertex = true },
         .size = @sizeOf(Vertex) * vertices.len,
         .mapped_at_creation = .true,
@@ -85,8 +86,8 @@ fn setupVertexBuffer(core: *mach.Core.Mod) void {
     @memcpy(vertex_mapped.?, vertices[0..]);
 }
 
-fn setupIndexBuffer(core: *mach.Core.Mod) void {
-    index_buffer = core.state().device.createBuffer(&.{
+fn setupIndexBuffer(window: anytype) void {
+    index_buffer = window.device.createBuffer(&.{
         .usage = .{ .index = true },
         .size = @sizeOf(u32) * index_data.len,
         .mapped_at_creation = .true,
@@ -96,8 +97,8 @@ fn setupIndexBuffer(core: *mach.Core.Mod) void {
     @memcpy(index_mapped.?, index_data[0..]);
 }
 
-fn setupBindGroup(core: *mach.Core.Mod) void {
-    const sampler = core.state().device.createSampler(
+fn setupBindGroup(window: anytype) void {
+    const sampler = window.device.createSampler(
         &.{
             .mag_filter = .nearest,
             .min_filter = .nearest,
@@ -108,19 +109,19 @@ fn setupBindGroup(core: *mach.Core.Mod) void {
     const bind_group_layout = render_pipeline.getBindGroupLayout(0);
     defer bind_group_layout.release();
 
-    bind_group = core.state().device.createBindGroup(
+    bind_group = window.device.createBindGroup(
         &gpu.BindGroup.Descriptor.init(.{
             .layout = bind_group_layout,
             .entries = &.{
-                gpu.BindGroup.Entry.sampler(0, sampler),
-                gpu.BindGroup.Entry.textureView(1, ppup.texture_view),
+                gpu.BindGroup.Entry.initSampler(0, sampler),
+                gpu.BindGroup.Entry.initTextureView(1, ppup.texture_view),
             },
         }),
     );
 }
 
-pub fn doRenderPass(encoder: *gpu.CommandEncoder) void {
-    const back_buffer_view = mach.core.swap_chain.getCurrentTextureView().?;
+pub fn doRenderPass(window: anytype, encoder: *gpu.CommandEncoder) void {
+    const back_buffer_view = window.swap_chain.getCurrentTextureView().?;
     defer back_buffer_view.release();
 
     const color_attachment = gpu.RenderPassColorAttachment{

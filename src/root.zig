@@ -14,4 +14,4 @@ pub const hardware = struct {
     pub const constants = @import("hardware/constants.zig");
     pub const registers = @import("hardware/registers.zig");
 };
-pub const magic = @import("magic_smoke/funcs.zig");
+pub const magic_smoke = @import("magic_smoke/module.zig");
