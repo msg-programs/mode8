@@ -129,32 +129,15 @@ struct BGPixel {
     isprio: bool,
 };
 
-struct ObjPixel {
-    p_col: u32,
-    prio: u32,
-};
+// struct ObjPixel {
+//     p_col: u32, --> x
+//     prio: u32, --> y
+// };
 
-struct BufferPixel {
-    p_col: u32,
-    origin: u32,
-};
-
-struct DMASwitches {
-    xscroll_do_dma: array<bool, 4>,
-    yscroll_do_dma: array<bool, 4>,
-    affine_x0_do_dma: array<bool, 4>,
-    affine_y0_do_dma: array<bool, 4>,
-    affine_a_do_dma: array<bool, 4>,
-    affine_b_do_dma: array<bool, 4>,
-    affine_c_do_dma: array<bool, 4>,
-    affine_d_do_dma: array<bool, 4>,
-    dma_dir: array<bool, 4>,
-    dma_dir_ex: array<bool, 4>,
-    win_start_do_dma: array<bool, 2>,
-    win_end_do_dma: array<bool, 2>,
-    fixcol_main_do_dma: bool,
-    fixcol_sub_do_dma: bool
-};
+// struct vec2u {
+//     p_col: u32, --> x
+//     origin: u32, --> y
+// };
 
 struct BGTransform {
     xscroll: array<array<i32, DMA_NUM>, BG_NUM>,
@@ -176,46 +159,10 @@ struct WinSettingsRaw {
     win_to_scrns: u32
 };
 
-struct WinSettings {
-    win_start: array<array<u32, DMA_NUM / 4>, WINDOW_NUM>,
-    win_end: array<array<u32, DMA_NUM / 4>, WINDOW_NUM>,
-    win_compose: array<u32, 6>,
-    win_to_main: array<bool, 5>,
-    win_to_sub: array<bool, 5>,
-    win_apply_main: u32,
-    win_apply_sub: u32
-};
-
-struct CompSettings {
-    prio_remap_bg0: bool,
-    prio_remap_bg1: bool,
-    prio_remap_bg2: bool,
-    prio_remap_bg3: bool,
-    fix_sub: bool,
-    to_main: array<bool, 5>,
-    to_sub: array<bool, 5>
-};
-
 struct ColorMathSettingsRaw {
     fixcol_main: array<u32, DMA_NUM/2>,
     fixcol_sub: array<u32, DMA_NUM/2>,
     math_debug_settings: u32
-};
-
-struct ColorMathSettings {
-    fixcol_main: array<u32, DMA_NUM/2>,
-    fixcol_sub: array<u32, DMA_NUM/2>,
-    math_enable: array<bool, 6>,
-    math_algo: u32,
-    math_normalize: u32
-};
-
-struct BGSettings {
-    mosiac: array<u32, BG_NUM>,
-    bg_sz: array<u32, BG_NUM>,
-    bg_offs: array<vec2u, BG_NUM>,
-    oob_setting: array<u32, BG_NUM>,
-    oob_data: array<u32, BG_NUM>
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -247,13 +194,51 @@ struct BGSettings {
 /// VARIABLES
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-var<private> bg_settings: BGSettings;
-var<private> comp_settings: CompSettings;
-var<private> dma_switches: DMASwitches;
-var<private> win_settings: WinSettings;
-var<private> cmath_settings: ColorMathSettings;
-var<private> debug_mode: u32;
-var<private> debug_arg: u32;
+var<private> g_bg_mosiac: array<u32, BG_NUM>;
+var<private> g_bg_sz: array<u32, BG_NUM>;
+var<private> g_bg_offs: array<vec2u, BG_NUM>;
+var<private> g_bg_oob_setting: array<u32, BG_NUM>;
+var<private> g_bg_oob_data: array<u32, BG_NUM>;
+
+var<private> g_comp_prio_remap_bg0: bool;
+var<private> g_comp_prio_remap_bg1: bool;
+var<private> g_comp_prio_remap_bg2: bool;
+var<private> g_comp_prio_remap_bg3: bool;
+var<private> g_comp_fix_sub: bool;
+var<private> g_comp_to_main: array<bool, 5>;
+var<private> g_comp_to_sub: array<bool, 5>;
+
+var<private> g_dma_xscroll_do_dma: array<bool, 4>;
+var<private> g_dma_yscroll_do_dma: array<bool, 4>;
+var<private> g_dma_affine_x0_do_dma: array<bool, 4>;
+var<private> g_dma_affine_y0_do_dma: array<bool, 4>;
+var<private> g_dma_affine_a_do_dma: array<bool, 4>;
+var<private> g_dma_affine_b_do_dma: array<bool, 4>;
+var<private> g_dma_affine_c_do_dma: array<bool, 4>;
+var<private> g_dma_affine_d_do_dma: array<bool, 4>;
+var<private> g_dma_dir: array<bool, 4>;
+var<private> g_dma_dir_ex: array<bool, 4>;
+var<private> g_dma_win_start_do_dma: array<bool, 2>;
+var<private> g_dma_win_end_do_dma: array<bool, 2>;
+var<private> g_dma_fixcol_main_do_dma: bool;
+var<private> g_dma_fixcol_sub_do_dma: bool;
+
+var<private> g_win_start: array<array<u32, DMA_NUM / 4>, WINDOW_NUM>;
+var<private> g_win_end: array<array<u32, DMA_NUM / 4>, WINDOW_NUM>;
+var<private> g_win_compose: array<u32, 6>;
+var<private> g_win_to_main: array<bool, 5>;
+var<private> g_win_to_sub: array<bool, 5>;
+var<private> g_win_apply_main: u32;
+var<private> g_win_apply_sub: u32;
+
+var<private> g_fixcol_main: array<u32, DMA_NUM/2>;
+var<private> g_fixcol_sub: array<u32, DMA_NUM/2>;
+var<private> g_math_enable: array<bool, 6>;
+var<private> g_math_algo: u32;
+var<private> g_math_normalize: u3;
+
+var<private> g_debug_mode: u32;
+var<private> g_debug_arg: u32;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// SETTINGS UNPACKING FUNCTIONS
@@ -272,32 +257,30 @@ fn unpack4xU8(in: u32) -> vec4<u32> {
 fn readCompSettings() {
 
     let comp_settings_raw: vec4<u32> = unpack4xU8(settings_raw[0]);
- 
+
     let prio_remap: u32 = comp_settings_raw.x;
     let fix_sub: u32 =    comp_settings_raw.y;
     let to_main: u32 =    comp_settings_raw.z;
     let to_sub: u32 =     comp_settings_raw.w;
 
-    comp_settings = CompSettings(
-        (prio_remap & (1 << 0)) != 0,
-        (prio_remap & (1 << 1)) != 0,
-        (prio_remap & (1 << 2)) != 0,
-        (prio_remap & (1 << 3)) != 0,
-        fix_sub != 0,
-        array(
-            (to_main & (1 << 0)) != 0,
-            (to_main & (1 << 1)) != 0,
-            (to_main & (1 << 2)) != 0,
-            (to_main & (1 << 3)) != 0,
-            (to_main & (1 << 4)) != 0,
-        ),
-        array(
-            (to_sub & (1 << 0)) != 0,
-            (to_sub & (1 << 1)) != 0,
-            (to_sub & (1 << 2)) != 0,
-            (to_sub & (1 << 3)) != 0,
-            (to_sub & (1 << 4)) != 0,
-        )
+    g_comp_prio_remap_bg0 = (prio_remap & (1 << 0)) != 0;
+    g_comp_prio_remap_bg1 = (prio_remap & (1 << 1)) != 0;
+    g_comp_prio_remap_bg2 = (prio_remap & (1 << 2)) != 0;
+    g_comp_prio_remap_bg3 = (prio_remap & (1 << 3)) != 0;
+    g_comp_fix_sub = fix_sub != 0;
+    g_comp_to_main = array(
+        (to_main & (1 << 0)) != 0,
+        (to_main & (1 << 1)) != 0,
+        (to_main & (1 << 2)) != 0,
+        (to_main & (1 << 3)) != 0,
+        (to_main & (1 << 4)) != 0,
+    );
+    g_comp_to_sub = array(
+        (to_sub & (1 << 0)) != 0,
+        (to_sub & (1 << 1)) != 0,
+        (to_sub & (1 << 2)) != 0,
+        (to_sub & (1 << 3)) != 0,
+        (to_sub & (1 << 4)) != 0,
     );
 }
 
@@ -305,172 +288,164 @@ fn readBGSettings() {
 
     let bg_settings_raw = array(settings_raw[3], settings_raw[4], settings_raw[5], settings_raw[6], settings_raw[7]);
 
-    let mosiac = bg_settings_raw[0] & OxFFFF;
+    let mosiac = (bg_settings_raw[0]) & OxFFFF;
     let oob_setting = (bg_settings_raw[0] & OxFF0000) >> 16;
     let bgsize = unpack4xU8(bg_settings_raw[1]);
     let bgoffs = bg_settings_raw[2];
     let oobdat_lo = unpack4xU8(bg_settings_raw[3]);
     let oobdat_hi = unpack4xU8(bg_settings_raw[4]);
 
-    bg_settings = BGSettings(
-        array(
-            ((mosiac & Ox0000000F) >> 0) + 1,
-            ((mosiac & Ox000000F0) >> 4) + 1,
-            ((mosiac & Ox00000F00) >> 8) + 1,
-            ((mosiac & Ox0000F000) >> 12) + 1,
-        ),
-        array(
-            (bgsize.x + 1) * 2,
-            (bgsize.y + 1) * 2,
-            (bgsize.z + 1) * 2,
-            (bgsize.w + 1) * 2,
-        ),
-        array(
-            vec2u(((bgoffs & Ox0000000F) >> 0) * 32, ((bgoffs & Ox000000F0) >> 4) * 32),
-            vec2u(((bgoffs & Ox00000F00) >> 8) * 32, ((bgoffs & Ox0000F000) >> 12) * 32),
-            vec2u(((bgoffs & Ox000F0000) >> 16) * 32, ((bgoffs & Ox00F00000) >> 20) * 32),
-            vec2u(((bgoffs & Ox0F000000) >> 24) * 32, ((bgoffs & OxF0000000) >> 28) * 32),
-        ),
-        array(
-            ((oob_setting & 0x03) >> 0),
-            ((oob_setting & 0x0C) >> 2),
-            ((oob_setting & 0x30) >> 4),
-            ((oob_setting & 0xC0) >> 6),
-        ),
-        array(
-            oobdat_lo.x | (oobdat_hi.x << 8),
-            oobdat_lo.y | (oobdat_hi.y << 8),
-            oobdat_lo.z | (oobdat_hi.z << 8),
-            oobdat_lo.w | (oobdat_hi.w << 8),
-        ),
+    g_bg_mosiac = array(
+        ((mosiac & Ox0000000F) >> 0) + 1,
+        ((mosiac & Ox000000F0) >> 4) + 1,
+        ((mosiac & Ox00000F00) >> 8) + 1,
+        ((mosiac & Ox0000F000) >> 12) + 1,
+    );
+    g_bg_sz = array(
+        (bgsize.x + 1) * 2,
+        (bgsize.y + 1) * 2,
+        (bgsize.z + 1) * 2,
+        (bgsize.w + 1) * 2,
+    );
+    g_bg_offs = array(
+        vec2u(((bgoffs & Ox0000000F) >> 0) * 32, ((bgoffs & Ox000000F0) >> 4) * 32),
+        vec2u(((bgoffs & Ox00000F00) >> 8) * 32, ((bgoffs & Ox0000F000) >> 12) * 32),
+        vec2u(((bgoffs & Ox000F0000) >> 16) * 32, ((bgoffs & Ox00F00000) >> 20) * 32),
+        vec2u(((bgoffs & Ox0F000000) >> 24) * 32, ((bgoffs & OxF0000000) >> 28) * 32),
+    );
+    g_bg_oob_setting = array(
+        ((oob_setting & 0x03) >> 0),
+        ((oob_setting & 0x0C) >> 2),
+        ((oob_setting & 0x30) >> 4),
+        ((oob_setting & 0xC0) >> 6),
+    );
+    g_bg_oob_data = array(
+        oobdat_lo.x | (oobdat_hi.x << 8),
+        oobdat_lo.y | (oobdat_hi.y << 8),
+        oobdat_lo.z | (oobdat_hi.z << 8),
+        oobdat_lo.w | (oobdat_hi.w << 8),
     );
 }
 
 fn readDMASwitches() {
     let dma_switches_raw = array(settings_raw[1], settings_raw[2]);
-    dma_switches = DMASwitches(
-        array( // xscroll
-            (dma_switches_raw[0] & 0x00000001) != 0,
-            (dma_switches_raw[0] & 0x00000002) != 0,
-            (dma_switches_raw[0] & 0x00000004) != 0,
-            (dma_switches_raw[0] & 0x00000008) != 0
-        ),
-        array( // yscroll
-            (dma_switches_raw[0] & 0x00000010) != 0,
-            (dma_switches_raw[0] & 0x00000020) != 0,
-            (dma_switches_raw[0] & 0x00000040) != 0,
-            (dma_switches_raw[0] & 0x00000080) != 0
-        ),
-        array( // x0
-            (dma_switches_raw[0] & 0x00000100) != 0,
-            (dma_switches_raw[0] & 0x00000200) != 0,
-            (dma_switches_raw[0] & 0x00000400) != 0,
-            (dma_switches_raw[0] & 0x00000800) != 0
-        ),
-        array( // y0
-            (dma_switches_raw[0] & 0x00001000) != 0,
-            (dma_switches_raw[0] & 0x00002000) != 0,
-            (dma_switches_raw[0] & 0x00004000) != 0,
-            (dma_switches_raw[0] & 0x00008000) != 0
-        ),
-        array( // d
-            (dma_switches_raw[0] & 0x00010000) != 0,
-            (dma_switches_raw[0] & 0x00020000) != 0,
-            (dma_switches_raw[0] & 0x00040000) != 0,
-            (dma_switches_raw[0] & 0x00080000) != 0
-        ),
-        array( // c
-            (dma_switches_raw[0] & 0x000100000) != 0,
-            (dma_switches_raw[0] & 0x000200000) != 0,
-            (dma_switches_raw[0] & 0x000400000) != 0,
-            (dma_switches_raw[0] & 0x000800000) != 0
-        ),
-        array( // b
-            (dma_switches_raw[0] & 0x001000000) != 0,
-            (dma_switches_raw[0] & 0x002000000) != 0,
-            (dma_switches_raw[0] & 0x004000000) != 0,
-            (dma_switches_raw[0] & 0x008000000) != 0
-        ),
-        array( // a
-            (dma_switches_raw[0] & 0x010000000) != 0,
-            (dma_switches_raw[0] & 0x020000000) != 0,
-            (dma_switches_raw[0] & 0x040000000) != 0,
-            (dma_switches_raw[0] & 0x080000000) != 0
-        ),
-        array( // dir
-            (dma_switches_raw[1] & 0x000000001) != 0,
-            (dma_switches_raw[1] & 0x000000002) != 0,
-            (dma_switches_raw[1] & 0x000000004) != 0,
-            (dma_switches_raw[1] & 0x000000008) != 0
-        ),
-        array( // dir
-            (dma_switches_raw[1] & 0x000000010) != 0,
-            (dma_switches_raw[1] & 0x000000020) != 0,
-            (dma_switches_raw[1] & 0x000000040) != 0,
-            (dma_switches_raw[1] & 0x000000080) != 0
-        ),
-        array( // win start
-            (dma_switches_raw[1] & 0x000000100) != 0,
-            (dma_switches_raw[1] & 0x000000200) != 0
-        ),
-        array( // win end
-            (dma_switches_raw[1] & 0x000000400) != 0,
-            (dma_switches_raw[1] & 0x000000800) != 0
-        ),
-        (dma_switches_raw[1] & OxFF0000) != 0, // fixcol main
-        (dma_switches_raw[1] & OxFF000000) != 0, // fixcol sub
+    g_dma_xscroll_do_dma = array( // xscroll
+        (dma_switches_raw[0] & 0x00000001) != 0,
+        (dma_switches_raw[0] & 0x00000002) != 0,
+        (dma_switches_raw[0] & 0x00000004) != 0,
+        (dma_switches_raw[0] & 0x00000008) != 0
     );
+    g_dma_yscroll_do_dma = array( // yscroll
+        (dma_switches_raw[0] & 0x00000010) != 0,
+        (dma_switches_raw[0] & 0x00000020) != 0,
+        (dma_switches_raw[0] & 0x00000040) != 0,
+        (dma_switches_raw[0] & 0x00000080) != 0
+    );
+    g_dma_affine_x0_do_dma = array( // x0
+        (dma_switches_raw[0] & 0x00000100) != 0,
+        (dma_switches_raw[0] & 0x00000200) != 0,
+        (dma_switches_raw[0] & 0x00000400) != 0,
+        (dma_switches_raw[0] & 0x00000800) != 0
+    );
+    g_dma_affine_y0_do_dma = array( // y0
+        (dma_switches_raw[0] & 0x00001000) != 0,
+        (dma_switches_raw[0] & 0x00002000) != 0,
+        (dma_switches_raw[0] & 0x00004000) != 0,
+        (dma_switches_raw[0] & 0x00008000) != 0
+    );
+    g_dma_affine_a_do_dma = array( // d
+        (dma_switches_raw[0] & 0x00010000) != 0,
+        (dma_switches_raw[0] & 0x00020000) != 0,
+        (dma_switches_raw[0] & 0x00040000) != 0,
+        (dma_switches_raw[0] & 0x00080000) != 0
+    );
+    g_dma_affine_b_do_dma = array( // c
+        (dma_switches_raw[0] & 0x000100000) != 0,
+        (dma_switches_raw[0] & 0x000200000) != 0,
+        (dma_switches_raw[0] & 0x000400000) != 0,
+        (dma_switches_raw[0] & 0x000800000) != 0
+    );
+    g_dma_affine_c_do_dma = array( // b
+        (dma_switches_raw[0] & 0x001000000) != 0,
+        (dma_switches_raw[0] & 0x002000000) != 0,
+        (dma_switches_raw[0] & 0x004000000) != 0,
+        (dma_switches_raw[0] & 0x008000000) != 0
+    );
+    g_dma_affine_d_do_dma = array( // a
+        (dma_switches_raw[0] & 0x010000000) != 0,
+        (dma_switches_raw[0] & 0x020000000) != 0,
+        (dma_switches_raw[0] & 0x040000000) != 0,
+        (dma_switches_raw[0] & 0x080000000) != 0
+    );
+    g_dma_dir = array( // dir
+        (dma_switches_raw[1] & 0x000000001) != 0,
+        (dma_switches_raw[1] & 0x000000002) != 0,
+        (dma_switches_raw[1] & 0x000000004) != 0,
+        (dma_switches_raw[1] & 0x000000008) != 0
+    );
+    g_dma_dir_ex = array( // dir
+        (dma_switches_raw[1] & 0x000000010) != 0,
+        (dma_switches_raw[1] & 0x000000020) != 0,
+        (dma_switches_raw[1] & 0x000000040) != 0,
+        (dma_switches_raw[1] & 0x000000080) != 0
+    );
+    g_dma_win_start_do_dma = array( // win start
+        (dma_switches_raw[1] & 0x000000100) != 0,
+        (dma_switches_raw[1] & 0x000000200) != 0
+    );
+    g_dma_win_end_do_dma = array( // win end
+        (dma_switches_raw[1] & 0x000000400) != 0,
+        (dma_switches_raw[1] & 0x000000800) != 0
+    );
+    g_dma_fixcol_main_do_dma = (dma_switches_raw[1] & OxFF0000) != 0; // fixcol main
+    g_dma_fixcol_sub_do_dma = (dma_switches_raw[1] & OxFF000000) != 0; // fixcol sub
 }
 
 fn readWinSettings() {
 
-    win_settings = WinSettings(
-        win_settings_raw.win_start,
-        win_settings_raw.win_end,
-        array(
-            (win_settings_raw.win_compose & Ox0000000F) >> 0,
-            (win_settings_raw.win_compose & Ox000000F0) >> 4,
-            (win_settings_raw.win_compose & Ox00000F00) >> 8,
-            (win_settings_raw.win_compose & Ox0000F000) >> 12,
-            (win_settings_raw.win_compose & Ox000F0000) >> 16,
-            (win_settings_raw.win_compose & Ox00F00000) >> 20
-        ),
-        array(
-            (win_settings_raw.win_to_scrns & 0x00000001) != 0,
-            (win_settings_raw.win_to_scrns & 0x00000002) != 0,
-            (win_settings_raw.win_to_scrns & 0x00000004) != 0,
-            (win_settings_raw.win_to_scrns & 0x00000008) != 0,
-            (win_settings_raw.win_to_scrns & 0x00000010) != 0,
-        ),
-        array(
-            (win_settings_raw.win_to_scrns & 0x00000100) != 0,
-            (win_settings_raw.win_to_scrns & 0x00000200) != 0,
-            (win_settings_raw.win_to_scrns & 0x00000400) != 0,
-            (win_settings_raw.win_to_scrns & 0x00000800) != 0,
-            (win_settings_raw.win_to_scrns & 0x00001000) != 0,
-        ),
-        (win_settings_raw.win_to_scrns & Ox000F0000) >> 16,
-        (win_settings_raw.win_to_scrns & Ox00F00000) >> 20,
+    g_win_start = win_settings_raw.win_start;
+    g_win_end = win_settings_raw.win_end;
+    g_win_compose = array(
+        (win_settings_raw.win_compose & Ox0000000F) >> 0,
+        (win_settings_raw.win_compose & Ox000000F0) >> 4,
+        (win_settings_raw.win_compose & Ox00000F00) >> 8,
+        (win_settings_raw.win_compose & Ox0000F000) >> 12,
+        (win_settings_raw.win_compose & Ox000F0000) >> 16,
+        (win_settings_raw.win_compose & Ox00F00000) >> 20
     );
+    g_win_to_main = array(
+        (win_settings_raw.win_to_scrns & 0x00000001) != 0,
+        (win_settings_raw.win_to_scrns & 0x00000002) != 0,
+        (win_settings_raw.win_to_scrns & 0x00000004) != 0,
+        (win_settings_raw.win_to_scrns & 0x00000008) != 0,
+        (win_settings_raw.win_to_scrns & 0x00000010) != 0,
+    );
+    g_win_to_sub = array(
+        (win_settings_raw.win_to_scrns & 0x00000100) != 0,
+        (win_settings_raw.win_to_scrns & 0x00000200) != 0,
+        (win_settings_raw.win_to_scrns & 0x00000400) != 0,
+        (win_settings_raw.win_to_scrns & 0x00000800) != 0,
+        (win_settings_raw.win_to_scrns & 0x00001000) != 0,
+    );
+    g_win_apply_main = (win_settings_raw.win_to_scrns & Ox000F0000) >> 16;
+    g_win_apply_sub = (win_settings_raw.win_to_scrns & Ox00F00000) >> 20;
 }
 
 fn readCMathSettings() {
-    cmath_settings = ColorMathSettings(
-        bg_transform.cmsr.fixcol_main,
-        bg_transform.cmsr.fixcol_sub,
-        array(
-            (bg_transform.cmsr.math_debug_settings & 0x00000001) != 0,
-            (bg_transform.cmsr.math_debug_settings & 0x00000002) != 0,
-            (bg_transform.cmsr.math_debug_settings & 0x00000004) != 0,
-            (bg_transform.cmsr.math_debug_settings & 0x00000008) != 0,
-            (bg_transform.cmsr.math_debug_settings & 0x00000010) != 0,
-            (bg_transform.cmsr.math_debug_settings & 0x00000020) != 0,
-        ),
-        (bg_transform.cmsr.math_debug_settings & Ox0000FF00) >> 8,
-        (bg_transform.cmsr.math_debug_settings & Ox00FF0000) >> 16
+    g_fixcol_main = bg_transform.cmsr.fixcol_main;
+    g_fixcol_sub = bg_transform.cmsr.fixcol_sub;
+    g_math_enable = array(
+        (bg_transform.cmsr.math_debug_settings & 0x00000001) != 0,
+        (bg_transform.cmsr.math_debug_settings & 0x00000002) != 0,
+        (bg_transform.cmsr.math_debug_settings & 0x00000004) != 0,
+        (bg_transform.cmsr.math_debug_settings & 0x00000008) != 0,
+        (bg_transform.cmsr.math_debug_settings & 0x00000010) != 0,
+        (bg_transform.cmsr.math_debug_settings & 0x00000020) != 0,
     );
-    debug_mode = (bg_transform.cmsr.math_debug_settings & Ox0F000000) >> 24;
-    debug_arg = (bg_transform.cmsr.math_debug_settings & OxF0000000) >> 28;
+    g_math_algo = (bg_transform.cmsr.math_debug_settings & Ox0000FF00) >> 8;
+    g_math_normalize = (bg_transform.cmsr.math_debug_settings & Ox00FF0000) >> 16;
+    g_debug_mode = (bg_transform.cmsr.math_debug_settings & Ox0F000000) >> 24;
+    g_debug_arg = (bg_transform.cmsr.math_debug_settings & OxF0000000) >> 28;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -731,9 +706,9 @@ fn fetchObjPixel(screenpos: vec2<u32>, obj_attrs: Obj) -> u32 {
 
 // given the screenpos, search for the obj with the highest prio (highest OAM index == tiebreaker).
 // get the obj's prio and the packed color at that screenpos.
-fn calcObjsPixel(screenpos: vec2<u32>) -> ObjPixel {
+fn calcObjsPixel(screenpos: vec2<u32>) -> vec2<u32> {
 
-    var candidate = ObjPixel(
+    var candidate = vec2u(
         0x0000,
         0,
     );
@@ -752,11 +727,11 @@ fn calcObjsPixel(screenpos: vec2<u32>) -> ObjPixel {
         if (!isPackedColorOpaque(col)) {
             continue;
         }
-        if (oam_data.prio < candidate.prio) {
+        if (oam_data.prio < candidate.y) {
             continue;
         }
-        candidate.p_col = col;
-        candidate.prio = oam_data.prio;
+        candidate.x = col;
+        candidate.y = oam_data.prio;
     }
     return candidate;
 }
@@ -836,7 +811,7 @@ fn isPixelInColWin(is_main: bool, data_in: bool) -> bool {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 // resolve BG and obj prios to produce the final color for a pixel
-fn resolvePrios(cols: array<u32, 5>, bg_is_prio: array<bool, 4>, obj_prio: u32, fixcol: u32) -> BufferPixel {
+fn resolvePrios(cols: array<u32, 5>, bg_is_prio: array<bool, 4>, obj_prio: u32, fixcol: u32) -> vec2<u32> {
 
     // what a horrible day to be a GPU 3: revenge of the if chain (something something yandere simulator. ha ha.)
 
@@ -853,71 +828,71 @@ fn resolvePrios(cols: array<u32, 5>, bg_is_prio: array<bool, 4>, obj_prio: u32, 
     // if you want do that for some reason, open a PR :)
 
     if (comp_settings.prio_remap_bg3 && bg_is_prio[3] && is_opaque[3]) {
-        return BufferPixel(cols[3], 3);
+        return vec2u(cols[3], 3);
     }
 
     if (comp_settings.prio_remap_bg2 && bg_is_prio[2] && is_opaque[2]) {
-        return BufferPixel(cols[2], 2);
+        return vec2u(cols[2], 2);
     }
 
     if (comp_settings.prio_remap_bg1 && bg_is_prio[1] && is_opaque[1]) {
-        return BufferPixel(cols[1], 1);
+        return vec2u(cols[1], 1);
     }
 
     if (comp_settings.prio_remap_bg0 && bg_is_prio[0] && is_opaque[0]) {
-        return BufferPixel(cols[0], 0);
+        return vec2u(cols[0], 0);
     }
 
     if (obj_prio == 3 && is_opaque[4]) {
-        return BufferPixel(cols[4], 4);
+        return vec2u(cols[4], 4);
     }
 
     if (bg_is_prio[3] && is_opaque[3]) {
-        return BufferPixel(cols[3], 3);
+        return vec2u(cols[3], 3);
     }
 
     if (bg_is_prio[2] && is_opaque[2]) {
-        return BufferPixel(cols[2], 2);
+        return vec2u(cols[2], 2);
     }
 
     if (obj_prio == 2 && is_opaque[4]) {
-        return BufferPixel(cols[4], 4);
+        return vec2u(cols[4], 4);
     }
 
     if (!bg_is_prio[3] && is_opaque[3]) {
-        return BufferPixel(cols[3], 3);
+        return vec2u(cols[3], 3);
     }
 
     if (!bg_is_prio[2] && is_opaque[2]) {
-        return BufferPixel(cols[2], 2);
+        return vec2u(cols[2], 2);
     }
 
     if (obj_prio == 1 && is_opaque[4]) {
-        return BufferPixel(cols[4], 4);
+        return vec2u(cols[4], 4);
     }
 
     if (bg_is_prio[1] && is_opaque[1]) {
-        return BufferPixel(cols[1], 1);
+        return vec2u(cols[1], 1);
     }
 
     if (bg_is_prio[0] && is_opaque[0]) {
-        return BufferPixel(cols[0], 0);
+        return vec2u(cols[0], 0);
     }
 
     if (obj_prio == 0 && is_opaque[4]) {
-        return BufferPixel(cols[4], 4);
+        return vec2u(cols[4], 4);
     }
 
     if (!bg_is_prio[1] && is_opaque[1]) {
-        return BufferPixel(cols[1], 1);
+        return vec2u(cols[1], 1);
     }
 
     if (!bg_is_prio[0] && is_opaque[0]) {
-        return BufferPixel(cols[0], 0);
+        return vec2u(cols[0], 0);
     }
 
     // fallthrough: set to fixcol
-    return BufferPixel(fixcol, 5);
+    return vec2u(fixcol, 5);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -991,9 +966,9 @@ fn mixSoftlight(main: vec4<f32>, sub: vec4<f32>) -> vec4<f32> {
     }
 }
 
-fn doColorMath(main: BufferPixel, sub: u32) -> vec4<f32> {
+fn doColorMath(main: vec2<u32>, sub: u32) -> vec4<f32> {
 
-    let is_main_opaque: bool = isPackedColorOpaque(main.p_col);
+    let is_main_opaque: bool = isPackedColorOpaque(main.x);
     let is_sub_opaque: bool = isPackedColorOpaque(sub);
 
     if (!is_main_opaque && !is_sub_opaque) {
@@ -1003,14 +978,14 @@ fn doColorMath(main: BufferPixel, sub: u32) -> vec4<f32> {
         return unpackColor(sub);
     }
     if (!is_sub_opaque) {
-        return unpackColor(main.p_col);
+        return unpackColor(main.x);
     }
 
-    if (!cmath_settings.math_enable[main.origin]) {
-        return unpackColor(main.p_col);
+    if (!cmath_settings.math_enable[main.y]) {
+        return unpackColor(main.x);
     }
 
-    let a: vec4f = unpackColor(main.p_col);
+    let a: vec4f = unpackColor(main.x);
     let b: vec4f = unpackColor(sub);
 
     var rescol: vec4<f32>;
@@ -1140,15 +1115,15 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
     let bg1_data: BGPixel = calcBGPixel(screenpos, 1);
     let bg2_data: BGPixel = calcBGPixel(screenpos, 2);
     let bg3_data: BGPixel = calcBGPixel(screenpos, 3);
-    let obj_data: ObjPixel = calcObjsPixel(screenpos);
+    let obj_data: vec2<u32> = calcObjsPixel(screenpos);
 
     // colors array for efficient processing later
-    let p_cols: array<u32, 5> = array(bg0_data.p_col, bg1_data.p_col, bg2_data.p_col, bg3_data.p_col, obj_data.p_col);
+    let p_cols: array<u32, 5> = array(bg0_data.p_col, bg1_data.p_col, bg2_data.p_col, bg3_data.p_col, obj_data.x);
 
     // prio array for use in priority calculation later
     // objs have 4 prio settings, so handle them differently.
     let bg_prios: array<bool, 4> = array(bg0_data.isprio, bg1_data.isprio, bg2_data.isprio, bg3_data.isprio);
-    let obj_prio: u32 = obj_data.prio;
+    let obj_prio: u32 = obj_data.y;
 
     // should the color be sent to the main/sub buffer?
     let p_cols_main: array<u32, 5> = arrselx5u(no_p_cols, p_cols, comp_settings.to_main);
@@ -1166,8 +1141,8 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
 
     // apply priority logic.
     // result: the final color for this buffer + its source layer
-    let main_result: BufferPixel = resolvePrios(wind_p_cols_main, bg_prios, obj_prio, fixcol_main);
-    let sub_result_pre: BufferPixel = resolvePrios(wind_p_cols_sub, bg_prios, obj_prio, fixcol_sub);
+    let main_result: vec2<u32> = resolvePrios(wind_p_cols_main, bg_prios, obj_prio, fixcol_main);
+    let sub_result_pre: vec2<u32> = resolvePrios(wind_p_cols_sub, bg_prios, obj_prio, fixcol_sub);
 
     /// MAIN/SUB BUFFER AFTER PRIO RESOLVE
     /////////////////////////////////////////////
@@ -1175,19 +1150,19 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
     // replace transparent pixels with fixcol. unsure if actually needed as resolvePrios does this,
     // but better safe than sorry...
     // also discard unneeded origin value for sub buffer
-    let main_result_fixed: BufferPixel = BufferPixel(
-        select(fixcol_main, main_result.p_col, isPackedColorOpaque(main_result.p_col)),
-        main_result.origin
+    let main_result_fixed: vec2<u32> = vec2u(
+        select(fixcol_main, main_result.x, isPackedColorOpaque(main_result.x)),
+        main_result.y
     );
-    let sub_result_pre_fixed: u32 = select(fixcol_sub, sub_result_pre.p_col, isPackedColorOpaque(sub_result_pre.p_col));
+    let sub_result_pre_fixed: u32 = select(fixcol_sub, sub_result_pre.x, isPackedColorOpaque(sub_result_pre.x));
 
     // apply fixcol override
     let sub_result: u32 = select(sub_result_pre_fixed, fixcol_sub, comp_settings.fix_sub);
 
     // apply color window
-    let wind_main_result: BufferPixel = BufferPixel(
-        select(main_result_fixed.p_col, 0x0000, col_win_main),
-        main_result_fixed.origin
+    let wind_main_result: vec2<u32> = vec2u(
+        select(main_result_fixed.x, 0x0000, col_win_main),
+        main_result_fixed.y
     );
     let wind_sub_result: u32 = select(sub_result, 0x0000, col_win_sub);
 

@@ -2,7 +2,7 @@ const mach = @import("mach");
 const std = @import("std");
 const gpu = mach.gpu;
 const opp = @import("output_pipeline.zig");
-const ppup = @import("ppu_pipeline.zig");
+const ppu = @import("ppu.zig");
 const reg = @import("../hardware/registers.zig");
 const bits = @import("../bsp/bits.zig");
 
@@ -16,7 +16,7 @@ var window: mach.ObjectID = undefined;
 
 pub fn poweron(core: *mach.Core, w: mach.ObjectID) !void {
     // core.setFrameRateLimit(0);
-    // core.setFrameRateLimit(60);
+    // core.windows.getValue(w).setFrameRateLimit(60);
 
     window = w;
 
@@ -27,18 +27,18 @@ pub fn poweron(core: *mach.Core, w: mach.ObjectID) !void {
     //     .title_timer = try mach.time.Timer.start(),
     // };
 
-    ppup.init(core, window);
+    // ppup.init(core, window);
     opp.init(core, window);
 }
 
 pub fn poweroff() void {
     std.debug.print("poweroff\n", .{});
-    ppup.deinit();
+    // ppup.deinit();
     opp.deinit();
 }
 
 pub fn tick(core: *mach.Core) !void {
-    std.debug.print("tick\n", .{});
+    const then = std.time.nanoTimestamp();
 
     // meh. TODO: make better
     reg.controller[0] = bits.sto1x8in8(
@@ -133,7 +133,8 @@ pub fn tick(core: *mach.Core) !void {
     const encoder = win.device.createCommandEncoder(null);
     defer encoder.release();
 
-    ppup.doComputePass(win, encoder);
+    // ppup.doComputePass(win, encoder);
+    ppu.tick();
     opp.doRenderPass(win, encoder);
 
     var command = encoder.finish(null);
@@ -153,4 +154,10 @@ pub fn tick(core: *mach.Core) !void {
     //     },
     // );
     // }
+
+    // hackily force ~60 fps until there's a framerate limiter again
+    const now = std.time.nanoTimestamp();
+    const delta = now - then;
+    const delay = (16 * std.time.ns_per_ms) - delta;
+    std.Thread.sleep(@truncate(@abs(delay)));
 }

@@ -32,9 +32,28 @@ pub const stop = mach.schedule(.{
     .{ mach.Core, .deinit },
 });
 
+var wn0 = WinSetupTest.TestWinNoDMA{ .win = 0, .flip_dma = false };
+var wn1 = WinSetupTest.TestWinNoDMA{ .win = 1, .flip_dma = false };
+var wn0f = WinSetupTest.TestWinNoDMA{ .win = 0, .flip_dma = true };
+var wn1f = WinSetupTest.TestWinNoDMA{ .win = 1, .flip_dma = true };
+var wnd0 = WinSetupTest.TestWinDMA{ .win = 0, .flip_dma = false };
+var wnd1 = WinSetupTest.TestWinDMA{ .win = 1, .flip_dma = false };
+var wnd0f = WinSetupTest.TestWinDMA{ .win = 0, .flip_dma = true };
+var wnd1f = WinSetupTest.TestWinDMA{ .win = 1, .flip_dma = true };
+
+const screens = [_]Mgr.ManagedScreen{
+    .{ .test_win_nodma = &wn0 },
+    .{ .test_win_nodma = &wn1 },
+    .{ .test_win_nodma = &wn0f },
+    .{ .test_win_nodma = &wn1f },
+    .{ .test_win_dma = &wnd0 },
+    .{ .test_win_dma = &wnd1 },
+    .{ .test_win_dma = &wnd0f },
+    .{ .test_win_dma = &wnd1f },
+};
+
 screen: u64,
 go_next: bool,
-screens: []const Mgr.ManagedScreen,
 
 var window: mach.ObjectID = undefined;
 
@@ -48,100 +67,84 @@ pub fn init(app: *App, core: *mach.Core, app_mod: mach.Mod(App)) !void {
         // .height = 256 * 3,
     });
 
-    var wn1 = WinSetupTest.TestWinNoDMA{ .win = 0, .flip_dma = false };
-    const t1 = Mgr.ManagedScreen{ .test_win_nodma = &wn1 };
-
-    // hooooo boy
-    // fix this ASAP, this can't be the way to do it now can it
     app.* = .{
         .screen = 0,
         .go_next = true,
-        .screens = &.{
-            t1,
-        },
-        // .screens = @constCast(&[_]Mgr.ManagedScreen{
-        //     .{ .test_win_nodma = @alignCast(@ptrCast(@constCast(&.{ .win = 0, .flip_dma = false }))) },
-        //     .{ .test_win_nodma = @alignCast(@ptrCast(@constCast(&.{ .win = 1, .flip_dma = false }))) },
-        //     .{ .test_win_nodma = @alignCast(@ptrCast(@constCast(&.{ .win = 0, .flip_dma = true }))) },
-        //     .{ .test_win_nodma = @alignCast(@ptrCast(@constCast(&.{ .win = 1, .flip_dma = true }))) },
-        //     .{ .test_win_dma = @alignCast(@ptrCast(@constCast(&.{ .win = 0, .flip_dma = false }))) },
-        //     .{ .test_win_dma = @alignCast(@ptrCast(@constCast(&.{ .win = 1, .flip_dma = false }))) },
-        //     .{ .test_win_dma = @alignCast(@ptrCast(@constCast(&.{ .win = 0, .flip_dma = true }))) },
-        //     .{ .test_win_dma = @alignCast(@ptrCast(@constCast(&.{ .win = 1, .flip_dma = true }))) },
-        //     .{ .win_tests_data_setup = @alignCast(@ptrCast(@constCast(&.{}))) },
-        //     .{ .test_win_compose = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_0, .show_setup = false }))) },
-        //     .{ .test_win_compose = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_1, .show_setup = false }))) },
-        //     .{ .test_win_compose = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_2, .show_setup = false }))) },
-        //     .{ .test_win_compose = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_3, .show_setup = false }))) },
-        //     .{ .test_win_compose = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_OBJS, .show_setup = false }))) },
-        //     .{ .test_win_compose = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_COL, .show_setup = false }))) },
-        //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_0, .to_main = true }))) },
-        //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_1, .to_main = true }))) },
-        //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_2, .to_main = true }))) },
-        //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_3, .to_main = true }))) },
-        //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_OBJS, .to_main = true }))) },
-        //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_0, .to_main = false }))) },
-        //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_1, .to_main = false }))) },
-        //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_2, .to_main = false }))) },
-        //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_3, .to_main = false }))) },
-        //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_OBJS, .to_main = false }))) },
-        //     .{ .test_win_col = @alignCast(@ptrCast(@constCast(&.{ .to_main = true }))) },
-        //     .{ .test_win_col = @alignCast(@ptrCast(@constCast(&.{ .to_main = false }))) },
-        //     .{ .test_fixcol = @alignCast(@ptrCast(@constCast(&.{ .for_main = true }))) },
-        //     .{ .test_fixcol = @alignCast(@ptrCast(@constCast(&.{ .for_main = false }))) },
-        //     .{ .test_fixcol_dma = @alignCast(@ptrCast(@constCast(&.{ .for_main = false, .flip_dma = false }))) },
-        //     .{ .test_fixcol_dma = @alignCast(@ptrCast(@constCast(&.{ .for_main = true, .flip_dma = false }))) },
-        //     .{ .test_fixcol_dma = @alignCast(@ptrCast(@constCast(&.{ .for_main = false, .flip_dma = true }))) },
-        //     .{ .test_fixcol_dma = @alignCast(@ptrCast(@constCast(&.{ .for_main = true, .flip_dma = true }))) },
-        //     .{ .bg_tests_data_setup = @alignCast(@ptrCast(@constCast(&.{}))) },
-        //     .{ .bg_pos_fixup = @alignCast(@ptrCast(@constCast(&.{ .xnow = 0, .ynow = 0, .xtarget = -32, .ytarget = -32 }))) },
-        //     .{ .test_bg_oob = @alignCast(@ptrCast(@constCast(&.{ .bg = 0 }))) },
-        //     .{ .test_bg_oob = @alignCast(@ptrCast(@constCast(&.{ .bg = 1 }))) },
-        //     .{ .test_bg_oob = @alignCast(@ptrCast(@constCast(&.{ .bg = 2 }))) },
-        //     .{ .test_bg_oob = @alignCast(@ptrCast(@constCast(&.{ .bg = 3 }))) },
-        //     .{ .bg_pos_fixup = @alignCast(@ptrCast(@constCast(&.{ .xnow = -32, .ynow = -32, .xtarget = 0, .ytarget = 0 }))) },
-        //     .{ .test_bg_scroll_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 0, .flip_dma = false }))) },
-        //     .{ .test_bg_scroll_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 1, .flip_dma = false }))) },
-        //     .{ .test_bg_scroll_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 2, .flip_dma = false }))) },
-        //     .{ .test_bg_scroll_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 3, .flip_dma = false }))) },
-        //     .{ .test_bg_scroll_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 0, .flip_dma = true }))) },
-        //     .{ .test_bg_scroll_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 1, .flip_dma = true }))) },
-        //     .{ .test_bg_scroll_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 2, .flip_dma = true }))) },
-        //     .{ .test_bg_scroll_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 3, .flip_dma = true }))) },
-        //     .{ .bg_pos_fixup = @alignCast(@ptrCast(@constCast(&.{ .xnow = 0, .ynow = 0, .xtarget = -64, .ytarget = -64 }))) },
-        //     .{ .test_bg_size = @alignCast(@ptrCast(@constCast(&.{ .bg = 0 }))) },
-        //     .{ .test_bg_size = @alignCast(@ptrCast(@constCast(&.{ .bg = 1 }))) },
-        //     .{ .test_bg_size = @alignCast(@ptrCast(@constCast(&.{ .bg = 2 }))) },
-        //     .{ .test_bg_size = @alignCast(@ptrCast(@constCast(&.{ .bg = 3 }))) },
-        //     .{ .test_bg_mosiac = @alignCast(@ptrCast(@constCast(&.{ .bg = 0 }))) },
-        //     .{ .test_bg_mosiac = @alignCast(@ptrCast(@constCast(&.{ .bg = 1 }))) },
-        //     .{ .test_bg_mosiac = @alignCast(@ptrCast(@constCast(&.{ .bg = 2 }))) },
-        //     .{ .test_bg_mosiac = @alignCast(@ptrCast(@constCast(&.{ .bg = 3 }))) },
-        //     .{ .bg_pos_fixup = @alignCast(@ptrCast(@constCast(&.{ .xnow = -64, .ynow = -64, .xtarget = 0, .ytarget = 0 }))) },
-        //     .{ .test_bg_affine = @alignCast(@ptrCast(@constCast(&.{ .bg = 0 }))) },
-        //     .{ .test_bg_affine = @alignCast(@ptrCast(@constCast(&.{ .bg = 1 }))) },
-        //     .{ .test_bg_affine = @alignCast(@ptrCast(@constCast(&.{ .bg = 2 }))) },
-        //     .{ .test_bg_affine = @alignCast(@ptrCast(@constCast(&.{ .bg = 3 }))) },
-        //     .{ .test_bg_affine_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 0, .flip_dma = false }))) },
-        //     .{ .test_bg_affine_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 1, .flip_dma = false }))) },
-        //     .{ .test_bg_affine_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 2, .flip_dma = false }))) },
-        //     .{ .test_bg_affine_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 3, .flip_dma = false }))) },
-        //     .{ .test_bg_affine_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 0, .flip_dma = true }))) },
-        //     .{ .test_bg_affine_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 1, .flip_dma = true }))) },
-        //     .{ .test_bg_affine_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 2, .flip_dma = true }))) },
-        //     .{ .test_bg_affine_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 3, .flip_dma = true }))) },
-        //     .{ .test_bg_prio_feat = @alignCast(@ptrCast(@constCast(&.{}))) },
-        //     .{ .test_obj_attrs = @alignCast(@ptrCast(@constCast(&.{}))) },
-        //     .{ .test_obj_wrap = @alignCast(@ptrCast(@constCast(&.{}))) },
-        //     .{ .compose_tests_data_setup = @alignCast(@ptrCast(@constCast(&.{}))) },
-        //     .{ .test_buffer = @alignCast(@ptrCast(@constCast(&.{ .to_main = true }))) },
-        //     .{ .test_buffer = @alignCast(@ptrCast(@constCast(&.{ .to_main = false }))) },
-        //     .{ .test_colwin = @alignCast(@ptrCast(@constCast(&.{ .is_main = true }))) },
-        //     .{ .test_colwin = @alignCast(@ptrCast(@constCast(&.{ .is_main = false }))) },
-        //     .{ .test_cmath_enable = @alignCast(@ptrCast(@constCast(&.{}))) },
-        //     .{ .test_cmath_sett = @alignCast(@ptrCast(@constCast(&.{}))) },
-        // }),
     };
+    // .screens = @constCast(&[_]Mgr.ManagedScreen{
+    //     .{ .win_tests_data_setup = @alignCast(@ptrCast(@constCast(&.{}))) },
+    //     .{ .test_win_compose = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_0, .show_setup = false }))) },
+    //     .{ .test_win_compose = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_1, .show_setup = false }))) },
+    //     .{ .test_win_compose = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_2, .show_setup = false }))) },
+    //     .{ .test_win_compose = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_3, .show_setup = false }))) },
+    //     .{ .test_win_compose = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_OBJS, .show_setup = false }))) },
+    //     .{ .test_win_compose = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_COL, .show_setup = false }))) },
+    //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_0, .to_main = true }))) },
+    //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_1, .to_main = true }))) },
+    //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_2, .to_main = true }))) },
+    //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_3, .to_main = true }))) },
+    //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_OBJS, .to_main = true }))) },
+    //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_0, .to_main = false }))) },
+    //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_1, .to_main = false }))) },
+    //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_2, .to_main = false }))) },
+    //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_3, .to_main = false }))) },
+    //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_OBJS, .to_main = false }))) },
+    //     .{ .test_win_col = @alignCast(@ptrCast(@constCast(&.{ .to_main = true }))) },
+    //     .{ .test_win_col = @alignCast(@ptrCast(@constCast(&.{ .to_main = false }))) },
+    //     .{ .test_fixcol = @alignCast(@ptrCast(@constCast(&.{ .for_main = true }))) },
+    //     .{ .test_fixcol = @alignCast(@ptrCast(@constCast(&.{ .for_main = false }))) },
+    //     .{ .test_fixcol_dma = @alignCast(@ptrCast(@constCast(&.{ .for_main = false, .flip_dma = false }))) },
+    //     .{ .test_fixcol_dma = @alignCast(@ptrCast(@constCast(&.{ .for_main = true, .flip_dma = false }))) },
+    //     .{ .test_fixcol_dma = @alignCast(@ptrCast(@constCast(&.{ .for_main = false, .flip_dma = true }))) },
+    //     .{ .test_fixcol_dma = @alignCast(@ptrCast(@constCast(&.{ .for_main = true, .flip_dma = true }))) },
+    //     .{ .bg_tests_data_setup = @alignCast(@ptrCast(@constCast(&.{}))) },
+    //     .{ .bg_pos_fixup = @alignCast(@ptrCast(@constCast(&.{ .xnow = 0, .ynow = 0, .xtarget = -32, .ytarget = -32 }))) },
+    //     .{ .test_bg_oob = @alignCast(@ptrCast(@constCast(&.{ .bg = 0 }))) },
+    //     .{ .test_bg_oob = @alignCast(@ptrCast(@constCast(&.{ .bg = 1 }))) },
+    //     .{ .test_bg_oob = @alignCast(@ptrCast(@constCast(&.{ .bg = 2 }))) },
+    //     .{ .test_bg_oob = @alignCast(@ptrCast(@constCast(&.{ .bg = 3 }))) },
+    //     .{ .bg_pos_fixup = @alignCast(@ptrCast(@constCast(&.{ .xnow = -32, .ynow = -32, .xtarget = 0, .ytarget = 0 }))) },
+    //     .{ .test_bg_scroll_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 0, .flip_dma = false }))) },
+    //     .{ .test_bg_scroll_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 1, .flip_dma = false }))) },
+    //     .{ .test_bg_scroll_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 2, .flip_dma = false }))) },
+    //     .{ .test_bg_scroll_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 3, .flip_dma = false }))) },
+    //     .{ .test_bg_scroll_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 0, .flip_dma = true }))) },
+    //     .{ .test_bg_scroll_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 1, .flip_dma = true }))) },
+    //     .{ .test_bg_scroll_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 2, .flip_dma = true }))) },
+    //     .{ .test_bg_scroll_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 3, .flip_dma = true }))) },
+    //     .{ .bg_pos_fixup = @alignCast(@ptrCast(@constCast(&.{ .xnow = 0, .ynow = 0, .xtarget = -64, .ytarget = -64 }))) },
+    //     .{ .test_bg_size = @alignCast(@ptrCast(@constCast(&.{ .bg = 0 }))) },
+    //     .{ .test_bg_size = @alignCast(@ptrCast(@constCast(&.{ .bg = 1 }))) },
+    //     .{ .test_bg_size = @alignCast(@ptrCast(@constCast(&.{ .bg = 2 }))) },
+    //     .{ .test_bg_size = @alignCast(@ptrCast(@constCast(&.{ .bg = 3 }))) },
+    //     .{ .test_bg_mosiac = @alignCast(@ptrCast(@constCast(&.{ .bg = 0 }))) },
+    //     .{ .test_bg_mosiac = @alignCast(@ptrCast(@constCast(&.{ .bg = 1 }))) },
+    //     .{ .test_bg_mosiac = @alignCast(@ptrCast(@constCast(&.{ .bg = 2 }))) },
+    //     .{ .test_bg_mosiac = @alignCast(@ptrCast(@constCast(&.{ .bg = 3 }))) },
+    //     .{ .bg_pos_fixup = @alignCast(@ptrCast(@constCast(&.{ .xnow = -64, .ynow = -64, .xtarget = 0, .ytarget = 0 }))) },
+    //     .{ .test_bg_affine = @alignCast(@ptrCast(@constCast(&.{ .bg = 0 }))) },
+    //     .{ .test_bg_affine = @alignCast(@ptrCast(@constCast(&.{ .bg = 1 }))) },
+    //     .{ .test_bg_affine = @alignCast(@ptrCast(@constCast(&.{ .bg = 2 }))) },
+    //     .{ .test_bg_affine = @alignCast(@ptrCast(@constCast(&.{ .bg = 3 }))) },
+    //     .{ .test_bg_affine_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 0, .flip_dma = false }))) },
+    //     .{ .test_bg_affine_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 1, .flip_dma = false }))) },
+    //     .{ .test_bg_affine_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 2, .flip_dma = false }))) },
+    //     .{ .test_bg_affine_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 3, .flip_dma = false }))) },
+    //     .{ .test_bg_affine_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 0, .flip_dma = true }))) },
+    //     .{ .test_bg_affine_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 1, .flip_dma = true }))) },
+    //     .{ .test_bg_affine_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 2, .flip_dma = true }))) },
+    //     .{ .test_bg_affine_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 3, .flip_dma = true }))) },
+    //     .{ .test_bg_prio_feat = @alignCast(@ptrCast(@constCast(&.{}))) },
+    //     .{ .test_obj_attrs = @alignCast(@ptrCast(@constCast(&.{}))) },
+    //     .{ .test_obj_wrap = @alignCast(@ptrCast(@constCast(&.{}))) },
+    //     .{ .compose_tests_data_setup = @alignCast(@ptrCast(@constCast(&.{}))) },
+    //     .{ .test_buffer = @alignCast(@ptrCast(@constCast(&.{ .to_main = true }))) },
+    //     .{ .test_buffer = @alignCast(@ptrCast(@constCast(&.{ .to_main = false }))) },
+    //     .{ .test_colwin = @alignCast(@ptrCast(@constCast(&.{ .is_main = true }))) },
+    //     .{ .test_colwin = @alignCast(@ptrCast(@constCast(&.{ .is_main = false }))) },
+    //     .{ .test_cmath_enable = @alignCast(@ptrCast(@constCast(&.{}))) },
+    //     .{ .test_cmath_sett = @alignCast(@ptrCast(@constCast(&.{}))) },
+    // }),
 }
 
 pub fn tick(app: *App, core: *mach.Core) !void {
@@ -149,8 +152,8 @@ pub fn tick(app: *App, core: *mach.Core) !void {
         switch (event) {
             .window_open => |ev| {
                 try mode8.magic_smoke.poweron(core, ev.window_id);
-                core.windows.set(ev.window_id, .width, 256 * 3);
-                core.windows.set(ev.window_id, .height, 256 * 3);
+                core.windows.set(ev.window_id, .width, 256 * 2);
+                core.windows.set(ev.window_id, .height, 256 * 2);
             },
             .close => core.exit(),
             else => {},
@@ -159,15 +162,15 @@ pub fn tick(app: *App, core: *mach.Core) !void {
 
     if (app.go_next) {
         app.go_next = false;
-        app.screens[app.screen].init();
+        screens[app.screen].init();
     }
 
-    if (app.screens[app.screen].tick()) {
+    if (screens[app.screen].tick()) {
         app.screen += 1;
         app.go_next = true;
     }
 
-    if (app.screen >= app.screens.len) {
+    if (app.screen >= screens.len) {
         core.exit();
     }
     try mode8.magic_smoke.tick(core);

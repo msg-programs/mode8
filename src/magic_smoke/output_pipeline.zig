@@ -1,7 +1,7 @@
 const mach = @import("mach");
 const gpu = mach.gpu;
-const ppup = @import("ppu_pipeline.zig");
 const std = @import("std");
+const ppu = @import("ppu.zig");
 
 const Vertex = extern struct {
     pos: @Vector(2, f32),
@@ -9,10 +9,10 @@ const Vertex = extern struct {
 };
 
 const vertices = [_]Vertex{
-    .{ .pos = .{ -1, -1 }, .uv = .{ 1, 1 } },
-    .{ .pos = .{ 1, -1 }, .uv = .{ 0, 1 } },
-    .{ .pos = .{ 1, 1 }, .uv = .{ 0, 0 } },
-    .{ .pos = .{ -1, 1 }, .uv = .{ 1, 0 } },
+    .{ .pos = .{ -1, -1 }, .uv = .{ 1, 0 } },
+    .{ .pos = .{ 1, -1 }, .uv = .{ 1, 1 } },
+    .{ .pos = .{ 1, 1 }, .uv = .{ 0, 1 } },
+    .{ .pos = .{ -1, 1 }, .uv = .{ 0, 0 } },
 };
 
 const index_data = [_]u32{ 0, 1, 2, 2, 3, 0 };
@@ -22,8 +22,29 @@ var vertex_buffer: *gpu.Buffer = undefined;
 var index_buffer: *gpu.Buffer = undefined;
 var bind_group: *gpu.BindGroup = undefined;
 
+var texture: *gpu.Texture = undefined;
+const tex_layout = gpu.Texture.DataLayout{
+    .bytes_per_row = 4 * 256,
+    .rows_per_image = 256,
+};
+
 pub fn init(core: *mach.Core, window: mach.ObjectID) void {
     const win = core.windows.getValue(window);
+
+    texture = win.device.createTexture(&.{
+        .format = .rgba8_unorm,
+        .label = "PPU out",
+        .size = .{
+            .width = 256,
+            .height = 256,
+        },
+        .usage = .{
+            .texture_binding = true,
+            .copy_dst = true,
+            .render_attachment = true,
+        },
+    });
+
     setupVertexBuffer(win);
     setupIndexBuffer(win);
     setupOutputPipeline(win);
@@ -31,6 +52,7 @@ pub fn init(core: *mach.Core, window: mach.ObjectID) void {
 }
 
 pub fn deinit() void {
+    texture.release();
     render_pipeline.release();
     vertex_buffer.release();
     index_buffer.release();
@@ -114,7 +136,7 @@ fn setupBindGroup(window: anytype) void {
             .layout = bind_group_layout,
             .entries = &.{
                 gpu.BindGroup.Entry.initSampler(0, sampler),
-                gpu.BindGroup.Entry.initTextureView(1, ppup.texture_view),
+                gpu.BindGroup.Entry.initTextureView(1, texture.createView(&.{})),
             },
         }),
     );
@@ -130,6 +152,13 @@ pub fn doRenderPass(window: anytype, encoder: *gpu.CommandEncoder) void {
         .load_op = .clear,
         .store_op = .store,
     };
+
+    window.queue.writeTexture(
+        &.{ .texture = texture },
+        &tex_layout,
+        &.{ .width = 256, .height = 256 },
+        &ppu.BUFFER,
+    );
 
     const pass = encoder.beginRenderPass(
         &gpu.RenderPassDescriptor.init(.{
