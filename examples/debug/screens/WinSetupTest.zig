@@ -276,57 +276,51 @@ pub const TestWinDMA = struct {
 //     }
 // };
 
-// pub const WinTestsDataSetup = struct {
-//     frame: u64 = 0,
+pub const WinTestsDataSetup = struct {
+    frame: u64 = 0,
 
-//     pub fn init(_: *WinTestsDataSetup) void {
-//         var s0: [256]u8 = undefined;
-//         var e0: [256]u8 = undefined;
-//         var s1: [256]u8 = undefined;
-//         var e1: [256]u8 = undefined;
+    pub fn init(_: *WinTestsDataSetup) void {
+        for (0..256) |i| {
+            switch (i) {
+                72...107 => {
+                    reg.win_start[0][i] = 72;
+                    reg.win_end[0][i] = 144;
+                    reg.win_start[1][i] = 255;
+                    reg.win_end[1][i] = 0;
+                },
+                108...143 => {
+                    reg.win_start[0][i] = 72;
+                    reg.win_end[0][i] = 144;
+                    reg.win_start[1][i] = 108;
+                    reg.win_end[1][i] = 180;
+                },
+                144...179 => {
+                    reg.win_start[0][i] = 255;
+                    reg.win_end[0][i] = 0;
+                    reg.win_start[1][i] = 108;
+                    reg.win_end[1][i] = 180;
+                },
+                else => {
+                    reg.win_start[0][i] = 255;
+                    reg.win_end[0][i] = 0;
+                    reg.win_start[1][i] = 255;
+                    reg.win_end[1][i] = 0;
+                },
+            }
+        }
 
-//         for (0..256) |i| {
-//             switch (i) {
-//                 72...107 => {
-//                     s0[i] = 72;
-//                     e0[i] = 144;
-//                     s1[i] = 255;
-//                     e1[i] = 0;
-//                 },
-//                 108...143 => {
-//                     s0[i] = 72;
-//                     e0[i] = 144;
-//                     s1[i] = 108;
-//                     e1[i] = 180;
-//                 },
-//                 144...179 => {
-//                     s0[i] = 255;
-//                     e0[i] = 0;
-//                     s1[i] = 108;
-//                     e1[i] = 180;
-//                 },
-//                 else => {
-//                     s0[i] = 255;
-//                     e0[i] = 0;
-//                     s1[i] = 255;
-//                     e1[i] = 0;
-//                 },
-//             }
-//         }
+        reg.win_start_do_dma = .{ true, true };
+        reg.win_end_do_dma = .{ true, true };
 
-//         bsp.RenderParams.setWinStart(0, .{ .dma = s0 });
-//         bsp.RenderParams.setWinEnd(0, .{ .dma = e0 });
-//         bsp.RenderParams.setWinStart(1, .{ .dma = s1 });
-//         bsp.RenderParams.setWinEnd(1, .{ .dma = e1 });
+        reg.dma_dir_win[0] = @intFromEnum(rpa.DMADir.top_to_bottom);
+        reg.dma_dir_win[1] = @intFromEnum(rpa.DMADir.top_to_bottom);
 
-//         bsp.RenderParams.setDMADirOther(.X, .X, .Y, .Y);
+        reg.debug_mode = @intFromEnum(rpa.DebugMode.windows_setup);
+        reg.debug_arg = @intFromEnum(rpa.DebugArg.none);
+        std.debug.print("Showing window setup for following tests...\n", .{});
+    }
 
-//         reg.debug_mode = @intFromEnum(rpa.DebugMode.windows_setup);
-//         reg.debug_arg = @intFromEnum(rpa.DebugArg.none);
-//         std.debug.print("Showing window setup for following tests...\n", .{});
-//     }
-
-//     pub fn tick(self: *WinTestsDataSetup) bool {
-//         return self.frame > (util.FULL_SECOND * 2);
-//     }
-// };
+    pub fn tick(self: *WinTestsDataSetup) bool {
+        return self.frame > (util.FULL_SECOND * 2);
+    }
+};

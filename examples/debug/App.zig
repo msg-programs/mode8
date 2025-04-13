@@ -40,6 +40,7 @@ var wnd0 = WinSetupTest.TestWinDMA{ .win = 0, .flip_dma = false };
 var wnd1 = WinSetupTest.TestWinDMA{ .win = 1, .flip_dma = false };
 var wnd0f = WinSetupTest.TestWinDMA{ .win = 0, .flip_dma = true };
 var wnd1f = WinSetupTest.TestWinDMA{ .win = 1, .flip_dma = true };
+var wtds = WinSetupTest.WinTestsDataSetup{};
 
 const screens = [_]Mgr.ManagedScreen{
     .{ .test_win_nodma = &wn0 },
@@ -50,6 +51,7 @@ const screens = [_]Mgr.ManagedScreen{
     .{ .test_win_dma = &wnd1 },
     .{ .test_win_dma = &wnd0f },
     .{ .test_win_dma = &wnd1f },
+    .{ .win_tests_data_setup = &wtds },
 };
 
 screen: u64,
@@ -72,7 +74,6 @@ pub fn init(app: *App, core: *mach.Core, app_mod: mach.Mod(App)) !void {
         .go_next = true,
     };
     // .screens = @constCast(&[_]Mgr.ManagedScreen{
-    //     .{ .win_tests_data_setup = @alignCast(@ptrCast(@constCast(&.{}))) },
     //     .{ .test_win_compose = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_0, .show_setup = false }))) },
     //     .{ .test_win_compose = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_1, .show_setup = false }))) },
     //     .{ .test_win_compose = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_2, .show_setup = false }))) },
