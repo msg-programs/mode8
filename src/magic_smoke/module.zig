@@ -41,36 +41,36 @@ pub fn tick(core: *mach.Core) !void {
     const then = std.time.nanoTimestamp();
 
     // meh. TODO: make better
-    reg.controller[0] = bits.sto1x8in8(
-        if (reg.controller[0] & 0x02 != 0) 0 else @intFromBool(core.keyPressed(.w)),
-        @intFromBool(core.keyPressed(.w)),
-        if (reg.controller[0] & 0x08 != 0) 0 else @intFromBool(core.keyPressed(.a)),
-        @intFromBool(core.keyPressed(.a)),
-        if (reg.controller[0] & 0x20 != 0) 0 else @intFromBool(core.keyPressed(.s)),
-        @intFromBool(core.keyPressed(.s)),
-        if (reg.controller[0] & 0x80 != 0) 0 else @intFromBool(core.keyPressed(.d)),
-        @intFromBool(core.keyPressed(.d)),
-    );
-    reg.controller[1] = bits.sto1x8in8(
-        if (reg.controller[0] & 0x02 != 0) 0 else @intFromBool(core.keyPressed(.o)),
-        @intFromBool(core.keyPressed(.o)),
-        if (reg.controller[0] & 0x08 != 0) 0 else @intFromBool(core.keyPressed(.k)),
-        @intFromBool(core.keyPressed(.k)),
-        if (reg.controller[0] & 0x20 != 0) 0 else @intFromBool(core.keyPressed(.l)),
-        @intFromBool(core.keyPressed(.l)),
-        if (reg.controller[0] & 0x80 != 0) 0 else @intFromBool(core.keyPressed(.semicolon)),
-        @intFromBool(core.keyPressed(.semicolon)),
-    );
-    reg.controller[2] = bits.sto1x8in8(
-        if (reg.controller[0] & 0x02 != 0) 0 else @intFromBool(core.keyPressed(.left_shift)),
-        @intFromBool(core.keyPressed(.left_shift)),
-        if (reg.controller[0] & 0x08 != 0) 0 else @intFromBool(core.keyPressed(.right_shift)),
-        @intFromBool(core.keyPressed(.right_shift)),
-        if (reg.controller[0] & 0x20 != 0) 0 else @intFromBool(core.keyPressed(.tab)),
-        @intFromBool(core.keyPressed(.tab)),
-        if (reg.controller[0] & 0x80 != 0) 0 else @intFromBool(core.keyPressed(.enter)),
-        @intFromBool(core.keyPressed(.enter)),
-    );
+    // reg.controller[0] = bits.sto1x8in8(
+    //     if (reg.controller[0] & 0x02 != 0) 0 else @intFromBool(core.keyPressed(.w)),
+    //     @intFromBool(core.keyPressed(.w)),
+    //     if (reg.controller[0] & 0x08 != 0) 0 else @intFromBool(core.keyPressed(.a)),
+    //     @intFromBool(core.keyPressed(.a)),
+    //     if (reg.controller[0] & 0x20 != 0) 0 else @intFromBool(core.keyPressed(.s)),
+    //     @intFromBool(core.keyPressed(.s)),
+    //     if (reg.controller[0] & 0x80 != 0) 0 else @intFromBool(core.keyPressed(.d)),
+    //     @intFromBool(core.keyPressed(.d)),
+    // );
+    // reg.controller[1] = bits.sto1x8in8(
+    //     if (reg.controller[0] & 0x02 != 0) 0 else @intFromBool(core.keyPressed(.o)),
+    //     @intFromBool(core.keyPressed(.o)),
+    //     if (reg.controller[0] & 0x08 != 0) 0 else @intFromBool(core.keyPressed(.k)),
+    //     @intFromBool(core.keyPressed(.k)),
+    //     if (reg.controller[0] & 0x20 != 0) 0 else @intFromBool(core.keyPressed(.l)),
+    //     @intFromBool(core.keyPressed(.l)),
+    //     if (reg.controller[0] & 0x80 != 0) 0 else @intFromBool(core.keyPressed(.semicolon)),
+    //     @intFromBool(core.keyPressed(.semicolon)),
+    // );
+    // reg.controller[2] = bits.sto1x8in8(
+    //     if (reg.controller[0] & 0x02 != 0) 0 else @intFromBool(core.keyPressed(.left_shift)),
+    //     @intFromBool(core.keyPressed(.left_shift)),
+    //     if (reg.controller[0] & 0x08 != 0) 0 else @intFromBool(core.keyPressed(.right_shift)),
+    //     @intFromBool(core.keyPressed(.right_shift)),
+    //     if (reg.controller[0] & 0x20 != 0) 0 else @intFromBool(core.keyPressed(.tab)),
+    //     @intFromBool(core.keyPressed(.tab)),
+    //     if (reg.controller[0] & 0x80 != 0) 0 else @intFromBool(core.keyPressed(.enter)),
+    //     @intFromBool(core.keyPressed(.enter)),
+    // );
 
     // var lookup = .{0} ** @as(u7, @intFromEnum(mach.Core.Key.max));
     // lookup[@intFromEnum(mach.Core.Key.w)] = 0;
