@@ -2,7 +2,17 @@
 # Glossary
 mode8's source and documentation uses the following terminology:
 
-# Rendering Primitives
+## Namespace Names
+* Registers: `mode8.hardware.registers.*`
+* Constants: `mode8.hardware.constants.*`
+* Memory: `mode8.hardware.memory.*`
+
+# Rendering
+* Window: See Windows.md
+* DMA: See DMA.md
+* Layer: Umbrella term for the four BGs + the Objs + the Fixcols (6 layers in total).
+
+<!-- # Rendering Primitives
 * Tile: The unit from which BGs are constructed.
 * BG/Background: A tilemap constructed from Tiles.
 * Obj/Object: A freely moveable graphic independent of all BGs.
@@ -16,5 +26,4 @@ mode8's source and documentation uses the following terminology:
 
 # Composition
 * Fixcol: A fallback color that replaces transparency during composition.
-* Layer: Unit of composition. There are six Layers: four BGs, the Objs and the Fixcol
-* Window: A mask. Pixels inside the window are discarded.
+-->
