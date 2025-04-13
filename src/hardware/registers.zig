@@ -64,8 +64,8 @@ pub var win_start_do_dma: [con.WINDOW_NUM]bool = @splat(false);
 /// enable DMA for which window's end?
 pub var win_end_do_dma: [con.WINDOW_NUM]bool = @splat(false);
 
-// /// how to compose windows 0-1 together
-// pub var win_compose: [6]u4 = @splat(0);
+/// how to compose windows 0-1 together
+pub var win_compose: [6]u4 = @splat(0);
 
 // /// send this background to the main buffer
 // pub var to_main: [5]bool = @splat(false);

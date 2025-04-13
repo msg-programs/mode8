@@ -7,10 +7,10 @@ const WST = @import("./screens/WinSetupTest.zig");
 pub const ManagedScreen = union(enum) {
     test_win_nodma: *WST.TestWinNoDMA,
     test_win_dma: *WST.TestWinDMA,
-    // test_win_compose: *WST.TestWinCompose,
+    win_tests_data_setup: *WST.WinTestsDataSetup,
+    test_win_compose: *WST.TestWinCompose,
     // test_win_send: *WST.TestWinSend,
     // test_win_col: *WST.TestColWin,
-    win_tests_data_setup: *WST.WinTestsDataSetup,
     // test_colwin_dma: *WST.WinTestsDataSetup,
     // test_fixcol: *CMT.TestFixcol,
     // test_fixcol_dma: *CMT.TestFixcolDMA,

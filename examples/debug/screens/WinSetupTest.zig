@@ -116,42 +116,42 @@ pub const TestWinDMA = struct {
     }
 };
 
-// pub const TestWinCompose = struct {
-//     frame: u64 = 0,
-//     show_setup: bool,
-//     for_layer: bsp.RenderParams.DebugArg,
+pub const TestWinCompose = struct {
+    frame: u64 = 0,
+    for_layer: bsp.RenderParams.DebugArg,
 
-//     pub fn init(self: *TestWinCompose) void {
-//         reg.debug_mode = @intFromEnum(rpa.DebugMode.window_comp);
-//         reg.debug_arg = @intFromEnum(self.for_layer);
-//         std.debug.print("Testing per-layer compose (showing with {})\n", .{self.for_layer});
-//     }
+    pub fn init(self: *TestWinCompose) void {
+        reg.debug_mode = @intFromEnum(rpa.DebugMode.window_comp);
+        reg.debug_arg = @intFromEnum(self.for_layer);
+        std.debug.print("Testing per-layer compose (showing with {})\n", .{self.for_layer});
+    }
 
-//     pub fn tick(self: *TestWinCompose) bool {
-//         const nocomp: bsp.RenderParams.WinComposition = .{
-//             .neither = false,
-//             .both = false,
-//             .win0 = false,
-//             .win1 = false,
-//         };
+    pub fn tick(self: *TestWinCompose) bool {
+        const nocomp: bsp.RenderParams.WinComposition = .{
+            .neither = false,
+            .both = false,
+            .win0 = false,
+            .win1 = false,
+        };
 
-//         const comp: bsp.RenderParams.WinComposition = switch (util.halfsecOf(self.frame)) {
-//             0 => .{ .neither = true, .both = false, .win0 = false, .win1 = false },
-//             1 => .{ .neither = false, .both = true, .win0 = false, .win1 = false },
-//             2 => .{ .neither = false, .both = false, .win0 = true, .win1 = false },
-//             3 => .{ .neither = false, .both = false, .win0 = false, .win1 = true },
-//             else => return true,
-//         };
+        const comp: bsp.RenderParams.WinComposition = switch (util.halfsecOf(self.frame)) {
+            0 => .{ .neither = true, .both = false, .win0 = false, .win1 = false },
+            1 => .{ .neither = false, .both = true, .win0 = false, .win1 = false },
+            2 => .{ .neither = false, .both = false, .win0 = true, .win1 = false },
+            3 => .{ .neither = false, .both = false, .win0 = false, .win1 = true },
+            else => return true,
+        };
 
-//         rpa.setWinCompose(.bg_0, if (self.for_layer == .show_bg_0) comp else nocomp);
-//         rpa.setWinCompose(.bg_1, if (self.for_layer == .show_bg_1) comp else nocomp);
-//         rpa.setWinCompose(.bg_2, if (self.for_layer == .show_bg_2) comp else nocomp);
-//         rpa.setWinCompose(.bg_3, if (self.for_layer == .show_bg_3) comp else nocomp);
-//         rpa.setWinCompose(.obj, if (self.for_layer == .show_objs) comp else nocomp);
-//         rpa.setWinCompose(.color, if (self.for_layer == .show_col) comp else nocomp);
-//         return false;
-//     }
-// };
+        reg.win_compose[0] = @bitCast(if (self.for_layer == .show_bg_0) comp else nocomp);
+        reg.win_compose[1] = @bitCast(if (self.for_layer == .show_bg_1) comp else nocomp);
+        reg.win_compose[2] = @bitCast(if (self.for_layer == .show_bg_2) comp else nocomp);
+        reg.win_compose[3] = @bitCast(if (self.for_layer == .show_bg_3) comp else nocomp);
+        reg.win_compose[4] = @bitCast(if (self.for_layer == .show_objs) comp else nocomp);
+        reg.win_compose[5] = @bitCast(if (self.for_layer == .show_col) comp else nocomp);
+
+        return false;
+    }
+};
 
 // pub const TestWinSend = struct {
 //     frame: u64 = 0,

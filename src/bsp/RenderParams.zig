@@ -14,15 +14,14 @@ pub const RenderParams = struct {
     //     bg_3,
     // };
 
-    // pub const Layer = enum(u3) {
-    //     bg_0,
-    //     bg_1,
-    //     bg_2,
-    //     bg_3,
-    //     obj,
-    //     color,
-    //     _,
-    // };
+    pub const Layer = enum(u3) {
+        bg_0,
+        bg_1,
+        bg_2,
+        bg_3,
+        obj,
+        color,
+    };
 
     pub const DMADir = enum(u1) {
         top_to_bottom,
@@ -36,12 +35,12 @@ pub const RenderParams = struct {
     //     };
     // }
 
-    // pub const WinComposition = packed struct {
-    //     neither: bool,
-    //     win0: bool,
-    //     win1: bool,
-    //     both: bool,
-    // };
+    pub const WinComposition = packed struct {
+        neither: bool,
+        win0: bool,
+        win1: bool,
+        both: bool,
+    };
 
     // pub const ColWinApplyAlgo = enum(u2) {
     //     always_on,

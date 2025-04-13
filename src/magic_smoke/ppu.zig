@@ -365,35 +365,28 @@ fn isPixelInWin(screenpos: ScreenPos, win: u32) bool {
         (start <= screenpos.x and screenpos.x <= end);
 }
 
-// // combine the window data obtained above (valid for all layers) according to a layer's setting.
-// fn combineWinsForLayer(layer: u32, w0: bool, w1: bool) bool {
-//     const Helper = packed struct {
-//         lo: u4,
-//         hi: u4,
-//     };
-
-//     const wincomp: Helper = @bitCast(reg.win_compose[layer / 2]);
-//     const val = if (layer % 2 == 0) wincomp.lo else wincomp.hi;
-
-//     return switch (val) { // over   1   0 out
-//         0 => false, //    0   0   0   0
-//         1 => (!w0) and (!w1), //    0   0   0   1
-//         2 => w0 and !(w1), //    0   0   1   0
-//         3 => !w1, //    0   0   1   1
-//         4 => (!w0) and w1, //    0   1   0   0
-//         5 => !w0, //    0   1   0   1
-//         6 => (w0 or w1) and (!(w0 and w1)), //    0   1   1   0
-//         7 => (!w0) or (!w1), //    0   1   1   1
-//         8 => w0 and w1, //    1   0   0   0
-//         9 => !((w0 or w1) and (!(w0 and w1))), //    1   0   0   1
-//         10 => w0, //    1   0   1   0
-//         11 => w0 or (!w1), //    1   0   1   1
-//         12 => w1, //    1   1   0   0
-//         13 => (!w0) or w1, //    1   1   0   1
-//         14 => w0 or w1, //    1   1   1   0
-//         15 => true, //    1   1   1   1
-//     };
-// }
+// combine the window data obtained above (valid for all layers) according to a layer's setting.
+fn combineWinsForLayer(layer: rpa.Layer, w0: bool, w1: bool) bool {
+    // panics on bad layer arg, should never happen as the user can't control this
+    return switch (reg.win_compose[@intFromEnum(layer)]) { // over   1   0 out
+        0 => false, //    0   0   0   0
+        1 => (!w0) and (!w1), //    0   0   0   1
+        2 => w0 and !(w1), //    0   0   1   0
+        3 => !w1, //    0   0   1   1
+        4 => (!w0) and w1, //    0   1   0   0
+        5 => !w0, //    0   1   0   1
+        6 => (w0 or w1) and (!(w0 and w1)), //    0   1   1   0
+        7 => (!w0) or (!w1), //    0   1   1   1
+        8 => w0 and w1, //    1   0   0   0
+        9 => !((w0 or w1) and (!(w0 and w1))), //    1   0   0   1
+        10 => w0, //    1   0   1   0
+        11 => w0 or (!w1), //    1   0   1   1
+        12 => w1, //    1   1   0   0
+        13 => (!w0) or w1, //    1   1   0   1
+        14 => w0 or w1, //    1   1   1   0
+        15 => true, //    1   1   1   1
+    };
+}
 
 // fn isPixelInColWin(is_main: bool, data_in: bool) bool {
 //     const Helper = packed struct {
@@ -650,8 +643,8 @@ fn shaderMain(screenpos: ScreenPos) void {
     // const no_p_cols: [5]u16 = .{ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000 };
     // const no_wins: [5]bool = .{ false, false, false, false, false };
 
-    // // used for bad debug config
-    // const errcol = Color.init(1.0, 0.0, 1.0, 1.0);
+    // used for bad debug config
+    const errcol = Color{ .r = 255, .g = 0, .b = 255 };
 
     // WINDOW PREPARATION
     /////////////////////////////////////////////
@@ -660,15 +653,15 @@ fn shaderMain(screenpos: ScreenPos) void {
     const px_in_win0: bool = isPixelInWin(screenpos, 0);
     const px_in_win1: bool = isPixelInWin(screenpos, 1);
 
-    // // combine win 0/1 according to the layer's merging rules:
-    // // is a layer's pixel inside the layer windows?
-    // const layer_wins: [5]bool = .{
-    //     combineWinsForLayer(0, px_in_win0, px_in_win1),
-    //     combineWinsForLayer(1, px_in_win0, px_in_win1),
-    //     combineWinsForLayer(2, px_in_win0, px_in_win1),
-    //     combineWinsForLayer(3, px_in_win0, px_in_win1),
-    //     combineWinsForLayer(4, px_in_win0, px_in_win1),
-    // };
+    // combine win 0/1 according to the layer's merging rules:
+    // is a layer's pixel inside the layer windows?
+    const layer_wins: [5]bool = .{
+        combineWinsForLayer(.bg_0, px_in_win0, px_in_win1),
+        combineWinsForLayer(.bg_1, px_in_win0, px_in_win1),
+        combineWinsForLayer(.bg_2, px_in_win0, px_in_win1),
+        combineWinsForLayer(.bg_3, px_in_win0, px_in_win1),
+        combineWinsForLayer(.obj, px_in_win0, px_in_win1),
+    };
 
     // const Helper = packed struct {
     //     bits: [8]bool,
@@ -678,8 +671,8 @@ fn shaderMain(screenpos: ScreenPos) void {
     // const main_wins: [5]bool = arrselx5(bool, no_wins, layer_wins, @as(Helper, @bitCast(reg.win_to_main)).bits[0..6]);
     // const sub_wins: [5]bool = arrselx5(bool, no_wins, layer_wins, @as(Helper, @bitCast(reg.win_to_sub)).bits[0..6]);
 
-    // // color window is used in a different way than the others, combine seperately
-    // const col_win: bool = combineWinsForLayer(5, px_in_win0, px_in_win1);
+    // color window is used in a different way than the others, combine seperately
+    const col_win: bool = combineWinsForLayer(.color, px_in_win0, px_in_win1);
 
     // // is a buffer's pixel inside the color window?
     // const col_win_main: bool = isPixelInColWin(true, col_win);
@@ -780,22 +773,24 @@ fn shaderMain(screenpos: ScreenPos) void {
             setPx(screenpos, col);
             return;
         },
-        // rpa.DebugMode.DEBUG_MODE_WINDOW_COMP => {
-        //     if (reg.debug_arg > .DEBUG_ARG_SHOW_COL) {
-        //         setPx(screen_x, screen_y, errcol);
-        //         return;
-        //     }
+        .window_comp => {
+            const w = switch (@as(rpa.DebugArg, @enumFromInt(reg.debug_arg))) {
+                .show_bg_0 => layer_wins[0],
+                .show_bg_1 => layer_wins[1],
+                .show_bg_2 => layer_wins[2],
+                .show_bg_3 => layer_wins[3],
+                .show_objs => layer_wins[4],
+                .show_col => col_win,
+                else => {
+                    setPx(screenpos, errcol);
+                    return;
+                },
+            };
 
-        //     if (reg.debug_arg == .DEBUG_ARG_SHOW_COL) {
-        //         const v: f32 = if (col_win) 1.0 else 0.0;
-        //         setPx(screen_x, screen_y, Color.init(v, v, v, 1.0));
-        //         return;
-        //     }
-
-        //     const v: f32 = if (layer_wins[@intFromEnum(reg.debug_arg)]) 1.0 else 0.0;
-        //     setPx(screen_x, screen_y, Color.init(v, v, v, 1.0));
-        //     return;
-        // },
+            const v: u8 = if (w) 255 else 0;
+            setPx(screenpos, Color{ .r = v, .g = v, .b = v });
+            return;
+        },
         // rpa.DebugMode.DEBUG_MODE_WINDOWS_MAIN => {
         //     // show how the windows apply to a certain layer in the main buffer.
         //     // useful for checking if the win is applied to the layer.
