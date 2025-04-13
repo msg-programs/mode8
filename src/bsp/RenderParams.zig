@@ -27,10 +27,6 @@ pub const RenderParams = struct {
     pub const DMADir = enum(u1) {
         top_to_bottom,
         left_to_right,
-
-        pub fn asBool(self: DMADir) bool {
-            return self == .left_to_right;
-        }
     };
 
     pub fn DMAData(comptime T: type) type {

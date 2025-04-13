@@ -105,7 +105,7 @@ pub var dma_dir_bg: [4]bool = @splat(false);
 
 /// should DMA for windows be applied horizontally or vertically?
 /// note: also flips how windows work
-pub var dma_dir_win: [con.WINDOW_NUM]bool = @splat(false);
+pub var dma_dir_win: [con.WINDOW_NUM]u1 = @splat(0);
 
 /// should DMA for fixcols be applied horizontally or vertically?
 pub var dma_dir_fixcol: [2]bool = @splat(false);

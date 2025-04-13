@@ -28,11 +28,11 @@ pub const TestWinNoDMA = struct {
         const not_dma_dir: rpa.DMADir = if (self.flip_dma) .top_to_bottom else .left_to_right;
         const dma_dir: rpa.DMADir = if (self.flip_dma) .left_to_right else .top_to_bottom;
         if (self.win == 0) {
-            reg.dma_dir_win[0] = dma_dir.asBool();
-            reg.dma_dir_win[1] = not_dma_dir.asBool();
+            reg.dma_dir_win[0] = @intFromEnum(dma_dir);
+            reg.dma_dir_win[1] = @intFromEnum(not_dma_dir);
         } else {
-            reg.dma_dir_win[0] = not_dma_dir.asBool();
-            reg.dma_dir_win[1] = dma_dir.asBool();
+            reg.dma_dir_win[0] = @intFromEnum(not_dma_dir);
+            reg.dma_dir_win[1] = @intFromEnum(dma_dir);
         }
     }
 
@@ -78,11 +78,11 @@ pub const TestWinDMA = struct {
         const not_dma_dir: rpa.DMADir = if (self.flip_dma) .top_to_bottom else .left_to_right;
         const dma_dir: rpa.DMADir = if (self.flip_dma) .left_to_right else .top_to_bottom;
         if (self.win == 0) {
-            reg.dma_dir_win[0] = dma_dir.asBool();
-            reg.dma_dir_win[1] = not_dma_dir.asBool();
+            reg.dma_dir_win[0] = @intFromEnum(dma_dir);
+            reg.dma_dir_win[1] = @intFromEnum(not_dma_dir);
         } else {
-            reg.dma_dir_win[0] = not_dma_dir.asBool();
-            reg.dma_dir_win[1] = dma_dir.asBool();
+            reg.dma_dir_win[0] = @intFromEnum(not_dma_dir);
+            reg.dma_dir_win[1] = @intFromEnum(dma_dir);
         }
     }
 

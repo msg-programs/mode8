@@ -342,9 +342,9 @@ const BufferPixel = struct {
 fn isPixelInWin(screenpos: ScreenPos, win: u32) bool {
     const do_start_dma = reg.win_start_do_dma[win];
     const do_end_dma = reg.win_end_do_dma[win];
-    const change_dma_dir = reg.dma_dir_win[win];
+    const dma_dir: rpa.DMADir = @enumFromInt(reg.dma_dir_win[win]);
 
-    const index = if (change_dma_dir)
+    const index = if (dma_dir == .left_to_right)
         screenpos.x
     else
         screenpos.y;
@@ -359,7 +359,7 @@ fn isPixelInWin(screenpos: ScreenPos, win: u32) bool {
     else
         reg.win_end[win][0];
 
-    return if (change_dma_dir)
+    return if (dma_dir == .left_to_right)
         (start <= screenpos.y and screenpos.y <= end)
     else
         (start <= screenpos.x and screenpos.x <= end);
