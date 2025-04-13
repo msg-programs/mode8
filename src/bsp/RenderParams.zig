@@ -7,130 +7,131 @@ const bits = mode8.bsp.bits;
 const Color = mode8.bsp.Color;
 
 pub const RenderParams = struct {
-    pub const BG = enum(u2) {
-        bg_0,
-        bg_1,
-        bg_2,
-        bg_3,
-    };
+    // pub const BG = enum(u2) {
+    //     bg_0,
+    //     bg_1,
+    //     bg_2,
+    //     bg_3,
+    // };
 
-    pub const Layer = enum(u3) {
-        bg_0,
-        bg_1,
-        bg_2,
-        bg_3,
-        obj,
-        color,
-        _,
-    };
+    // pub const Layer = enum(u3) {
+    //     bg_0,
+    //     bg_1,
+    //     bg_2,
+    //     bg_3,
+    //     obj,
+    //     color,
+    //     _,
+    // };
 
     pub const DMADir = enum(u1) {
         top_to_bottom,
         left_to_right,
     };
 
-    pub fn DMAData(comptime T: type) type {
-        return union(enum) {
-            direct: T,
-            dma: [con.DMA_NUM]T,
-        };
-    }
+    // pub fn DMAData(comptime T: type) type {
+    //     return union(enum) {
+    //         direct: T,
+    //         dma: [con.DMA_NUM]T,
+    //     };
+    // }
 
-    pub const WinComposition = packed struct {
-        neither: bool,
-        win0: bool,
-        win1: bool,
-        both: bool,
-    };
+    // pub const WinComposition = packed struct {
+    //     neither: bool,
+    //     win0: bool,
+    //     win1: bool,
+    //     both: bool,
+    // };
 
-    pub const ColWinApplyAlgo = enum(u2) {
-        always_on,
-        direct,
-        inverted,
-        always_off,
-    };
+    // pub const ColWinApplyAlgo = enum(u2) {
+    //     always_on,
+    //     direct,
+    //     inverted,
+    //     always_off,
+    // };
 
-    pub const MathComposeAlgo = enum(u4) {
-        /// highest priority color is used directly
-        normal,
+    // pub const MathComposeAlgo = enum(u4) {
+    //     /// highest priority color is used directly
+    //     normal,
 
-        /// add colors together component-wise
-        add,
+    //     /// add colors together component-wise
+    //     add,
 
-        /// subtract sub buffer color from main buffer color component-wise
-        subtract,
+    //     /// subtract sub buffer color from main buffer color component-wise
+    //     subtract,
 
-        /// multiply colors together and then divides by maximum value component-wise
-        multiply,
+    //     /// multiply colors together and then divides by maximum value component-wise
+    //     multiply,
 
-        /// divice main buffer color by sub-buffer color component-wise
-        divide,
+    //     /// divice main buffer color by sub-buffer color component-wise
+    //     divide,
 
-        /// subtract larger value from smaller value component-wise
-        difference,
+    //     /// subtract larger value from smaller value component-wise
+    //     difference,
 
-        /// if sub buffer is light/dark, replace darker/lighter colors in the main buffer with sub buffer color
-        pinlight,
+    //     /// if sub buffer is light/dark, replace darker/lighter colors in the main buffer with sub buffer color
+    //     pinlight,
 
-        /// multiply compliments and take compliment of result component-wise
-        screen,
+    //     /// multiply compliments and take compliment of result component-wise
+    //     screen,
 
-        /// use darker color component-wise
-        darken,
+    //     /// use darker color component-wise
+    //     darken,
 
-        /// use lighter color component-wise
-        lighten,
+    //     /// use lighter color component-wise
+    //     lighten,
 
-        /// MULTIPLY if sub buffer is light, else SCREEN
-        overlay,
+    //     /// MULTIPLY if sub buffer is light, else SCREEN
+    //     overlay,
 
-        /// LIGHTEN if sub buffer is light, else DARKEN
-        softlight,
+    //     /// LIGHTEN if sub buffer is light, else DARKEN
+    //     softlight,
 
-        /// reserved
-        _,
-    };
+    //     /// reserved
+    //     _,
+    // };
 
-    pub const MathNormalizeFunc = enum(u2) {
-        /// clamp result to 0..31 component-wise
-        clamp,
+    // pub const MathNormalizeFunc = enum(u2) {
+    //     /// clamp result to 0..31 component-wise
+    //     clamp,
 
-        /// half result and clamp to 0..31 component-wise
-        half,
+    //     /// half result and clamp to 0..31 component-wise
+    //     half,
 
-        /// double result and clamp to 0..31 component-wise
-        double,
+    //     /// double result and clamp to 0..31 component-wise
+    //     double,
 
-        /// bleed excess to other color channels
-        bleed,
-    };
+    //     /// bleed excess to other color channels
+    //     bleed,
+    // };
 
-    pub const OOBSetting = enum(u2) {
-        wrap,
-        tile,
-        color,
-        clamp,
-    };
+    // pub const OOBSetting = enum(u2) {
+    //     wrap,
+    //     tile,
+    //     color,
+    //     clamp,
+    // };
 
-    pub const OOBData = union(OOBSetting) {
-        wrap: void,
-        tile: bsp.Tile,
-        color: u16,
-        clamp: void,
-    };
+    // pub const OOBData = union(OOBSetting) {
+    //     wrap: void,
+    //     tile: bsp.Tile,
+    //     color: u16,
+    //     clamp: void,
+    // };
 
     pub const DebugMode = enum(u4) {
-        off = 0,
-        layer = 1,
-        windows_setup = 2,
-        windows_main = 3,
-        windows_sub = 4,
-        col_window = 5,
-        window_comp = 7,
-        fixcol_setup = 8,
-        buf_pre_win = 9,
-        buf_post_win = 11,
-        buf_colmath_in = 13,
+        off,
+        layer,
+        windows_setup,
+        windows_main,
+        windows_sub,
+        col_window,
+        window_comp,
+        fixcol_setup,
+        buf_pre_win,
+        buf_post_win,
+        buf_colmath_in,
+        _,
     };
 
     pub const DebugArg = enum(u4) {
@@ -145,28 +146,28 @@ pub const RenderParams = struct {
         show_sub,
     };
 
-    pub fn setOOBSetting(bg: BG, data: OOBData) void {
-        const idx = @intFromEnum(bg);
+    // pub fn setOOBSetting(bg: BG, data: OOBData) void {
+    //     const idx = @intFromEnum(bg);
 
-        switch (data) {
-            .wrap => reg.oob_setting[idx] = @intFromEnum(.wrap),
-            .clamp => reg.oob_setting[idx] = @intFromEnum(.clamp),
-            .color => |col| {
-                reg.oob_setting[idx] = @intFromEnum(.color);
-                reg.oob_data[idx] = @bitCast(col);
-            },
-            .tile => |til| {
-                reg.oob_setting[idx] = @intFromEnum(.tile);
-                reg.oob_data[idx] = @bitCast(til);
-            },
-        }
-    }
+    //     switch (data) {
+    //         .wrap => reg.oob_setting[idx] = @intFromEnum(.wrap),
+    //         .clamp => reg.oob_setting[idx] = @intFromEnum(.clamp),
+    //         .color => |col| {
+    //             reg.oob_setting[idx] = @intFromEnum(.color);
+    //             reg.oob_data[idx] = @bitCast(col);
+    //         },
+    //         .tile => |til| {
+    //             reg.oob_setting[idx] = @intFromEnum(.tile);
+    //             reg.oob_data[idx] = @bitCast(til);
+    //         },
+    //     }
+    // }
 
-    pub fn setWinCompose(layer: Layer, comp: WinComposition) void {
-        const idx = @intFromEnum(layer);
-        std.debug.assert(idx < reg.win_compose.len);
-        reg.win_compose[idx] = @bitCast(comp);
-    }
+    // pub fn setWinCompose(layer: Layer, comp: WinComposition) void {
+    //     const idx = @intFromEnum(layer);
+    //     std.debug.assert(idx < reg.win_compose.len);
+    //     reg.win_compose[idx] = @bitCast(comp);
+    // }
 
     // pub fn setBGSize(bg0_size: u10, bg1_size: u10, bg2_size: u10, bg3_size: u10) void {
     //     const bg0: u10 = std.math.clamp(bg0_size, 2, 512);
