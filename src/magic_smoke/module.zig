@@ -155,9 +155,9 @@ pub fn tick(core: *mach.Core) !void {
     // );
     // }
 
-    // hackily force ~60 fps until there's a framerate limiter again
+    // hackily enforce a fps limit until there's a framerate limiter again
     const now = std.time.nanoTimestamp();
     const delta = now - then;
-    const delay = (16 * std.time.ns_per_ms) - delta;
+    const delay = (8 * std.time.ns_per_ms) - delta;
     std.Thread.sleep(@truncate(@abs(delay)));
 }
