@@ -3,14 +3,14 @@
 mode8's source and documentation uses the following terminology:
 
 ## Namespace Names
-* Registers: `mode8.hardware.registers.*`
-* Constants: `mode8.hardware.constants.*`
-* Memory: `mode8.hardware.memory.*`
+- Registers: `mode8.hardware.registers.*`
+- Constants: `mode8.hardware.constants.*`
+- Memory: `mode8.hardware.memory.*`
 
 # Rendering
-* Window: See Windows.md
-* DMA: See DMA.md
-* Layer: Umbrella term for the four BGs + the Objs + the Fixcols (6 layers in total).
+- Window: See Windows.md
+- DMA: See DMA.md
+- Layer: Umbrella term for the four BGs + the Objs + the Fixcols (6 layers in total).
 
 <!-- # Rendering Primitives
 * Tile: The unit from which BGs are constructed.
