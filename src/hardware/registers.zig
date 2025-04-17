@@ -91,8 +91,8 @@ pub var win_to_sub: [5]bool = @splat(false);
 // /// bool: enable DMA?
 // pub var fixcol_sub_do_dma: bool = false;
 
-// /// window apply mode for buffers, 0 = main 1 = sub
-// pub var win_apply: [2]u4 = @splat(0);
+/// window apply mode for buffers, 0 = main 1 = sub
+pub var col_win_apply: [2]u4 = @splat(0);
 
 // /// which of the high-prio background tiles to layer above all objs
 // pub var prio_remap: [4]bool = @splat(false);

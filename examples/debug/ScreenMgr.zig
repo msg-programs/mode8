@@ -10,7 +10,7 @@ pub const ManagedScreen = union(enum) {
     win_tests_data_setup: *WST.WinTestsDataSetup,
     test_win_compose: *WST.TestWinCompose,
     test_win_send: *WST.TestWinSend,
-    // test_win_col: *WST.TestColWin,
+    test_win_col: *WST.TestColWin,
     // test_colwin_dma: *WST.WinTestsDataSetup,
     // test_fixcol: *CMT.TestFixcol,
     // test_fixcol_dma: *CMT.TestFixcolDMA,

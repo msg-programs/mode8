@@ -142,12 +142,12 @@ pub const TestWinCompose = struct {
             else => return true,
         };
 
-        reg.win_compose[0] = @bitCast(if (self.for_layer == .show_bg_0) comp else nocomp);
-        reg.win_compose[1] = @bitCast(if (self.for_layer == .show_bg_1) comp else nocomp);
-        reg.win_compose[2] = @bitCast(if (self.for_layer == .show_bg_2) comp else nocomp);
-        reg.win_compose[3] = @bitCast(if (self.for_layer == .show_bg_3) comp else nocomp);
-        reg.win_compose[4] = @bitCast(if (self.for_layer == .show_objs) comp else nocomp);
-        reg.win_compose[5] = @bitCast(if (self.for_layer == .show_col) comp else nocomp);
+        reg.win_compose[@intFromEnum(rpa.Layer.bg_0)] = @bitCast(if (self.for_layer == .show_bg_0) comp else nocomp);
+        reg.win_compose[@intFromEnum(rpa.Layer.bg_1)] = @bitCast(if (self.for_layer == .show_bg_1) comp else nocomp);
+        reg.win_compose[@intFromEnum(rpa.Layer.bg_2)] = @bitCast(if (self.for_layer == .show_bg_2) comp else nocomp);
+        reg.win_compose[@intFromEnum(rpa.Layer.bg_3)] = @bitCast(if (self.for_layer == .show_bg_3) comp else nocomp);
+        reg.win_compose[@intFromEnum(rpa.Layer.obj)] = @bitCast(if (self.for_layer == .show_objs) comp else nocomp);
+        reg.win_compose[@intFromEnum(rpa.Layer.color)] = @bitCast(if (self.for_layer == .show_col) comp else nocomp);
 
         return false;
     }
@@ -180,12 +180,11 @@ pub const TestWinSend = struct {
             .win1 = false,
         };
 
-        reg.win_compose[0] = @bitCast(if (self.for_layer == .show_bg_0) comp else nocomp);
-        reg.win_compose[1] = @bitCast(if (self.for_layer == .show_bg_1) comp else nocomp);
-        reg.win_compose[2] = @bitCast(if (self.for_layer == .show_bg_2) comp else nocomp);
-        reg.win_compose[3] = @bitCast(if (self.for_layer == .show_bg_3) comp else nocomp);
-        reg.win_compose[4] = @bitCast(if (self.for_layer == .show_objs) comp else nocomp);
-
+        reg.win_compose[@intFromEnum(rpa.Layer.bg_0)] = @bitCast(if (self.for_layer == .show_bg_0) comp else nocomp);
+        reg.win_compose[@intFromEnum(rpa.Layer.bg_1)] = @bitCast(if (self.for_layer == .show_bg_1) comp else nocomp);
+        reg.win_compose[@intFromEnum(rpa.Layer.bg_2)] = @bitCast(if (self.for_layer == .show_bg_2) comp else nocomp);
+        reg.win_compose[@intFromEnum(rpa.Layer.bg_3)] = @bitCast(if (self.for_layer == .show_bg_3) comp else nocomp);
+        reg.win_compose[@intFromEnum(rpa.Layer.obj)] = @bitCast(if (self.for_layer == .show_objs) comp else nocomp);
         std.debug.print("Testing window send to buffer (to main? {} showing with {})\n", .{ self.to_main, self.for_layer });
     }
 
@@ -196,75 +195,72 @@ pub const TestWinSend = struct {
             return false;
         }
         if (self.to_main) {
-            reg.win_to_main[0] = if (self.for_layer == .show_bg_0) true else false;
-            reg.win_to_main[1] = if (self.for_layer == .show_bg_1) true else false;
-            reg.win_to_main[2] = if (self.for_layer == .show_bg_2) true else false;
-            reg.win_to_main[3] = if (self.for_layer == .show_bg_3) true else false;
-            reg.win_to_main[4] = if (self.for_layer == .show_objs) true else false;
+            reg.win_to_main[@intFromEnum(rpa.Layer.bg_0)] = if (self.for_layer == .show_bg_0) true else false;
+            reg.win_to_main[@intFromEnum(rpa.Layer.bg_1)] = if (self.for_layer == .show_bg_1) true else false;
+            reg.win_to_main[@intFromEnum(rpa.Layer.bg_2)] = if (self.for_layer == .show_bg_2) true else false;
+            reg.win_to_main[@intFromEnum(rpa.Layer.bg_3)] = if (self.for_layer == .show_bg_3) true else false;
+            reg.win_to_main[@intFromEnum(rpa.Layer.obj)] = if (self.for_layer == .show_objs) true else false;
         } else {
-            reg.win_to_sub[0] = if (self.for_layer == .show_bg_0) true else false;
-            reg.win_to_sub[1] = if (self.for_layer == .show_bg_1) true else false;
-            reg.win_to_sub[2] = if (self.for_layer == .show_bg_2) true else false;
-            reg.win_to_sub[3] = if (self.for_layer == .show_bg_3) true else false;
-            reg.win_to_sub[4] = if (self.for_layer == .show_objs) true else false;
+            reg.win_to_sub[@intFromEnum(rpa.Layer.bg_0)] = if (self.for_layer == .show_bg_0) true else false;
+            reg.win_to_sub[@intFromEnum(rpa.Layer.bg_1)] = if (self.for_layer == .show_bg_1) true else false;
+            reg.win_to_sub[@intFromEnum(rpa.Layer.bg_2)] = if (self.for_layer == .show_bg_2) true else false;
+            reg.win_to_sub[@intFromEnum(rpa.Layer.bg_3)] = if (self.for_layer == .show_bg_3) true else false;
+            reg.win_to_sub[@intFromEnum(rpa.Layer.obj)] = if (self.for_layer == .show_objs) true else false;
         }
         return util.halfsecOf(self.frame) == 2;
     }
 };
 
-// pub const TestColWin = struct {
-//     frame: u64 = 0,
-//     to_main: bool,
+pub const TestColWin = struct {
+    frame: u64 = 0,
+    to_main: bool,
 
-//     pub fn init(self: *TestColWin) void {
-//         bsp.RenderParams.setDebugMode(
-//             .DEBUG_MODE_COL_WINDOW,
-//             if (self.to_main)
-//                 .DEBUG_ARG_SHOW_MAIN
-//             else
-//                 .DEBUG_ARG_SHOW_SUB,
-//         );
+    pub fn init(self: *TestColWin) void {
+        reg.debug_mode = @intFromEnum(rpa.DebugMode.col_window);
+        reg.debug_arg = @intFromEnum(if (self.to_main) rpa.DebugArg.show_main else rpa.DebugArg.show_sub);
 
-//         const comp: bsp.RenderParams.WinComposition = .{
-//             .neither = true,
-//             .both = true,
-//             .win0 = false,
-//             .win1 = false,
-//         };
+        const comp: bsp.RenderParams.WinComposition = .{
+            .neither = true,
+            .both = true,
+            .win0 = false,
+            .win1 = false,
+        };
 
-//         const nocomp: bsp.RenderParams.WinComposition = .{
-//             .neither = false,
-//             .both = false,
-//             .win0 = false,
-//             .win1 = false,
-//         };
+        const nocomp: bsp.RenderParams.WinComposition = .{
+            .neither = false,
+            .both = false,
+            .win0 = false,
+            .win1 = false,
+        };
 
-//         bsp.RenderParams.setWinCompose(nocomp, nocomp, nocomp, nocomp, nocomp, comp);
+        reg.win_compose[@intFromEnum(rpa.Layer.bg_0)] = @bitCast(nocomp);
+        reg.win_compose[@intFromEnum(rpa.Layer.bg_1)] = @bitCast(nocomp);
+        reg.win_compose[@intFromEnum(rpa.Layer.bg_2)] = @bitCast(nocomp);
+        reg.win_compose[@intFromEnum(rpa.Layer.bg_3)] = @bitCast(nocomp);
+        reg.win_compose[@intFromEnum(rpa.Layer.obj)] = @bitCast(nocomp);
+        reg.win_compose[@intFromEnum(rpa.Layer.color)] = @bitCast(comp);
 
-//         std.debug.print("Testing color window apply algorithms (to main? {})\n", .{self.to_main});
-//     }
+        std.debug.print("Testing color window apply algorithms (to main? {})\n", .{self.to_main});
+    }
 
-//     pub fn tick(self: *TestColWin) bool {
-//         if (util.halfsecOf(self.frame) == 4) {
-//             return true;
-//         }
+    pub fn tick(self: *TestColWin) bool {
+        if (util.halfsecOf(self.frame) == 4) {
+            return true;
+        }
 
-//         const apply: bsp.RenderParams.ColWinApplyAlgo = switch (util.halfsecOf(self.frame)) {
-//             0 => .ALWAYS_ON,
-//             1 => .ALWAYS_OFF,
-//             2 => .DIRECT,
-//             3 => .INVERTED,
-//             else => .ALWAYS_ON,
-//         };
+        const apply: rpa.ColWinApplyAlgo = switch (util.halfsecOf(self.frame)) {
+            0 => .always_on,
+            1 => .always_off,
+            2 => .direct,
+            3 => .inverted,
+            else => unreachable,
+        };
 
-//         if (self.to_main) {
-//             bsp.RenderParams.setColWinApply(apply, .ALWAYS_OFF);
-//         } else {
-//             bsp.RenderParams.setColWinApply(.ALWAYS_OFF, apply);
-//         }
-//         return false;
-//     }
-// };
+        reg.col_win_apply[0] = @intFromEnum(if (self.to_main) apply else .always_off);
+        reg.col_win_apply[1] = @intFromEnum(if (self.to_main) .always_off else apply);
+        return false;
+    }
+};
 
 pub const WinTestsDataSetup = struct {
     frame: u64 = 0,

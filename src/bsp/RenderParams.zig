@@ -42,12 +42,12 @@ pub const RenderParams = struct {
         both: bool,
     };
 
-    // pub const ColWinApplyAlgo = enum(u2) {
-    //     always_on,
-    //     direct,
-    //     inverted,
-    //     always_off,
-    // };
+    pub const ColWinApplyAlgo = enum(u2) {
+        always_on,
+        direct,
+        inverted,
+        always_off,
+    };
 
     // pub const MathComposeAlgo = enum(u4) {
     //     /// highest priority color is used directly
@@ -162,12 +162,6 @@ pub const RenderParams = struct {
     //     }
     // }
 
-    // pub fn setWinCompose(layer: Layer, comp: WinComposition) void {
-    //     const idx = @intFromEnum(layer);
-    //     std.debug.assert(idx < reg.win_compose.len);
-    //     reg.win_compose[idx] = @bitCast(comp);
-    // }
-
     // pub fn setBGSize(bg0_size: u10, bg1_size: u10, bg2_size: u10, bg3_size: u10) void {
     //     const bg0: u10 = std.math.clamp(bg0_size, 2, 512);
     //     const bg1: u10 = std.math.clamp(bg1_size, 2, 512);
@@ -189,14 +183,6 @@ pub const RenderParams = struct {
 
     // pub fn setToSub(bg0: bool, bg1: bool, bg2: bool, bg3: bool, obj: bool) void {
     //     reg.to_sub = bsp.bits.stoBoolx8in8(false, false, false, obj, bg3, bg2, bg1, bg0);
-    // }
-
-    // pub fn setWinToMain(bg0: bool, bg1: bool, bg2: bool, bg3: bool, obj: bool) void {
-    //     reg.win_to_main = bsp.bits.stoBoolx8in8(false, false, false, obj, bg3, bg2, bg1, bg0);
-    // }
-
-    // pub fn setWinToSub(bg0: bool, bg1: bool, bg2: bool, bg3: bool, obj: bool) void {
-    //     reg.win_to_sub = bsp.bits.stoBoolx8in8(false, false, false, obj, bg3, bg2, bg1, bg0);
     // }
 
     // pub fn setFixcolMain(val: DMAData(u16)) void {
@@ -223,10 +209,6 @@ pub const RenderParams = struct {
     //             std.mem.copyForwards(u16, &reg.fixcol_sub, &v);
     //         },
     //     }
-    // }
-
-    // pub fn setColWinApply(algo_main: ColWinApplyAlgo, algo_sub: ColWinApplyAlgo) void {
-    //     reg.win_apply = bsp.bits.sto2x4in8(@intFromEnum(algo_main), @intFromEnum(algo_sub));
     // }
 
     // pub fn setMosiac(bg0_str: u4, bg1_str: u4, bg2_str: u4, bg3_str: u4) void {

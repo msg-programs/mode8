@@ -8,9 +8,11 @@ mode8's source and documentation uses the following terminology:
 - Memory: `mode8.hardware.memory.*`
 
 # Rendering
-- Window: See Windows.md
+- Window: A mask applied to layers, see Windows.md
 - DMA: See DMA.md
 - Layer: Umbrella term for the four BGs + the Objs + the Fixcols (6 layers in total).
+- Buffer: The rendering pipeline uses two framebuffers (main and sub) at one point, see Buffers.md
+- Color Math: The final step of the rendering pipeline, see Color Math.md
 
 <!-- # Rendering Primitives
 * Tile: The unit from which BGs are constructed.

@@ -57,6 +57,8 @@ var wss1 = WinSetupTest.TestWinSend{ .for_layer = .show_bg_1, .to_main = false }
 var wss2 = WinSetupTest.TestWinSend{ .for_layer = .show_bg_2, .to_main = false };
 var wss3 = WinSetupTest.TestWinSend{ .for_layer = .show_bg_3, .to_main = false };
 var wssc = WinSetupTest.TestWinSend{ .for_layer = .show_objs, .to_main = false };
+var wcm = WinSetupTest.TestColWin{ .to_main = true };
+var wcs = WinSetupTest.TestColWin{ .to_main = false };
 
 const screens = [_]Mgr.ManagedScreen{
     .{ .test_win_nodma = &wn0 },
@@ -84,6 +86,8 @@ const screens = [_]Mgr.ManagedScreen{
     .{ .test_win_send = &wss2 },
     .{ .test_win_send = &wss3 },
     .{ .test_win_send = &wssc },
+    .{ .test_win_col = &wcm },
+    .{ .test_win_col = &wcs },
 };
 
 screen: u64,
@@ -110,8 +114,6 @@ pub fn init(app: *App, core: *mach.Core, app_mod: mach.Mod(App)) !void {
         .frames = 0,
     };
     // .screens = @constCast(&[_]Mgr.ManagedScreen{
-    //     .{ .test_win_col = @alignCast(@ptrCast(@constCast(&.{ .to_main = true }))) },
-    //     .{ .test_win_col = @alignCast(@ptrCast(@constCast(&.{ .to_main = false }))) },
     //     .{ .test_fixcol = @alignCast(@ptrCast(@constCast(&.{ .for_main = true }))) },
     //     .{ .test_fixcol = @alignCast(@ptrCast(@constCast(&.{ .for_main = false }))) },
     //     .{ .test_fixcol_dma = @alignCast(@ptrCast(@constCast(&.{ .for_main = false, .flip_dma = false }))) },

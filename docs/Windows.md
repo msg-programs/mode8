@@ -16,18 +16,27 @@ When the `dma_dir_win` register is set to `.top_to_bottom`, the start and end va
 - `dma_dir_win`: Change the DMA direction for the windows.
 
 ### 2. Composition
-The two windows are then merged into a single, more complex window. The register that defines how this should happen supplies a value for every layer. The result is therefore six seperate windows, one for each BG, for the Objs and for the Fixcol.
+The two windows are then merged into a single, more complex window. The register that defines how this should happen supplies a value for every layer. The result is therefore six seperate windows, one for each BG, one for the Objs and the Color Window (see step 4).
 
 **Relevant Registers:**
-`win_compose`: Controls how the windows should be merged for a specific layer.
+- `win_compose`: Controls how the windows should be merged for a specific layer.
 
 **Relevant BSP definitions:**
 - `bsp.RenderParams.Layer`: Can be `@intFromEnum`ed to an index for the `win_compose` register.
 - `bsp.RenderParams.WinComposition`: Can be `@bitCast`ed to a value for the `win_compose` register.
 
-### 3. Buffer application
-The composite windows are applied to the respective layer. As the layers are cloned to the main and sub buffer, the windows are also cloned any applied to the main/sub buffer seperately.
+### 3. Buffer layer application
+The composite windows are applied to the respective layers, i.e. the four BGs and the objs. As the layers are cloned to the main and sub buffer, the windows are also cloned any applied to the main/sub buffer seperately.
 
 **Relevant Registers:**
 - `win_to_main`: Should the window be applied to the layer's clone in the main buffer?
 - `win_to_sub`: Should the window be applied to the layer's clone in the sub buffer?
+
+### 4. Buffer final application
+Step 3 only covers five out of six windows, as the final one is applied differently. This window is referred to as the Color Window. It's applied after all layers in a buffer have been merged, but before any color math has taken place. It can not only be enabled or disabled, but also inverted or overridden with so that the full screen is inside the window.
+
+**Relevant Registers:**
+- `col_win_apply`: The apply algorithm for the color window (main/sub buffer)
+
+**Relevant BSP definitions:**
+- `bsp.RenderParams.ColWinApplyAlgo`: Can be `@intFromEnum`ed to set the `col_win_apply` register

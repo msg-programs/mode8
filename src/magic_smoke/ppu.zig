@@ -389,22 +389,17 @@ fn combineWinsForLayer(layer: rpa.Layer, w0: bool, w1: bool) bool {
     };
 }
 
-// fn isPixelInColWin(is_main: bool, data_in: bool) bool {
-//     const Helper = packed struct {
-//         lo: u4,
-//         hi: u4,
-//     };
-//     const val: Helper = @bitCast(reg.win_apply);
+fn isPixelInColWin(is_main: bool, data_in: bool) bool {
+    const idx: usize = if (is_main) 0 else 1;
+    const setting: rpa.ColWinApplyAlgo = @enumFromInt(reg.col_win_apply[idx]);
 
-//     const setting: u2 = if (is_main) @intCast(val.lo & 0x3) else @intCast(val.hi & 0x3);
-
-//     return switch (setting) {
-//         0 => true, // ALWAYS ON
-//         1 => data_in, // DIRECT
-//         2 => !data_in, // INVERTED
-//         3 => false, // ALWAYS OFF
-//     };
-// }
+    return switch (setting) {
+        .always_on => true,
+        .direct => data_in,
+        .inverted => !data_in,
+        .always_off => false,
+    };
+}
 
 // ///////////////////////////////////////////////////////////////////////////////////////////////////
 // // THE LONG ONE
@@ -683,9 +678,9 @@ fn shaderMain(screenpos: ScreenPos) void {
     // color window is used in a different way than the others, combine seperately
     const col_win: bool = combineWinsForLayer(.color, px_in_win0, px_in_win1);
 
-    // // is a buffer's pixel inside the color window?
-    // const col_win_main: bool = isPixelInColWin(true, col_win);
-    // const col_win_sub: bool = isPixelInColWin(false, col_win);
+    // is a buffer's pixel inside the color window?
+    const col_win_main: bool = isPixelInColWin(true, col_win);
+    const col_win_sub: bool = isPixelInColWin(false, col_win);
 
     // // COLOR MAIN/SUB BUFFER
     // /////////////////////////////////////////////
@@ -845,27 +840,26 @@ fn shaderMain(screenpos: ScreenPos) void {
                 setPx(screenpos, Color{ .r = 128, .g = 0, .b = 0 });
             }
         },
-        // rpa.DebugMode.DEBUG_MODE_COL_WINDOW => {
-        //     // same as above, but for the color window
-        //     // useful, as the col window has an additional setting
+        .col_window => {
+            // same as above, but for the color window
+            // useful, as the col window has an additional setting
 
-        //     var trig: bool = undefined;
-        //     if (reg.debug_arg == .DEBUG_ARG_SHOW_MAIN) {
-        //         trig = col_win_main;
-        //     } else if (reg.debug_arg == .DEBUG_ARG_SHOW_SUB) {
-        //         trig = col_win_sub;
-        //     } else {
-        //         setPx(screen_x, screen_y, errcol);
-        //         return;
-        //     }
+            const in_colwin = switch (debug_arg) {
+                else => {
+                    setPx(screenpos, errcol);
+                    return;
+                },
+                .show_main => col_win_main,
+                .show_sub => col_win_sub,
+            };
 
-        //     if (trig) {
-        //         setPx(screen_x, screen_y, Color.init(1, 1, 1, 1));
-        //     } else {
-        //         setPx(screen_x, screen_y, Color.init(0, 0, 0, 1));
-        //     }
-        //     return;
-        // },
+            if (in_colwin) {
+                setPx(screenpos, Color{ .r = 255, .b = 255, .g = 255 });
+            } else {
+                setPx(screenpos, Color{ .r = 0, .b = 0, .g = 0 });
+            }
+            return;
+        },
         // rpa.DebugMode.DEBUG_MODE_BUF_PRE_WIN => {
         //     // main/sub buffer layers combined by priority, without the windows applied
         //     if (reg.debug_arg == .DEBUG_ARG_SHOW_MAIN) {
