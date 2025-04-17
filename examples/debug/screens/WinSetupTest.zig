@@ -153,74 +153,64 @@ pub const TestWinCompose = struct {
     }
 };
 
-// pub const TestWinSend = struct {
-//     frame: u64 = 0,
-//     to_main: bool,
-//     for_layer: bsp.RenderParams.DebugArg,
+pub const TestWinSend = struct {
+    frame: u64 = 0,
+    to_main: bool,
+    for_layer: bsp.RenderParams.DebugArg,
 
-//     pub fn init(self: *TestWinSend) void {
-//         if (self.to_main) {
-//             bsp.RenderParams.setDebugMode(.DEBUG_MODE_WINDOWS_MAIN, self.for_layer);
-//         } else {
-//             bsp.RenderParams.setDebugMode(.DEBUG_MODE_WINDOWS_SUB, self.for_layer);
-//         }
+    pub fn init(self: *TestWinSend) void {
+        reg.debug_mode = @intFromEnum(if (self.to_main) rpa.DebugMode.windows_main else rpa.DebugMode.windows_sub);
+        reg.debug_arg = @intFromEnum(self.for_layer);
 
-//         const comp: bsp.RenderParams.WinComposition = switch (self.for_layer) {
-//             .DEBUG_ARG_SHOW_BG_0 => .{ .neither = true, .both = false, .win0 = false, .win1 = false },
-//             .DEBUG_ARG_SHOW_BG_1 => .{ .neither = false, .both = true, .win0 = false, .win1 = false },
-//             .DEBUG_ARG_SHOW_BG_2 => .{ .neither = false, .both = false, .win0 = true, .win1 = false },
-//             .DEBUG_ARG_SHOW_BG_3 => .{ .neither = false, .both = false, .win0 = false, .win1 = true },
-//             .DEBUG_ARG_SHOW_OBJS => .{ .neither = false, .both = false, .win0 = true, .win1 = true },
-//             else => unreachable,
-//         };
-//         const nocomp: bsp.RenderParams.WinComposition = .{
-//             .neither = false,
-//             .both = false,
-//             .win0 = false,
-//             .win1 = false,
-//         };
+        const t = self.to_main;
+        const f = !self.to_main;
 
-//         switch (self.for_layer) {
-//             .DEBUG_ARG_SHOW_BG_0 => bsp.RenderParams.setWinCompose(comp, nocomp, nocomp, nocomp, nocomp, nocomp),
-//             .DEBUG_ARG_SHOW_BG_1 => bsp.RenderParams.setWinCompose(nocomp, comp, nocomp, nocomp, nocomp, nocomp),
-//             .DEBUG_ARG_SHOW_BG_2 => bsp.RenderParams.setWinCompose(nocomp, nocomp, comp, nocomp, nocomp, nocomp),
-//             .DEBUG_ARG_SHOW_BG_3 => bsp.RenderParams.setWinCompose(nocomp, nocomp, nocomp, comp, nocomp, nocomp),
-//             .DEBUG_ARG_SHOW_OBJS => bsp.RenderParams.setWinCompose(nocomp, nocomp, nocomp, nocomp, comp, nocomp),
-//             .DEBUG_ARG_SHOW_COL => bsp.RenderParams.setWinCompose(nocomp, nocomp, nocomp, nocomp, nocomp, comp),
-//             else => unreachable,
-//         }
+        const comp: bsp.RenderParams.WinComposition = switch (self.for_layer) {
+            .show_bg_0 => .{ .neither = t, .both = f, .win0 = f, .win1 = f },
+            .show_bg_1 => .{ .neither = f, .both = t, .win0 = f, .win1 = f },
+            .show_bg_2 => .{ .neither = f, .both = f, .win0 = t, .win1 = f },
+            .show_bg_3 => .{ .neither = f, .both = f, .win0 = f, .win1 = t },
+            .show_objs => .{ .neither = f, .both = f, .win0 = t, .win1 = t },
+            else => unreachable,
+        };
+        const nocomp: bsp.RenderParams.WinComposition = .{
+            .neither = false,
+            .both = false,
+            .win0 = false,
+            .win1 = false,
+        };
 
-//         std.debug.print("Testing window send to buffer (to main? {} showing with {})\n", .{ self.to_main, self.for_layer });
-//     }
+        reg.win_compose[0] = @bitCast(if (self.for_layer == .show_bg_0) comp else nocomp);
+        reg.win_compose[1] = @bitCast(if (self.for_layer == .show_bg_1) comp else nocomp);
+        reg.win_compose[2] = @bitCast(if (self.for_layer == .show_bg_2) comp else nocomp);
+        reg.win_compose[3] = @bitCast(if (self.for_layer == .show_bg_3) comp else nocomp);
+        reg.win_compose[4] = @bitCast(if (self.for_layer == .show_objs) comp else nocomp);
 
-//     pub fn tick(self: *TestWinSend) bool {
-//         if (util.halfsecOf(self.frame) == 0) {
-//             bsp.RenderParams.setWinToMain(false, false, false, false, false);
-//             bsp.RenderParams.setWinToSub(false, false, false, false, false);
-//             return false;
-//         }
-//         if (self.to_main) {
-//             switch (self.for_layer) {
-//                 .DEBUG_ARG_SHOW_BG_0 => bsp.RenderParams.setWinToMain(true, false, false, false, false),
-//                 .DEBUG_ARG_SHOW_BG_1 => bsp.RenderParams.setWinToMain(false, true, false, false, false),
-//                 .DEBUG_ARG_SHOW_BG_2 => bsp.RenderParams.setWinToMain(false, false, true, false, false),
-//                 .DEBUG_ARG_SHOW_BG_3 => bsp.RenderParams.setWinToMain(false, false, false, true, false),
-//                 .DEBUG_ARG_SHOW_OBJS => bsp.RenderParams.setWinToMain(false, false, false, false, true),
-//                 else => unreachable,
-//             }
-//         } else {
-//             switch (self.for_layer) {
-//                 .DEBUG_ARG_SHOW_BG_0 => bsp.RenderParams.setWinToSub(true, false, false, false, false),
-//                 .DEBUG_ARG_SHOW_BG_1 => bsp.RenderParams.setWinToSub(false, true, false, false, false),
-//                 .DEBUG_ARG_SHOW_BG_2 => bsp.RenderParams.setWinToSub(false, false, true, false, false),
-//                 .DEBUG_ARG_SHOW_BG_3 => bsp.RenderParams.setWinToSub(false, false, false, true, false),
-//                 .DEBUG_ARG_SHOW_OBJS => bsp.RenderParams.setWinToSub(false, false, false, false, true),
-//                 else => unreachable,
-//             }
-//         }
-//         return util.halfsecOf(self.frame) == 2;
-//     }
-// };
+        std.debug.print("Testing window send to buffer (to main? {} showing with {})\n", .{ self.to_main, self.for_layer });
+    }
+
+    pub fn tick(self: *TestWinSend) bool {
+        if (util.halfsecOf(self.frame) == 0) {
+            reg.win_to_main = @splat(false);
+            reg.win_to_sub = @splat(false);
+            return false;
+        }
+        if (self.to_main) {
+            reg.win_to_main[0] = if (self.for_layer == .show_bg_0) true else false;
+            reg.win_to_main[1] = if (self.for_layer == .show_bg_1) true else false;
+            reg.win_to_main[2] = if (self.for_layer == .show_bg_2) true else false;
+            reg.win_to_main[3] = if (self.for_layer == .show_bg_3) true else false;
+            reg.win_to_main[4] = if (self.for_layer == .show_objs) true else false;
+        } else {
+            reg.win_to_sub[0] = if (self.for_layer == .show_bg_0) true else false;
+            reg.win_to_sub[1] = if (self.for_layer == .show_bg_1) true else false;
+            reg.win_to_sub[2] = if (self.for_layer == .show_bg_2) true else false;
+            reg.win_to_sub[3] = if (self.for_layer == .show_bg_3) true else false;
+            reg.win_to_sub[4] = if (self.for_layer == .show_objs) true else false;
+        }
+        return util.halfsecOf(self.frame) == 2;
+    }
+};
 
 // pub const TestColWin = struct {
 //     frame: u64 = 0,

@@ -19,3 +19,7 @@ mode8's builtin debug modes are used to display various intermediate stages of t
     - Requires args: One of `.show_bg_0, .show_bg_1, .show_bg_2, .show_bg_3, .show_objs, .show_col`
     - Shows how windows are merged for the specified layer
     - Displays the result's inside in white and the outside in black.
+- `.windows_main`, `.windows_sub`
+    - Requires args: One of `.show_bg_0, .show_bg_1, .show_bg_2, .show_bg_3, .show_objs, .show_col`
+    - Shows how the window arrives at the specified layer in the main/sub buffer.
+    - Displays the inside in white and the outside in black if the window is actually applied to the layer in this buffer. Displays a dark red otherwise.

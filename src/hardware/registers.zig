@@ -73,11 +73,11 @@ pub var win_compose: [6]u4 = @splat(0);
 // /// send this background to the sub buffer
 // pub var to_sub: [5]bool = @splat(false);
 
-// /// send the window data to the main buffer
-// pub var win_to_main: [5]bool = @splat(false);
+/// send the window data to the main buffer
+pub var win_to_main: [5]bool = @splat(false);
 
-// /// send the window data to the sub buffer
-// pub var win_to_sub: [5]bool = @splat(false);
+/// send the window data to the sub buffer
+pub var win_to_sub: [5]bool = @splat(false);
 
 // /// fixed color for main buffer. DMA-able
 // pub var fixcol_main: [con.DMA_NUM]u16 = .{0} ** (con.DMA_NUM);

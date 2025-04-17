@@ -24,3 +24,10 @@ The two windows are then merged into a single, more complex window. The register
 **Relevant BSP definitions:**
 - `bsp.RenderParams.Layer`: Can be `@intFromEnum`ed to an index for the `win_compose` register.
 - `bsp.RenderParams.WinComposition`: Can be `@bitCast`ed to a value for the `win_compose` register.
+
+### 3. Buffer application
+The composite windows are applied to the respective layer. As the layers are cloned to the main and sub buffer, the windows are also cloned any applied to the main/sub buffer seperately.
+
+**Relevant Registers:**
+- `win_to_main`: Should the window be applied to the layer's clone in the main buffer?
+- `win_to_sub`: Should the window be applied to the layer's clone in the sub buffer?

@@ -47,6 +47,16 @@ var wc2 = WinSetupTest.TestWinCompose{ .for_layer = .show_bg_2 };
 var wc3 = WinSetupTest.TestWinCompose{ .for_layer = .show_bg_3 };
 var wc4 = WinSetupTest.TestWinCompose{ .for_layer = .show_objs };
 var wc5 = WinSetupTest.TestWinCompose{ .for_layer = .show_col };
+var wsm0 = WinSetupTest.TestWinSend{ .for_layer = .show_bg_0, .to_main = true };
+var wsm1 = WinSetupTest.TestWinSend{ .for_layer = .show_bg_1, .to_main = true };
+var wsm2 = WinSetupTest.TestWinSend{ .for_layer = .show_bg_2, .to_main = true };
+var wsm3 = WinSetupTest.TestWinSend{ .for_layer = .show_bg_3, .to_main = true };
+var wsmc = WinSetupTest.TestWinSend{ .for_layer = .show_objs, .to_main = true };
+var wss0 = WinSetupTest.TestWinSend{ .for_layer = .show_bg_0, .to_main = false };
+var wss1 = WinSetupTest.TestWinSend{ .for_layer = .show_bg_1, .to_main = false };
+var wss2 = WinSetupTest.TestWinSend{ .for_layer = .show_bg_2, .to_main = false };
+var wss3 = WinSetupTest.TestWinSend{ .for_layer = .show_bg_3, .to_main = false };
+var wssc = WinSetupTest.TestWinSend{ .for_layer = .show_objs, .to_main = false };
 
 const screens = [_]Mgr.ManagedScreen{
     .{ .test_win_nodma = &wn0 },
@@ -64,10 +74,22 @@ const screens = [_]Mgr.ManagedScreen{
     .{ .test_win_compose = &wc3 },
     .{ .test_win_compose = &wc4 },
     .{ .test_win_compose = &wc5 },
+    .{ .test_win_send = &wsm0 },
+    .{ .test_win_send = &wsm1 },
+    .{ .test_win_send = &wsm2 },
+    .{ .test_win_send = &wsm3 },
+    .{ .test_win_send = &wsmc },
+    .{ .test_win_send = &wss0 },
+    .{ .test_win_send = &wss1 },
+    .{ .test_win_send = &wss2 },
+    .{ .test_win_send = &wss3 },
+    .{ .test_win_send = &wssc },
 };
 
 screen: u64,
 go_next: bool,
+timer: std.time.Timer,
+frames: u64,
 
 var window: mach.ObjectID = undefined;
 
@@ -84,18 +106,10 @@ pub fn init(app: *App, core: *mach.Core, app_mod: mach.Mod(App)) !void {
     app.* = .{
         .screen = 0,
         .go_next = true,
+        .timer = try std.time.Timer.start(),
+        .frames = 0,
     };
     // .screens = @constCast(&[_]Mgr.ManagedScreen{
-    //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_0, .to_main = true }))) },
-    //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_1, .to_main = true }))) },
-    //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_2, .to_main = true }))) },
-    //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_3, .to_main = true }))) },
-    //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_OBJS, .to_main = true }))) },
-    //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_0, .to_main = false }))) },
-    //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_1, .to_main = false }))) },
-    //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_2, .to_main = false }))) },
-    //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_BG_3, .to_main = false }))) },
-    //     .{ .test_win_send = @alignCast(@ptrCast(@constCast(&.{ .for_layer = .DEBUG_ARG_SHOW_OBJS, .to_main = false }))) },
     //     .{ .test_win_col = @alignCast(@ptrCast(@constCast(&.{ .to_main = true }))) },
     //     .{ .test_win_col = @alignCast(@ptrCast(@constCast(&.{ .to_main = false }))) },
     //     .{ .test_fixcol = @alignCast(@ptrCast(@constCast(&.{ .for_main = true }))) },
@@ -170,12 +184,18 @@ pub fn tick(app: *App, core: *mach.Core) !void {
     if (app.go_next) {
         app.go_next = false;
         screens[app.screen].init();
+        app.timer.reset();
+        app.frames = 0;
     }
-
     if (screens[app.screen].tick()) {
         app.screen += 1;
         app.go_next = true;
+        const lap = @as(f32, @floatFromInt(app.timer.lap()));
+        const mslap = lap / @as(f32, std.time.ns_per_ms);
+        const slap = mslap / @as(f32, std.time.ms_per_s);
+        std.debug.print("{} frames in {d:.0} ms = {d:.2} fps\n", .{ app.frames, mslap, @as(f32, @floatFromInt(app.frames)) / slap });
     }
+    app.frames += 1;
 
     if (app.screen >= screens.len) {
         core.exit();

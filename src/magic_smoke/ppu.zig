@@ -1,3 +1,4 @@
+const std = @import("std");
 const m8 = @import("../root.zig");
 const con = m8.hardware.constants;
 const bsp = m8.bsp;
@@ -634,6 +635,18 @@ fn setPx(screenpos: ScreenPos, color: Color) void {
     BUFFER[screenpos.x][screenpos.y] = color;
 }
 
+fn debugArgToLayer(da: rpa.DebugArg) ?rpa.Layer {
+    return switch (da) {
+        .show_bg_0 => rpa.Layer.bg_0,
+        .show_bg_1 => rpa.Layer.bg_1,
+        .show_bg_2 => rpa.Layer.bg_2,
+        .show_bg_3 => rpa.Layer.bg_3,
+        .show_objs => rpa.Layer.obj,
+        .show_col => rpa.Layer.color,
+        else => null,
+    };
+}
+
 fn shaderMain(screenpos: ScreenPos) void {
 
     // // SETUP
@@ -641,7 +654,7 @@ fn shaderMain(screenpos: ScreenPos) void {
 
     // // used for vector select() calls
     // const no_p_cols: [5]u16 = .{ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000 };
-    // const no_wins: [5]bool = .{ false, false, false, false, false };
+    const no_wins: [5]bool = .{ false, false, false, false, false };
 
     // used for bad debug config
     const errcol = Color{ .r = 255, .g = 0, .b = 255 };
@@ -663,13 +676,9 @@ fn shaderMain(screenpos: ScreenPos) void {
         combineWinsForLayer(.obj, px_in_win0, px_in_win1),
     };
 
-    // const Helper = packed struct {
-    //     bits: [8]bool,
-    // };
-
-    // // does a window apply to a layer sent to the main/sub buffer?
-    // const main_wins: [5]bool = arrselx5(bool, no_wins, layer_wins, @as(Helper, @bitCast(reg.win_to_main)).bits[0..6]);
-    // const sub_wins: [5]bool = arrselx5(bool, no_wins, layer_wins, @as(Helper, @bitCast(reg.win_to_sub)).bits[0..6]);
+    // does a window apply to a layer sent to the main/sub buffer?
+    const main_wins: [5]bool = @select(bool, reg.win_to_main, layer_wins, no_wins);
+    const sub_wins: [5]bool = @select(bool, reg.win_to_sub, layer_wins, no_wins);
 
     // color window is used in a different way than the others, combine seperately
     const col_win: bool = combineWinsForLayer(.color, px_in_win0, px_in_win1);
@@ -746,7 +755,10 @@ fn shaderMain(screenpos: ScreenPos) void {
     // DEBUG AND OUTPUT
     /////////////////////////////////////////////
 
-    switch (@as(rpa.DebugMode, @enumFromInt(reg.debug_mode))) {
+    const debug_mode: rpa.DebugMode = @enumFromInt(reg.debug_mode);
+    const debug_arg: rpa.DebugArg = @enumFromInt(reg.debug_arg);
+
+    switch (debug_mode) {
         else => unreachable,
         // rpa.DebugMode.DEBUG_MODE_NONE => {
         //     // normal case: no debug, just output
@@ -774,12 +786,12 @@ fn shaderMain(screenpos: ScreenPos) void {
             return;
         },
         .window_comp => {
-            const w = switch (@as(rpa.DebugArg, @enumFromInt(reg.debug_arg))) {
-                .show_bg_0 => layer_wins[0],
-                .show_bg_1 => layer_wins[1],
-                .show_bg_2 => layer_wins[2],
-                .show_bg_3 => layer_wins[3],
-                .show_objs => layer_wins[4],
+            const w = switch (debug_arg) {
+                .show_bg_0 => layer_wins[@intFromEnum(rpa.Layer.bg_0)],
+                .show_bg_1 => layer_wins[@intFromEnum(rpa.Layer.bg_1)],
+                .show_bg_2 => layer_wins[@intFromEnum(rpa.Layer.bg_2)],
+                .show_bg_3 => layer_wins[@intFromEnum(rpa.Layer.bg_3)],
+                .show_objs => layer_wins[@intFromEnum(rpa.Layer.obj)],
                 .show_col => col_win,
                 else => {
                     setPx(screenpos, errcol);
@@ -791,45 +803,48 @@ fn shaderMain(screenpos: ScreenPos) void {
             setPx(screenpos, Color{ .r = v, .g = v, .b = v });
             return;
         },
-        // rpa.DebugMode.DEBUG_MODE_WINDOWS_MAIN => {
-        //     // show how the windows apply to a certain layer in the main buffer.
-        //     // useful for checking if the win is applied to the layer.
-        //     if (reg.debug_arg > .DEBUG_ARG_SHOW_OBJS) {
-        //         setPx(screen_x, screen_y, errcol);
-        //         return;
-        //     }
+        .windows_main => {
+            const layer: rpa.Layer = debugArgToLayer(debug_arg) orelse {
+                setPx(screenpos, errcol);
+                return;
+            };
 
-        //     if (reg.win_to_main[@intFromEnum(reg.debug_arg)]) {
-        //         if (main_wins[@intFromEnum(reg.debug_arg)]) {
-        //             setPx(screen_x, screen_y, Color.init(0, 1, 0, 1));
-        //         } else {
-        //             setPx(screen_x, screen_y, Color.init(0, 0, 0, 1));
-        //         }
-        //         return;
-        //     } else {
-        //         setPx(screen_x, screen_y, Color.init(0.5, 0, 0, 1));
-        //         return;
-        //     }
-        // },
-        // rpa.DebugMode.DEBUG_MODE_WINDOWS_SUB => {
-        //     // same as above, but for the sub buffers
-        //     if (reg.debug_arg > .DEBUG_ARG_SHOW_OBJS) {
-        //         setPx(screen_x, screen_y, errcol);
-        //         return;
-        //     }
+            if (layer == .color) {
+                setPx(screenpos, errcol);
+                return;
+            }
 
-        //     if (reg.win_to_sub[@intFromEnum(reg.debug_arg)]) {
-        //         if (sub_wins[@intFromEnum(reg.debug_arg)]) {
-        //             setPx(screen_x, screen_y, Color.init(0, 1, 0, 1));
-        //         } else {
-        //             setPx(screen_x, screen_y, Color.init(0, 0, 0, 1));
-        //         }
-        //         return;
-        //     } else {
-        //         setPx(screen_x, screen_y, Color.init(0.5, 0, 0, 1));
-        //         return;
-        //     }
-        // },
+            if (reg.win_to_main[@intFromEnum(layer)]) {
+                if (main_wins[@intFromEnum(layer)]) {
+                    setPx(screenpos, Color{ .r = 255, .g = 255, .b = 255 });
+                } else {
+                    setPx(screenpos, Color{ .r = 0, .g = 0, .b = 0 });
+                }
+            } else {
+                setPx(screenpos, Color{ .r = 128, .g = 0, .b = 0 });
+            }
+        },
+        .windows_sub => {
+            const layer: rpa.Layer = debugArgToLayer(debug_arg) orelse {
+                setPx(screenpos, errcol);
+                return;
+            };
+
+            if (layer == .color) {
+                setPx(screenpos, errcol);
+                return;
+            }
+
+            if (reg.win_to_sub[@intFromEnum(layer)]) {
+                if (sub_wins[@intFromEnum(layer)]) {
+                    setPx(screenpos, Color{ .r = 255, .g = 255, .b = 255 });
+                } else {
+                    setPx(screenpos, Color{ .r = 0, .g = 0, .b = 0 });
+                }
+            } else {
+                setPx(screenpos, Color{ .r = 128, .g = 0, .b = 0 });
+            }
+        },
         // rpa.DebugMode.DEBUG_MODE_COL_WINDOW => {
         //     // same as above, but for the color window
         //     // useful, as the col window has an additional setting

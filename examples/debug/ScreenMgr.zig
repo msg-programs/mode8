@@ -9,7 +9,7 @@ pub const ManagedScreen = union(enum) {
     test_win_dma: *WST.TestWinDMA,
     win_tests_data_setup: *WST.WinTestsDataSetup,
     test_win_compose: *WST.TestWinCompose,
-    // test_win_send: *WST.TestWinSend,
+    test_win_send: *WST.TestWinSend,
     // test_win_col: *WST.TestColWin,
     // test_colwin_dma: *WST.WinTestsDataSetup,
     // test_fixcol: *CMT.TestFixcol,
@@ -32,7 +32,6 @@ pub const ManagedScreen = union(enum) {
     // test_cmath_sett: *COM.TestColorMathSettings,
 
     pub fn init(self: ManagedScreen) void {
-        @import("std").debug.print("{any}\n", .{self});
         switch (self) {
             inline else => |s| s.init(),
         }
