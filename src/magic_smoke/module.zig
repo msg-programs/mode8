@@ -38,7 +38,6 @@ pub fn poweroff() void {
 }
 
 pub fn tick(core: *mach.Core) !void {
-    const then = std.time.nanoTimestamp();
 
     // meh. TODO: make better
     // reg.controller[0] = bits.sto1x8in8(
@@ -155,9 +154,4 @@ pub fn tick(core: *mach.Core) !void {
     // );
     // }
 
-    // hackily enforce a fps limit until there's a framerate limiter again
-    const now = std.time.nanoTimestamp();
-    const delta = now - then;
-    const delay = (8 * std.time.ns_per_ms) - delta;
-    std.Thread.sleep(@truncate(@abs(delay)));
 }
