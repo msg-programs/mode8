@@ -1,3 +1,5 @@
+**NOTE: MASTER IS NOT UP-TO-DATE WITH CURRENT PROGRESS. SEE update-mach BRANCH FOR CURRENT STATUS**
+
 # mode8 Retro Fantasy Video Processing Unit
 
 > mode8 is a graphics engine designed to feel like an old 16-bit console.
