@@ -1,5 +1,5 @@
 const WST = @import("./screens/WinSetupTest.zig");
-// const CMT = @import("./screens/ColmathTest.zig");
+const FCT = @import("./screens/FixcolTest.zig");
 // const BGT = @import("./screens/BgTest.zig");
 // const OBT = @import("./screens/ObjTest.zig");
 // const COM = @import("./screens/ComposeTest.zig");
@@ -11,9 +11,8 @@ pub const ManagedScreen = union(enum) {
     test_win_compose: *WST.TestWinCompose,
     test_win_send: *WST.TestWinSend,
     test_win_col: *WST.TestColWin,
-    // test_colwin_dma: *WST.WinTestsDataSetup,
-    // test_fixcol: *CMT.TestFixcol,
-    // test_fixcol_dma: *CMT.TestFixcolDMA,
+    test_fixcol: *FCT.TestFixcol,
+    test_fixcol_dma: *FCT.TestFixcolDMA,
     // bg_tests_data_setup: *BGT.BgTestsDataSetup,
     // test_bg_size: *BGT.TestBgSize,
     // test_bg_oob: *BGT.TestBgOOB,

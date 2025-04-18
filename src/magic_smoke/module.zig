@@ -155,3 +155,5 @@ pub fn tick(core: *mach.Core) !void {
     // }
 
 }
+
+// TODO: maybe use enum for main/sub buffer instead of int? --> fixcol etc.

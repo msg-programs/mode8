@@ -78,15 +78,15 @@ const BufferPixel = struct {
 // // COLOR FUNCTIONS
 // ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-// // given a packed color, unpack it into a vec4f
-// fn unpackColor(p_col: u16) Color {
-//     return Color.init(
-//         @as(f32, @floatFromInt((p_col & 0x001F) >> 0)) / 31.0,
-//         @as(f32, @floatFromInt((p_col & 0x03E0) >> 5)) / 31.0,
-//         @as(f32, @floatFromInt((p_col & 0x7C00) >> 10)) / 31.0,
-//         @as(f32, @floatFromInt((p_col & 0x8000) >> 15)),
-//     );
-// }
+// given a packed color, unpack it
+fn unpackColor(p_col: u16) Color {
+    return Color{
+        .r = @intFromFloat(@as(f32, @floatFromInt((p_col & 0x001F) >> 0)) / 31.0 * 255),
+        .g = @intFromFloat(@as(f32, @floatFromInt((p_col & 0x03E0) >> 5)) / 31.0 * 255),
+        .b = @intFromFloat(@as(f32, @floatFromInt((p_col & 0x7C00) >> 10)) / 31.0 * 255),
+        .a = if (p_col & 0x8000 != 0) 255 else 0,
+    };
+}
 
 // // given a packed color, check if it's opaque
 // fn isPackedColorOpaque(p_col: u16) bool {
@@ -494,18 +494,19 @@ fn isPixelInColWin(is_main: bool, data_in: bool) bool {
 // // FIXCOL FUNCTION
 // ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-// fn getFixcol(screenpos: Vec2u, for_main: bool) u16 {
-//     const magic_num: u32 = if (for_main) 2 else 3;
-//     const do_dma_switch: bool = if (for_main) reg.fixcol_main_do_dma != 0 else reg.fixcol_sub_do_dma != 0;
+fn getFixcol(screenpos: ScreenPos, for_main: bool) u16 {
+    const magic_num: u32 = if (for_main) 0 else 1;
+    const do_dma_switch: bool = if (for_main) reg.fixcol_main_do_dma else reg.fixcol_sub_do_dma;
 
-//     const index_raw: u32 = if (reg.dma_dir_ex & (1 << magic_num)) screenpos.x() else screenpos.y();
-//     const index: u32 = if (do_dma_switch) index_raw else 0;
+    const dma_dir: rpa.DMADir = @enumFromInt(reg.dma_dir_fixcol[magic_num]);
+    const index_raw = if (dma_dir == .top_to_bottom) screenpos.y else screenpos.x;
+    const index: u32 = if (do_dma_switch) index_raw else 0;
 
-//     return if (for_main)
-//         reg.fixcol_main[index * 2] | (reg.fixcol_main[index * 2 + 1] << 8)
-//     else
-//         reg.fixcol_sub[index * 2] | (reg.fixcol_sub[index * 2 + 1] << 8);
-// }
+    return if (for_main)
+        reg.fixcol_main[index]
+    else
+        reg.fixcol_sub[index];
+}
 
 // ///////////////////////////////////////////////////////////////////////////////////////////////////
 // // COLOR MATH
@@ -711,11 +712,11 @@ fn shaderMain(screenpos: ScreenPos) void {
     // const wind_p_cols_main: [5]u16 = arrselx5(u16, p_cols_main, no_p_cols, main_wins);
     // const wind_p_cols_sub: [5]u16 = arrselx5(u16, p_cols_sub, no_p_cols, sub_wins);
 
-    // // get fallback color ("fixcol") for buffers
-    // // fixcol is always a packed color, but the consistent naming feels wrong...
-    // // TODO: ignore feelings, make consistent
-    // const fixcol_main: u16 = getFixcol(screen_x, screen_y, true);
-    // const fixcol_sub: u16 = getFixcol(screen_x, screen_y, false);
+    // get fallback color ("fixcol") for buffers
+    // fixcol is always a packed color, but the consistent naming feels wrong...
+    // TODO: ignore feelings, make consistent
+    const fixcol_main: u16 = getFixcol(screenpos, true);
+    const fixcol_sub: u16 = getFixcol(screenpos, false);
 
     // // apply priority logic.
     // // result: the final color for this buffer + its source layer
@@ -896,17 +897,17 @@ fn shaderMain(screenpos: ScreenPos) void {
         //     }
         //     return;
         // },
-        // rpa.DebugMode.DEBUG_MODE_FIXCOL_SETUP => {
-        //     // show fixcols for main and sub buffer
-        //     if (reg.debug_arg == .DEBUG_ARG_SHOW_MAIN) {
-        //         setPx(screen_x, screen_y, unpackColor(fixcol_main));
-        //     } else if (reg.debug_arg == .DEBUG_ARG_SHOW_SUB) {
-        //         setPx(screen_x, screen_y, unpackColor(fixcol_sub));
-        //     } else {
-        //         setPx(screen_x, screen_y, errcol);
-        //     }
-        //     return;
-        // },
+        .fixcol_setup => {
+            // show fixcols for main and sub buffer
+            if (debug_arg == .show_main) {
+                setPx(screenpos, unpackColor(fixcol_main));
+            } else if (debug_arg == .show_sub) {
+                setPx(screenpos, unpackColor(fixcol_sub));
+            } else {
+                setPx(screenpos, errcol);
+            }
+            return;
+        },
     }
 }
 

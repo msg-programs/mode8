@@ -79,17 +79,17 @@ pub var win_to_main: [5]bool = @splat(false);
 /// send the window data to the sub buffer
 pub var win_to_sub: [5]bool = @splat(false);
 
-// /// fixed color for main buffer. DMA-able
-// pub var fixcol_main: [con.DMA_NUM]u16 = .{0} ** (con.DMA_NUM);
+/// fixed color for main buffer. DMA-able
+pub var fixcol_main: [con.DMA_NUM]u16 = .{0} ** (con.DMA_NUM);
 
-// /// bool: enable DMA?
-// pub var fixcol_main_do_dma: bool = false;
+/// bool: enable DMA?
+pub var fixcol_main_do_dma: bool = false;
 
-// /// fixed color for sub buffer. DMA-able
-// pub var fixcol_sub: [con.DMA_NUM]u16 = @splat(0);
+/// fixed color for sub buffer. DMA-able
+pub var fixcol_sub: [con.DMA_NUM]u16 = @splat(0);
 
-// /// bool: enable DMA?
-// pub var fixcol_sub_do_dma: bool = false;
+/// bool: enable DMA?
+pub var fixcol_sub_do_dma: bool = false;
 
 /// window apply mode for buffers, 0 = main 1 = sub
 pub var col_win_apply: [2]u4 = @splat(0);
@@ -107,8 +107,8 @@ pub var col_win_apply: [2]u4 = @splat(0);
 /// note: also flips how windows work
 pub var dma_dir_win: [con.WINDOW_NUM]u1 = @splat(0);
 
-// /// should DMA for fixcols be applied horizontally or vertically?
-// pub var dma_dir_fixcol: [2]bool = @splat(false);
+/// should DMA for fixcols be applied horizontally or vertically?
+pub var dma_dir_fixcol: [2]u1 = @splat(0);
 
 // /// for which layers should color math be enabled?
 // pub var math_enable: [6]bool = @splat(false);

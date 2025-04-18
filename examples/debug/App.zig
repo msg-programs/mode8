@@ -10,6 +10,7 @@ const bsp = mode8.bsp;
 
 const Mgr = @import("ScreenMgr.zig");
 const WinSetupTest = @import("screens/WinSetupTest.zig");
+const FixcolTest = @import("screens/FixcolTest.zig");
 
 const App = @This();
 pub const mach_module = .app;
@@ -59,6 +60,59 @@ var wss3 = WinSetupTest.TestWinSend{ .for_layer = .show_bg_3, .to_main = false }
 var wssc = WinSetupTest.TestWinSend{ .for_layer = .show_objs, .to_main = false };
 var wcm = WinSetupTest.TestColWin{ .to_main = true };
 var wcs = WinSetupTest.TestColWin{ .to_main = false };
+var fcm = FixcolTest.TestFixcol{ .for_main = true };
+var fcs = FixcolTest.TestFixcol{ .for_main = false };
+var fcmd = FixcolTest.TestFixcolDMA{ .for_main = false, .flip_dma = false };
+var fcsd = FixcolTest.TestFixcolDMA{ .for_main = true, .flip_dma = false };
+var fcmdf = FixcolTest.TestFixcolDMA{ .for_main = false, .flip_dma = true };
+var fcsdf = FixcolTest.TestFixcolDMA{ .for_main = true, .flip_dma = true };
+// var ... = .{};
+// var ... = .{ .xnow = 0, .ynow = 0, .xtarget = -32, .ytarget = -32 };
+// var ... = .{ .bg = 0 };
+// var ... = .{ .bg = 1 };
+// var ... = .{ .bg = 2 };
+// var ... = .{ .bg = 3 };
+// var ... = .{ .xnow = -32, .ynow = -32, .xtarget = 0, .ytarget = 0 };
+// var ... = .{ .bg = 0, .flip_dma = false };
+// var ... = .{ .bg = 1, .flip_dma = false };
+// var ... = .{ .bg = 2, .flip_dma = false };
+// var ... = .{ .bg = 3, .flip_dma = false };
+// var ... = .{ .bg = 0, .flip_dma = true };
+// var ... = .{ .bg = 1, .flip_dma = true };
+// var ... = .{ .bg = 2, .flip_dma = true };
+// var ... = .{ .bg = 3, .flip_dma = true };
+// var ... = .{ .xnow = 0, .ynow = 0, .xtarget = -64, .ytarget = -64 };
+// var ... = .{ .bg = 0 };
+// var ... = .{ .bg = 1 };
+// var ... = .{ .bg = 2 };
+// var ... = .{ .bg = 3 };
+// var ... = .{ .bg = 0 };
+// var ... = .{ .bg = 1 };
+// var ... = .{ .bg = 2 };
+// var ... = .{ .bg = 3 };
+// var ... = .{ .xnow = -64, .ynow = -64, .xtarget = 0, .ytarget = 0 };
+// var ... = .{ .bg = 0 };
+// var ... = .{ .bg = 1 };
+// var ... = .{ .bg = 2 };
+// var ... = .{ .bg = 3 };
+// var ... = .{ .bg = 0, .flip_dma = false };
+// var ... = .{ .bg = 1, .flip_dma = false };
+// var ... = .{ .bg = 2, .flip_dma = false };
+// var ... = .{ .bg = 3, .flip_dma = false };
+// var ... = .{ .bg = 0, .flip_dma = true };
+// var ... = .{ .bg = 1, .flip_dma = true };
+// var ... = .{ .bg = 2, .flip_dma = true };
+// var ... = .{ .bg = 3, .flip_dma = true };
+// var ... = .{};
+// var ... = .{};
+// var ... = .{};
+// var ... = .{};
+// var ... = .{ .to_main = true };
+// var ... = .{ .to_main = false };
+// var ... = .{ .is_main = true };
+// var ... = .{ .is_main = false };
+// var ... = .{};
+// var ... = .{};
 
 const screens = [_]Mgr.ManagedScreen{
     .{ .test_win_nodma = &wn0 },
@@ -88,6 +142,59 @@ const screens = [_]Mgr.ManagedScreen{
     .{ .test_win_send = &wssc },
     .{ .test_win_col = &wcm },
     .{ .test_win_col = &wcs },
+    .{ .test_fixcol = &fcm },
+    .{ .test_fixcol = &fcs },
+    .{ .test_fixcol_dma = &fcmd },
+    .{ .test_fixcol_dma = &fcsd },
+    .{ .test_fixcol_dma = &fcmdf },
+    .{ .test_fixcol_dma = &fcsdf },
+    // .{ .bg_tests_data_setup = &},
+    // .{ .bg_pos_fixup = &},
+    // .{ .test_bg_oob = &},
+    // .{ .test_bg_oob = &},
+    // .{ .test_bg_oob = &},
+    // .{ .test_bg_oob = &},
+    // .{ .bg_pos_fixup = &},
+    // .{ .test_bg_scroll_dma = &},
+    // .{ .test_bg_scroll_dma = &},
+    // .{ .test_bg_scroll_dma = &},
+    // .{ .test_bg_scroll_dma = &},
+    // .{ .test_bg_scroll_dma = &},
+    // .{ .test_bg_scroll_dma = &},
+    // .{ .test_bg_scroll_dma = &},
+    // .{ .test_bg_scroll_dma = &},
+    // .{ .bg_pos_fixup = &},
+    // .{ .test_bg_size = &},
+    // .{ .test_bg_size = &},
+    // .{ .test_bg_size = &},
+    // .{ .test_bg_size = &},
+    // .{ .test_bg_mosiac = &},
+    // .{ .test_bg_mosiac = &},
+    // .{ .test_bg_mosiac = &},
+    // .{ .test_bg_mosiac = &},
+    // .{ .bg_pos_fixup = &},
+    // .{ .test_bg_affine = &},
+    // .{ .test_bg_affine = &},
+    // .{ .test_bg_affine = &},
+    // .{ .test_bg_affine = &},
+    // .{ .test_bg_affine_dma = &},
+    // .{ .test_bg_affine_dma = &},
+    // .{ .test_bg_affine_dma = &},
+    // .{ .test_bg_affine_dma = &},
+    // .{ .test_bg_affine_dma = &},
+    // .{ .test_bg_affine_dma = &},
+    // .{ .test_bg_affine_dma = &},
+    // .{ .test_bg_affine_dma = &},
+    // .{ .test_bg_prio_feat = &},
+    // .{ .test_obj_attrs = &},
+    // .{ .test_obj_wrap = &},
+    // .{ .compose_tests_data_setup = &},
+    // .{ .test_buffer = &},
+    // .{ .test_buffer = &},
+    // .{ .test_colwin = &},
+    // .{ .test_colwin = &},
+    // .{ .test_cmath_enable = &},
+    // .{ .test_cmath_sett = &},
 };
 
 screen: u64,
@@ -113,61 +220,6 @@ pub fn init(app: *App, core: *mach.Core, app_mod: mach.Mod(App)) !void {
         .timer = try std.time.Timer.start(),
         .frames = 0,
     };
-    // .screens = @constCast(&[_]Mgr.ManagedScreen{
-    //     .{ .test_fixcol = @alignCast(@ptrCast(@constCast(&.{ .for_main = true }))) },
-    //     .{ .test_fixcol = @alignCast(@ptrCast(@constCast(&.{ .for_main = false }))) },
-    //     .{ .test_fixcol_dma = @alignCast(@ptrCast(@constCast(&.{ .for_main = false, .flip_dma = false }))) },
-    //     .{ .test_fixcol_dma = @alignCast(@ptrCast(@constCast(&.{ .for_main = true, .flip_dma = false }))) },
-    //     .{ .test_fixcol_dma = @alignCast(@ptrCast(@constCast(&.{ .for_main = false, .flip_dma = true }))) },
-    //     .{ .test_fixcol_dma = @alignCast(@ptrCast(@constCast(&.{ .for_main = true, .flip_dma = true }))) },
-    //     .{ .bg_tests_data_setup = @alignCast(@ptrCast(@constCast(&.{}))) },
-    //     .{ .bg_pos_fixup = @alignCast(@ptrCast(@constCast(&.{ .xnow = 0, .ynow = 0, .xtarget = -32, .ytarget = -32 }))) },
-    //     .{ .test_bg_oob = @alignCast(@ptrCast(@constCast(&.{ .bg = 0 }))) },
-    //     .{ .test_bg_oob = @alignCast(@ptrCast(@constCast(&.{ .bg = 1 }))) },
-    //     .{ .test_bg_oob = @alignCast(@ptrCast(@constCast(&.{ .bg = 2 }))) },
-    //     .{ .test_bg_oob = @alignCast(@ptrCast(@constCast(&.{ .bg = 3 }))) },
-    //     .{ .bg_pos_fixup = @alignCast(@ptrCast(@constCast(&.{ .xnow = -32, .ynow = -32, .xtarget = 0, .ytarget = 0 }))) },
-    //     .{ .test_bg_scroll_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 0, .flip_dma = false }))) },
-    //     .{ .test_bg_scroll_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 1, .flip_dma = false }))) },
-    //     .{ .test_bg_scroll_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 2, .flip_dma = false }))) },
-    //     .{ .test_bg_scroll_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 3, .flip_dma = false }))) },
-    //     .{ .test_bg_scroll_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 0, .flip_dma = true }))) },
-    //     .{ .test_bg_scroll_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 1, .flip_dma = true }))) },
-    //     .{ .test_bg_scroll_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 2, .flip_dma = true }))) },
-    //     .{ .test_bg_scroll_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 3, .flip_dma = true }))) },
-    //     .{ .bg_pos_fixup = @alignCast(@ptrCast(@constCast(&.{ .xnow = 0, .ynow = 0, .xtarget = -64, .ytarget = -64 }))) },
-    //     .{ .test_bg_size = @alignCast(@ptrCast(@constCast(&.{ .bg = 0 }))) },
-    //     .{ .test_bg_size = @alignCast(@ptrCast(@constCast(&.{ .bg = 1 }))) },
-    //     .{ .test_bg_size = @alignCast(@ptrCast(@constCast(&.{ .bg = 2 }))) },
-    //     .{ .test_bg_size = @alignCast(@ptrCast(@constCast(&.{ .bg = 3 }))) },
-    //     .{ .test_bg_mosiac = @alignCast(@ptrCast(@constCast(&.{ .bg = 0 }))) },
-    //     .{ .test_bg_mosiac = @alignCast(@ptrCast(@constCast(&.{ .bg = 1 }))) },
-    //     .{ .test_bg_mosiac = @alignCast(@ptrCast(@constCast(&.{ .bg = 2 }))) },
-    //     .{ .test_bg_mosiac = @alignCast(@ptrCast(@constCast(&.{ .bg = 3 }))) },
-    //     .{ .bg_pos_fixup = @alignCast(@ptrCast(@constCast(&.{ .xnow = -64, .ynow = -64, .xtarget = 0, .ytarget = 0 }))) },
-    //     .{ .test_bg_affine = @alignCast(@ptrCast(@constCast(&.{ .bg = 0 }))) },
-    //     .{ .test_bg_affine = @alignCast(@ptrCast(@constCast(&.{ .bg = 1 }))) },
-    //     .{ .test_bg_affine = @alignCast(@ptrCast(@constCast(&.{ .bg = 2 }))) },
-    //     .{ .test_bg_affine = @alignCast(@ptrCast(@constCast(&.{ .bg = 3 }))) },
-    //     .{ .test_bg_affine_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 0, .flip_dma = false }))) },
-    //     .{ .test_bg_affine_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 1, .flip_dma = false }))) },
-    //     .{ .test_bg_affine_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 2, .flip_dma = false }))) },
-    //     .{ .test_bg_affine_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 3, .flip_dma = false }))) },
-    //     .{ .test_bg_affine_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 0, .flip_dma = true }))) },
-    //     .{ .test_bg_affine_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 1, .flip_dma = true }))) },
-    //     .{ .test_bg_affine_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 2, .flip_dma = true }))) },
-    //     .{ .test_bg_affine_dma = @alignCast(@ptrCast(@constCast(&.{ .bg = 3, .flip_dma = true }))) },
-    //     .{ .test_bg_prio_feat = @alignCast(@ptrCast(@constCast(&.{}))) },
-    //     .{ .test_obj_attrs = @alignCast(@ptrCast(@constCast(&.{}))) },
-    //     .{ .test_obj_wrap = @alignCast(@ptrCast(@constCast(&.{}))) },
-    //     .{ .compose_tests_data_setup = @alignCast(@ptrCast(@constCast(&.{}))) },
-    //     .{ .test_buffer = @alignCast(@ptrCast(@constCast(&.{ .to_main = true }))) },
-    //     .{ .test_buffer = @alignCast(@ptrCast(@constCast(&.{ .to_main = false }))) },
-    //     .{ .test_colwin = @alignCast(@ptrCast(@constCast(&.{ .is_main = true }))) },
-    //     .{ .test_colwin = @alignCast(@ptrCast(@constCast(&.{ .is_main = false }))) },
-    //     .{ .test_cmath_enable = @alignCast(@ptrCast(@constCast(&.{}))) },
-    //     .{ .test_cmath_sett = @alignCast(@ptrCast(@constCast(&.{}))) },
-    // }),
 }
 
 pub fn tick(app: *App, core: *mach.Core) !void {
