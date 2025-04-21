@@ -13,4 +13,4 @@ After importing mode8, the following namespaces may be accessed:
     - `Obj`: Simpler definition and manipulation of Objects and loading of Object graphics.
     - `RenderParams`: Functions used for manipulating the hardware registers that control rendering.
     - `Tile`: Simpler definition and loading of Tiles and Tile graphics.
-- `.magic`: Contains the init (poweron), deinit (poweroff) and tick functions used to drive everything.
+- `.magic`: Contains the magic that does the rendering. The init (poweron), deinit (poweroff) and tick functions that drive everything are found in this namespace.

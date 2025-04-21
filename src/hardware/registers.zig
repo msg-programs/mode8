@@ -1,17 +1,17 @@
 const mode8 = @import("../root.zig");
 const con = mode8.hardware.constants;
 
-// /// move background 0-3 in x axis. DMA-able
-// pub var xscroll: [con.BG_NUM][con.DMA_NUM]i32 = @splat(@splat(0));
+/// move background 0-3 in x axis. DMA-able
+pub var xscroll: [con.BG_NUM][con.DMA_NUM]i32 = @splat(@splat(0));
 
-// /// enable DMA for which backgrounds?
-// pub var xscroll_do_dma: [con.BG_NUM]bool = @splat(false);
+/// enable DMA for which backgrounds?
+pub var xscroll_do_dma: [con.BG_NUM]bool = @splat(false);
 
-// /// move background 0-3 in y axis. DMA-able
-// pub var yscroll: [con.BG_NUM][con.DMA_NUM]i32 = @splat(@splat(0));
+/// move background 0-3 in y axis. DMA-able
+pub var yscroll: [con.BG_NUM][con.DMA_NUM]i32 = @splat(@splat(0));
 
-// /// enable DMA for which backgrounds?
-// pub var yscroll_do_dma: [con.BG_NUM]bool = @splat(false);
+/// enable DMA for which backgrounds?
+pub var yscroll_do_dma: [con.BG_NUM]bool = @splat(false);
 
 // /// affine transformation: origin x pos. DMA-able
 // pub var affine_x0: [con.BG_NUM][con.DMA_NUM]i32 = @splat(@splat(0));
@@ -100,8 +100,8 @@ pub var col_win_apply: [2]u4 = @splat(0);
 // /// bool: should the sub buffer be overridden with the sub buffer fixed color?
 // pub var fix_sub: bool = 0;
 
-// /// should DMA be applied horizontally or vertically? (for BGs)
-// pub var dma_dir_bg: [4]bool = @splat(false);
+/// should DMA be applied horizontally or vertically? (for BGs)
+pub var dma_dir_bg: [4]u1 = @splat(0);
 
 /// should DMA for windows be applied horizontally or vertically?
 /// note: also flips how windows work
@@ -128,7 +128,7 @@ pub var dma_dir_fixcol: [2]u1 = @splat(0);
 // /// background size / 2 - 1
 // pub var bgsz: [con.BG_NUM]u8 = @splat(15);
 
-// /// background offset / 16
+// /// background offset / 16 (u4 x + u4 y)
 // pub var bgoffs: [con.BG_NUM]u8 = @splat(0);
 
 // /// bitfield {TrTdTlTu, TdTcTbTa, TSTsTRTL}: controller state

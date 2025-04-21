@@ -15,6 +15,11 @@ const ScreenPos = struct {
     y: u8,
 };
 
+const ViewPos = struct {
+    x: i32,
+    y: i32,
+};
+
 const Color = packed struct {
     r: u8,
     g: u8,
@@ -80,11 +85,12 @@ const BufferPixel = struct {
 
 // given a packed color, unpack it
 fn unpackColor(p_col: u16) Color {
-    return Color{
-        .r = @intFromFloat(@as(f32, @floatFromInt((p_col & 0x001F) >> 0)) / 31.0 * 255),
-        .g = @intFromFloat(@as(f32, @floatFromInt((p_col & 0x03E0) >> 5)) / 31.0 * 255),
-        .b = @intFromFloat(@as(f32, @floatFromInt((p_col & 0x7C00) >> 10)) / 31.0 * 255),
-        .a = if (p_col & 0x8000 != 0) 255 else 0,
+    const col: bsp.Color = @bitCast(p_col);
+    return .{
+        .r = @intFromFloat(@as(f32, @floatFromInt(col.r)) / 31.0 * 255.0),
+        .g = @intFromFloat(@as(f32, @floatFromInt(col.g)) / 31.0 * 255.0),
+        .b = @intFromFloat(@as(f32, @floatFromInt(col.b)) / 31.0 * 255.0),
+        .a = 255,
     };
 }
 
@@ -93,146 +99,173 @@ fn unpackColor(p_col: u16) Color {
 //     return (p_col & 0x8000) != 0;
 // }
 
-// // given a palette index, return the packed color stored there
-// fn lookupPaletteColor(idx: u8) u16 {
-//     return mem.GCM[idx] | (mem.GCM[idx + 1] << 8);
-// }
+// given a palette index, return the packed color stored there
+fn lookupPaletteColor(idx: u8) u16 {
+    return mem.GCM[idx * 2] | (@as(u16, mem.GCM[idx * 2 + 1]) << 8);
+}
 
-// ///////////////////////////////////////////////////////////////////////////////////////////////////
-// // BG TILE FUNCTIONS
-// ///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// BG TILE FUNCTIONS
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
-// // given a viewpos and a Tile struct, find the palette index of the pixel that is at that position.
-// // this implements flipping and rotation.
-// fn fetchTilePixel(viewpos: Vec2u, tile_attrs: bsp.Tile) u8 {
-//     // viewpos to pos inside tile
-//     var pixpos: Vec2u = Vec2u.init(
-//         viewpos.x() % con.TILE_GFX_DIM_PIX,
-//         viewpos.y() % con.TILE_GFX_DIM_PIX,
-//     );
+// given a viewpos and a Tile struct, find the palette index of the pixel that is at that position.
+// this implements flipping and rotation.
+fn fetchTilePixel(viewpos: ViewPos, tile_attrs: bsp.Tile) u8 {
+    std.debug.assert(viewpos.x >= 0);
+    std.debug.assert(viewpos.y >= 0);
 
-//     // do mirroring of tile
-//     if (tile_attrs.vflip) {
-//         pixpos.v[0] = 7 - pixpos.x();
-//     }
-//     if (tile_attrs.hflip) {
-//         pixpos.v[1] = 7 - pixpos.y();
-//     }
+    const view_x: u32 = @intCast(viewpos.x);
+    const view_y: u32 = @intCast(viewpos.y);
 
-//     if (tile_attrs.rot) {
-//         const tmp = pixpos.x();
-//         pixpos.v[0] = pixpos.y();
-//         pixpos.v[1] = tmp;
-//     }
+    // viewpos to pos inside tile
+    var pixpos_x = @mod(view_x, con.TILE_GFX_DIM_PIX);
+    var pixpos_y = @mod(view_y, con.TILE_GFX_DIM_PIX);
 
-//     const gfxid = tile_attrs.gfxid | (tile_attrs.atlid << 10);
+    // do mirroring of tile
+    if (tile_attrs.vflip == 1) {
+        pixpos_x = 7 - pixpos_x;
+    }
+    if (tile_attrs.hflip == 1) {
+        pixpos_y = 7 - pixpos_y;
+    }
 
-//     // 2D pixpos to 1D pix array index
-//     const pixidx = pixpos.y() * con.TILE_GFX_DIM_PIX + pixpos.x() + gfxid * con.TILE_GFX_PIX_NUM;
-//     return mem.TGM[pixidx];
-// }
+    if (tile_attrs.rot == 1) {
+        const tmp = pixpos_y;
+        pixpos_x = pixpos_y;
+        pixpos_y = tmp;
+    }
 
-// // given a viewpos and a BG, get the tile that is being viewed from the TAM
-// fn fetchTileAttrs(bg: u32, bgoffs: Vec2u, viewpos: Vec2u) bsp.Tile {
-//     // viewpos to tilepos
-//     const tilepos: Vec2u = Vec2u.divScalar(viewpos, con.TILE_GFX_DIM_PIX).add(bgoffs);
-//     // 2D tilepos to 1D tile array index
-//     const tileidx = (tilepos.y() * con.BG_DIM_TIL) + tilepos.x() + (bg * con.BG_DIM_TIL * con.BG_DIM_TIL);
+    const gfxid = tile_attrs.gfxid | (@as(u12, tile_attrs.atlid) << 10);
 
-//     const dat: u16 = mem.TAM[tileidx] | (mem.TAM[tileidx + 1] << 8);
-//     return @bitCast(dat);
-// }
+    // 2D pixpos to 1D pix array index
+    const pixidx: u32 = @as(u32, pixpos_y) * con.TILE_GFX_DIM_PIX + @as(u32, pixpos_x) + @as(u32, gfxid) * con.TILE_GFX_PIX_NUM;
+    return mem.TGM[pixidx];
+}
 
-// // normally, the pos of a pixel on the screen is == the position to look up in the TAM.
-// // mosiac, affine xform and scrolling are implemented by remapping the screenpos into a viewpos
-// fn toTileAttrViewPos(bg: u32, screenpos: Vec2u) Vec2i {
-//     var viewpos = Vec2i.init(screenpos.x(), screenpos.y());
-//     viewpos = (viewpos / i32(reg.mosiac[bg])) * i32(reg.mosiac[bg]);
+// given a viewpos and a BG, get the tile that is being viewed from the TAM
+fn fetchTileAttrs(bg: u32, bgoffs_x: u8, bgoffs_y: u8, viewpos: ViewPos) bsp.Tile {
+    std.debug.assert(viewpos.x >= 0);
+    std.debug.assert(viewpos.y >= 0);
 
-//     const index: u32 = if (reg.dma_dir_bg[bg]) screenpos.x() else screenpos.y();
+    const view_x: u32 = @intCast(viewpos.x);
+    const view_y: u32 = @intCast(viewpos.y);
 
-//     const xscroll: i32 = if (reg.xscroll_do_dma[bg]) reg.xscroll[bg][index] else reg.xscroll[bg][0];
-//     const yscroll: i32 = if (reg.yscroll_do_dma[bg]) reg.yscroll[bg][index] else reg.yscroll[bg][0];
+    // viewpos to tilepos
+    const tilepos_x = @divFloor(view_x, con.TILE_GFX_DIM_PIX) + bgoffs_x;
+    const tilepos_y = @divFloor(view_y, con.TILE_GFX_DIM_PIX) + bgoffs_y;
 
-//     const x0: i32 = if (reg.affine_x0_do_dma[bg]) reg.affine_x0[bg][index] else reg.affine_x0[bg][0];
-//     const y0: i32 = if (reg.affine_y0_do_dma[bg]) reg.affine_y0[bg][index] else reg.affine_y0[bg][0];
-//     const a: f32 = if (reg.affine_a_do_dma[bg]) reg.affine_a[bg][index] else reg.affine_a[bg][0];
-//     const b: f32 = if (reg.affine_b_do_dma[bg]) reg.affine_b[bg][index] else reg.affine_b[bg][0];
-//     const c: f32 = if (reg.affine_c_do_dma[bg]) reg.affine_c[bg][index] else reg.affine_c[bg][0];
-//     const d: f32 = if (reg.affine_d_do_dma[bg]) reg.affine_d[bg][index] else reg.affine_d[bg][0];
+    // 2D tilepos to 1D tile array index
+    const tileidx = @as(u32, @intCast((tilepos_y * con.BG_DIM_TIL) + tilepos_x)) + (bg * con.BG_DIM_TIL * con.BG_DIM_TIL);
 
-//     const affine_mat = math.mat2x2(.{ a, b }, .{ c, d });
-//     const affine_vec1: math.Vec2 = math.vec2(@floatFromInt(viewpos.x()), @floatFromInt(viewpos.y())).add(math.vec2(@floatFromInt(xscroll), @floatFromInt(yscroll))).sub(math.vec2(@floatFromInt(x0), @floatFromInt(y0)));
-//     const affine_vec2: math.Vec2 = math.vec2.init(x0, y0);
+    const dat: u16 = mem.TAM[tileidx * 2] | (@as(u16, mem.TAM[tileidx * 2 + 1]) << 8);
+    return @bitCast(dat);
+}
 
-//     const viewpos_pre: math.Vec2 = affine_mat.mulVec(affine_vec1).add(affine_vec2);
-//     viewpos = Vec2u.init(@intFromFloat(viewpos_pre.x()), @intFromFloat(viewpos_pre.y()));
+// normally, the pos of a pixel on the screen is == the position to look up in the TAM.
+// mosiac, affine xform and scrolling are implemented by remapping the screenpos into a viewpos
+fn toTileAttrViewPos(bg: u32, screenpos: ScreenPos) ViewPos {
+    var viewpos = ViewPos{ .x = screenpos.x, .y = screenpos.y };
+    // viewpos = (viewpos / i32(reg.mosiac[bg])) * i32(reg.mosiac[bg]);
 
-//     return viewpos;
-// }
+    const index: u32 = if (@as(rpa.DMADir, @enumFromInt(reg.dma_dir_bg[bg])) == .top_to_bottom) screenpos.y else screenpos.x;
 
-// // given the screenpos, calculate the packed color for that pixel based on the specified BG.
-// fn calcBGPixel(screenpos: Vec2u, bg: u2) BGPixel {
-//     var viewpos_pre = toTileAttrViewPos(bg, screenpos);
+    const xscroll: i32 = if (reg.xscroll_do_dma[bg]) reg.xscroll[bg][index] else reg.xscroll[bg][0];
+    const yscroll: i32 = if (reg.yscroll_do_dma[bg]) reg.yscroll[bg][index] else reg.yscroll[bg][0];
 
-//     const bgsz = reg.bgsz[bg] * 8;
+    // XXX TMP XXX
+    viewpos.x += xscroll;
+    viewpos.y += yscroll;
 
-//     const viewpos_pre_in_bounds: bool = (viewpos_pre.x < 0 or viewpos_pre.y < 0 or viewpos_pre.x >= i32(bgsz) or viewpos_pre.y >= i32(bgsz));
+    // const x0: i32 = if (reg.affine_x0_do_dma[bg]) reg.affine_x0[bg][index] else reg.affine_x0[bg][0];
+    // const y0: i32 = if (reg.affine_y0_do_dma[bg]) reg.affine_y0[bg][index] else reg.affine_y0[bg][0];
+    // const a: f32 = if (reg.affine_a_do_dma[bg]) reg.affine_a[bg][index] else reg.affine_a[bg][0];
+    // const b: f32 = if (reg.affine_b_do_dma[bg]) reg.affine_b[bg][index] else reg.affine_b[bg][0];
+    // const c: f32 = if (reg.affine_c_do_dma[bg]) reg.affine_c[bg][index] else reg.affine_c[bg][0];
+    // const d: f32 = if (reg.affine_d_do_dma[bg]) reg.affine_d[bg][index] else reg.affine_d[bg][0];
 
-//     if (!viewpos_pre_in_bounds) {
-//         const viewpos = Vec2u.init(viewpos_pre.x(), viewpos_pre.y());
-//         const tile_attrs = fetchTileAttrs(bg, reg.bg_sz[bg], reg.bg_offs[bg], viewpos);
-//         const tilecol_idx = fetchTilePixel(viewpos, tile_attrs);
-//         return BGPixel{
-//             .p_col = lookupPaletteColor(tilecol_idx),
-//             .isprio = tile_attrs.prio == 1,
-//         };
-//     }
-//     switch (reg.oob_setting[bg]) {
-//         .OOB_SETTING_CLAMP => {
-//             viewpos_pre = Vec2i.clamp(Vec2i.init(0, 0), viewpos_pre, Vec2i.init(i32(bgsz), i32(bgsz)));
-//             var viewpos = Vec2u.init(viewpos_pre.x(), viewpos_pre.y());
-//             // else color is taken from "next" tile instead of the one on the border
-//             if (viewpos.x >= bgsz) {
-//                 viewpos.x -= 1;
-//             }
-//             if (viewpos.y >= bgsz) {
-//                 viewpos.y -= 1;
-//             }
-//             const tile_attrs = fetchTileAttrs(bg, reg.bg_sz[bg], reg.bg_offs[bg], viewpos);
-//             const tilecol_idx = fetchTilePixel(viewpos, tile_attrs);
-//             return BGPixel(lookupPaletteColor(tilecol_idx), tile_attrs.prio);
-//         },
-//         .OOB_SETTING_COLOR => {
-//             return BGPixel(reg.oob_data[bg] & 0xFFFF, false);
-//         },
-//         .OOB_SETTING_TILE => {
-//             const dummy = bsp.Tile{
-//                 (reg.oob_data[bg] & 0x0FFF) >> 0,
-//                 (reg.oob_data[bg] & 0x1000) != 0,
-//                 (reg.oob_data[bg] & 0x2000) != 0,
-//                 (reg.oob_data[bg] & 0x4000) != 0,
-//                 (reg.oob_data[bg] & 0x8000) != 0,
-//             };
-//             const viewpos = Vec2u.init(viewpos_pre.x(), viewpos_pre.y());
-//             const tilecol_idx = fetchTilePixel(viewpos, dummy);
+    // const affine_mat = math.mat2x2(.{ a, b }, .{ c, d });
+    // const affine_vec1: math.Vec2 = math.vec2(@floatFromInt(viewpos.x()), @floatFromInt(viewpos.y())).add(math.vec2(@floatFromInt(xscroll), @floatFromInt(yscroll))).sub(math.vec2(@floatFromInt(x0), @floatFromInt(y0)));
+    // const affine_vec2: math.Vec2 = math.vec2.init(x0, y0);
 
-//             return BGPixel(lookupPaletteColor(tilecol_idx), dummy.prio);
-//         },
-//         .OOB_SETTING_WRAP => { // OOB_SETTING_WRAP
-//             // manual modulo for negative values
-//             if (viewpos_pre.x < 0 or viewpos_pre.y < 0) {
-//                 const diff = -viewpos_pre;
-//                 const mult = (diff / i32(bgsz)) + 1;
-//                 viewpos_pre += i32(bgsz) * mult;
-//             }
-//             const viewpos = Vec2u.init(viewpos_pre.x() % bgsz, viewpos_pre.y() % bgsz);
-//             const tile_attrs = fetchTileAttrs(bg, reg.bg_sz[bg], reg.bg_offs[bg], viewpos);
-//             const tilecol_idx = fetchTilePixel(viewpos, tile_attrs);
-//             return BGPixel(lookupPaletteColor(tilecol_idx), tile_attrs.prio);
-//         },
-//     }
-// }
+    // const viewpos_pre: math.Vec2 = affine_mat.mulVec(affine_vec1).add(affine_vec2);
+    // viewpos = Vec2u.init(@intFromFloat(viewpos_pre.x()), @intFromFloat(viewpos_pre.y()));
+
+    return viewpos;
+}
+
+// given the screenpos, calculate the packed color for that pixel based on the specified BG.
+fn calcBGPixel(screenpos: ScreenPos, bg: u2) BGPixel {
+    const viewpos_pre = toTileAttrViewPos(bg, screenpos); // XXX TMP CONST
+
+    // XXX BGSZ FIXED XXX
+    // const bgsz = reg.bgsz[bg] * 8;
+    const bgsz = 256;
+
+    const viewpos_pre_oob: bool = (viewpos_pre.x < 0 or viewpos_pre.y < 0 or viewpos_pre.x >= bgsz or viewpos_pre.y >= bgsz);
+
+    if (!viewpos_pre_oob) {
+        const viewpos = ViewPos{ .x = viewpos_pre.x, .y = viewpos_pre.y };
+        // const tile_attrs = fetchTileAttrs(bg, reg.bgsz[bg], reg.bg_offs[bg], viewpos);
+        // XXX TMP XXX
+        const tile_attrs = fetchTileAttrs(bg, 0, 0, viewpos);
+        const tilecol_idx = fetchTilePixel(viewpos, tile_attrs);
+        return BGPixel{
+            .p_col = lookupPaletteColor(tilecol_idx),
+            .isprio = tile_attrs.prio == 1,
+        };
+    } else {
+        // XXX TMP XXX
+        return BGPixel{
+            .p_col = 0x0000,
+            .isprio = false,
+        };
+    }
+
+    // switch (reg.oob_setting[bg]) {
+    //     .OOB_SETTING_CLAMP => {
+    //         viewpos_pre = Vec2i.clamp(Vec2i.init(0, 0), viewpos_pre, Vec2i.init(i32(bgsz), i32(bgsz)));
+    //         var viewpos = Vec2u.init(viewpos_pre.x(), viewpos_pre.y());
+    //         // else color is taken from "next" tile instead of the one on the border
+    //         if (viewpos.x >= bgsz) {
+    //             viewpos.x -= 1;
+    //         }
+    //         if (viewpos.y >= bgsz) {
+    //             viewpos.y -= 1;
+    //         }
+    //         const tile_attrs = fetchTileAttrs(bg, reg.bg_sz[bg], reg.bg_offs[bg], viewpos);
+    //         const tilecol_idx = fetchTilePixel(viewpos, tile_attrs);
+    //         return BGPixel(lookupPaletteColor(tilecol_idx), tile_attrs.prio);
+    //     },
+    //     .OOB_SETTING_COLOR => {
+    //         return BGPixel(reg.oob_data[bg] & 0xFFFF, false);
+    //     },
+    //     .OOB_SETTING_TILE => {
+    //         const dummy = bsp.Tile{
+    //             (reg.oob_data[bg] & 0x0FFF) >> 0,
+    //             (reg.oob_data[bg] & 0x1000) != 0,
+    //             (reg.oob_data[bg] & 0x2000) != 0,
+    //             (reg.oob_data[bg] & 0x4000) != 0,
+    //             (reg.oob_data[bg] & 0x8000) != 0,
+    //         };
+    //         const viewpos = Vec2u.init(viewpos_pre.x(), viewpos_pre.y());
+    //         const tilecol_idx = fetchTilePixel(viewpos, dummy);
+
+    //         return BGPixel(lookupPaletteColor(tilecol_idx), dummy.prio);
+    //     },
+    //     .OOB_SETTING_WRAP => { // OOB_SETTING_WRAP
+    //         // manual modulo for negative values
+    //         if (viewpos_pre.x < 0 or viewpos_pre.y < 0) {
+    //             const diff = -viewpos_pre;
+    //             const mult = (diff / i32(bgsz)) + 1;
+    //             viewpos_pre += i32(bgsz) * mult;
+    //         }
+    //         const viewpos = Vec2u.init(viewpos_pre.x() % bgsz, viewpos_pre.y() % bgsz);
+    //         const tile_attrs = fetchTileAttrs(bg, reg.bg_sz[bg], reg.bg_offs[bg], viewpos);
+    //         const tilecol_idx = fetchTilePixel(viewpos, tile_attrs);
+    //         return BGPixel(lookupPaletteColor(tilecol_idx), tile_attrs.prio);
+    //     },
+    // }
+}
 
 // ///////////////////////////////////////////////////////////////////////////////////////////////////
 // // OBJ FUNCTIONS
@@ -687,14 +720,14 @@ fn shaderMain(screenpos: ScreenPos) void {
     // /////////////////////////////////////////////
 
     // // BG and obj data: color and prio of the color's source
-    // const bg0_data: BGPixel = calcBGPixel(screen_x, screen_y, 0);
-    // const bg1_data: BGPixel = calcBGPixel(screen_x, screen_y, 1);
-    // const bg2_data: BGPixel = calcBGPixel(screen_x, screen_y, 2);
-    // const bg3_data: BGPixel = calcBGPixel(screen_x, screen_y, 3);
+    const bg0_data: BGPixel = calcBGPixel(screenpos, 0);
+    const bg1_data: BGPixel = calcBGPixel(screenpos, 1);
+    const bg2_data: BGPixel = calcBGPixel(screenpos, 2);
+    const bg3_data: BGPixel = calcBGPixel(screenpos, 3);
     // const obj_data: ObjPixel = calcObjsPixel(screen_x, screen_y);
 
-    // // colors array for efficient processing later
-    // const p_cols: [5]u16 = .{ bg0_data.p_col, bg1_data.p_col, bg2_data.p_col, bg3_data.p_col, obj_data.p_col };
+    // colors array for efficient processing later
+    const p_cols: [5]u16 = .{ bg0_data.p_col, bg1_data.p_col, bg2_data.p_col, bg3_data.p_col, bg3_data.p_col }; // XXX FOR NOW ONLY obj_data.p_col };
 
     // // prio array for use in priority calculation later
     // // objs have 4 prio settings, so handle them differently.
@@ -761,16 +794,19 @@ fn shaderMain(screenpos: ScreenPos) void {
         //     setPx(screen_x, screen_y, fincol);
         //     return;
         // },
-        // rpa.DebugMode.DEBUG_MODE_LAYER => {
-        //     // show just a single layer before entering the composition pipeline,
-        //     // i.e. transformation, size, affine, mosaic
-        //     if (reg.debug_arg > .DEBUG_ARG_SHOW_OBJS) {
-        //         setPx(screen_x, screen_y, errcol);
-        //         return;
-        //     }
-        //     setPx(screen_x, screen_y, unpackColor(p_cols[@intFromEnum(reg.debug_arg)]));
-        //     return;
-        // },
+        .layer => {
+            // show just a single layer before entering the composition pipeline,
+            // i.e. transformation, size, affine, mosaic
+            const col = switch (debug_arg) {
+                else => errcol,
+                .show_bg_0 => unpackColor(p_cols[0]),
+                .show_bg_1 => unpackColor(p_cols[1]),
+                .show_bg_2 => unpackColor(p_cols[2]),
+                .show_bg_3 => unpackColor(p_cols[3]),
+            };
+            setPx(screenpos, col);
+            return;
+        },
         .windows_setup => {
             // show how the windows are set up based on the start/end data
             const col = Color{

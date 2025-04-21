@@ -1,6 +1,9 @@
 # Windows
 Windows are masks that are applied to layers at various points. All pixels inside a window are treated as transparent.
 
+**Further reading:**
+- Compositing.md (for info on how the windows are used)
+
 ## The Window Pipeline
 
 ### 1. Definition

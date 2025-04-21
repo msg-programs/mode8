@@ -10,8 +10,9 @@ mode8's source and documentation uses the following terminology:
 # Rendering
 - Window: A mask applied to layers, see Windows.md
 - DMA: See DMA.md
+- BG: A background made from a tilemap, see BG.md
 - Layer: Umbrella term for the four BGs + the Objs + the Fixcols (6 layers in total).
-- Buffer: The rendering pipeline uses two framebuffers (main and sub) at one point, see Buffers.md
+- Buffer: The rendering pipeline uses two framebuffers (main and sub) at one point, see Compositing.md
 - Color Math: The final step of the rendering pipeline, see Color Math.md
 - Fixcol: Fixed fallback color used in the rendering pipeline, see Fixcol.md
 

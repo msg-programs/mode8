@@ -26,3 +26,6 @@ mode8's builtin debug modes are used to display various intermediate stages of t
 - `.fixcol_setup`
     - Requires args: One of `.show_main, .show_sub`
     - Shows the fixcol used for the main/sub buffer
+- `.layer`
+    - Requires args: One of `.show_bg_0, .show_bg_1, .show_bg_2, .show_bg_3, .show_objs`
+    - Shows the respective layer before any compositing, but after the layer's settings for mosiac, affine, offset, etc. are applied.

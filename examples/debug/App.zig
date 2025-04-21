@@ -11,6 +11,7 @@ const bsp = mode8.bsp;
 const Mgr = @import("ScreenMgr.zig");
 const WinSetupTest = @import("screens/WinSetupTest.zig");
 const FixcolTest = @import("screens/FixcolTest.zig");
+const BgTest = @import("screens/BgTest.zig");
 
 const App = @This();
 pub const mach_module = .app;
@@ -66,13 +67,13 @@ var fcmd = FixcolTest.TestFixcolDMA{ .for_main = false, .flip_dma = false };
 var fcsd = FixcolTest.TestFixcolDMA{ .for_main = true, .flip_dma = false };
 var fcmdf = FixcolTest.TestFixcolDMA{ .for_main = false, .flip_dma = true };
 var fcsdf = FixcolTest.TestFixcolDMA{ .for_main = true, .flip_dma = true };
-// var ... = .{};
-// var ... = .{ .xnow = 0, .ynow = 0, .xtarget = -32, .ytarget = -32 };
-// var ... = .{ .bg = 0 };
-// var ... = .{ .bg = 1 };
-// var ... = .{ .bg = 2 };
-// var ... = .{ .bg = 3 };
-// var ... = .{ .xnow = -32, .ynow = -32, .xtarget = 0, .ytarget = 0 };
+var bgds = BgTest.BgTestsDataSetup{};
+var bgmv1 = BgTest.BgPosFixup{ .xnow = 0, .ynow = 0, .xtarget = -32, .ytarget = -32 };
+// var bgoob0 = .{ .bg = 0 };
+// var bgoob1 = .{ .bg = 1 };
+// var bgoob2 = .{ .bg = 2 };
+// var bgoob3 = .{ .bg = 3 };
+// var bgmv2 = .{ .xnow = -32, .ynow = -32, .xtarget = 0, .ytarget = 0 };
 // var ... = .{ .bg = 0, .flip_dma = false };
 // var ... = .{ .bg = 1, .flip_dma = false };
 // var ... = .{ .bg = 2, .flip_dma = false };
@@ -81,7 +82,7 @@ var fcsdf = FixcolTest.TestFixcolDMA{ .for_main = true, .flip_dma = true };
 // var ... = .{ .bg = 1, .flip_dma = true };
 // var ... = .{ .bg = 2, .flip_dma = true };
 // var ... = .{ .bg = 3, .flip_dma = true };
-// var ... = .{ .xnow = 0, .ynow = 0, .xtarget = -64, .ytarget = -64 };
+// var bgmv3 = .{ .xnow = 0, .ynow = 0, .xtarget = -64, .ytarget = -64 };
 // var ... = .{ .bg = 0 };
 // var ... = .{ .bg = 1 };
 // var ... = .{ .bg = 2 };
@@ -90,7 +91,7 @@ var fcsdf = FixcolTest.TestFixcolDMA{ .for_main = true, .flip_dma = true };
 // var ... = .{ .bg = 1 };
 // var ... = .{ .bg = 2 };
 // var ... = .{ .bg = 3 };
-// var ... = .{ .xnow = -64, .ynow = -64, .xtarget = 0, .ytarget = 0 };
+// var bgmv4 = .{ .xnow = -64, .ynow = -64, .xtarget = 0, .ytarget = 0 };
 // var ... = .{ .bg = 0 };
 // var ... = .{ .bg = 1 };
 // var ... = .{ .bg = 2 };
@@ -125,7 +126,7 @@ const screens = [_]Mgr.ManagedScreen{
     .{ .test_win_dma = &wnd1f },
     .{ .win_tests_data_setup = &wtds },
     .{ .test_win_compose = &wc0 },
-    .{ .test_win_compose = &wc1 },
+    .{ .test_win_compose = &wc1 }, // 10
     .{ .test_win_compose = &wc2 },
     .{ .test_win_compose = &wc3 },
     .{ .test_win_compose = &wc4 },
@@ -135,7 +136,7 @@ const screens = [_]Mgr.ManagedScreen{
     .{ .test_win_send = &wsm2 },
     .{ .test_win_send = &wsm3 },
     .{ .test_win_send = &wsmc },
-    .{ .test_win_send = &wss0 },
+    .{ .test_win_send = &wss0 }, // 20
     .{ .test_win_send = &wss1 },
     .{ .test_win_send = &wss2 },
     .{ .test_win_send = &wss3 },
@@ -145,16 +146,16 @@ const screens = [_]Mgr.ManagedScreen{
     .{ .test_fixcol = &fcm },
     .{ .test_fixcol = &fcs },
     .{ .test_fixcol_dma = &fcmd },
-    .{ .test_fixcol_dma = &fcsd },
+    .{ .test_fixcol_dma = &fcsd }, // 30
     .{ .test_fixcol_dma = &fcmdf },
     .{ .test_fixcol_dma = &fcsdf },
-    // .{ .bg_tests_data_setup = &},
-    // .{ .bg_pos_fixup = &},
+    .{ .bg_tests_data_setup = &bgds },
+    .{ .bg_pos_fixup = &bgmv1 },
     // .{ .test_bg_oob = &},
     // .{ .test_bg_oob = &},
     // .{ .test_bg_oob = &},
     // .{ .test_bg_oob = &},
-    // .{ .bg_pos_fixup = &},
+    // .{ .bg_pos_fixup = &bgmv2},
     // .{ .test_bg_scroll_dma = &},
     // .{ .test_bg_scroll_dma = &},
     // .{ .test_bg_scroll_dma = &},
@@ -163,7 +164,7 @@ const screens = [_]Mgr.ManagedScreen{
     // .{ .test_bg_scroll_dma = &},
     // .{ .test_bg_scroll_dma = &},
     // .{ .test_bg_scroll_dma = &},
-    // .{ .bg_pos_fixup = &},
+    // .{ .bg_pos_fixup = &bgmv3},
     // .{ .test_bg_size = &},
     // .{ .test_bg_size = &},
     // .{ .test_bg_size = &},
@@ -172,7 +173,7 @@ const screens = [_]Mgr.ManagedScreen{
     // .{ .test_bg_mosiac = &},
     // .{ .test_bg_mosiac = &},
     // .{ .test_bg_mosiac = &},
-    // .{ .bg_pos_fixup = &},
+    // .{ .bg_pos_fixup = &bgmv4},
     // .{ .test_bg_affine = &},
     // .{ .test_bg_affine = &},
     // .{ .test_bg_affine = &},
@@ -215,7 +216,7 @@ pub fn init(app: *App, core: *mach.Core, app_mod: mach.Mod(App)) !void {
     });
 
     app.* = .{
-        .screen = 0,
+        .screen = 33,
         .go_next = true,
         .timer = try std.time.Timer.start(),
         .frames = 0,
