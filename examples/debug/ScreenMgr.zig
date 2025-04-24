@@ -16,7 +16,7 @@ pub const ManagedScreen = union(enum) {
     bg_tests_data_setup: *BGT.BgTestsDataSetup,
     bg_pos_fixup: *BGT.BgPosFixup,
     // test_bg_size: *BGT.TestBgSize,
-    // test_bg_oob: *BGT.TestBgOOB,
+    test_bg_oob: *BGT.TestBgOOB,
     // test_bg_scroll_dma: *BGT.TestBgScrollDMA,
     // test_bg_mosiac: *BGT.TestBgMosiac,
     // test_bg_affine: *BGT.TestBgAffine,

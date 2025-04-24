@@ -66,7 +66,7 @@ const OBJ_DIMS_PIX: [8][2]u32 = .{
 
 const BGPixel = struct {
     p_col: u16,
-    isprio: bool,
+    is_prio: bool,
 };
 
 const ObjPixel = struct {
@@ -143,7 +143,7 @@ fn fetchTilePixel(viewpos: ViewPos, tile_attrs: bsp.Tile) u8 {
 }
 
 // given a viewpos and a BG, get the tile that is being viewed from the TAM
-fn fetchTileAttrs(bg: u32, bgoffs_x: u8, bgoffs_y: u8, viewpos: ViewPos) bsp.Tile {
+fn fetchTileAttrs(bg: u2, bgoffs_x: u32, bgoffs_y: u32, viewpos: ViewPos) bsp.Tile {
     std.debug.assert(viewpos.x >= 0);
     std.debug.assert(viewpos.y >= 0);
 
@@ -155,7 +155,7 @@ fn fetchTileAttrs(bg: u32, bgoffs_x: u8, bgoffs_y: u8, viewpos: ViewPos) bsp.Til
     const tilepos_y = @divFloor(view_y, con.TILE_GFX_DIM_PIX) + bgoffs_y;
 
     // 2D tilepos to 1D tile array index
-    const tileidx = @as(u32, @intCast((tilepos_y * con.BG_DIM_TIL) + tilepos_x)) + (bg * con.BG_DIM_TIL * con.BG_DIM_TIL);
+    const tileidx = @as(u32, @intCast((tilepos_y * con.BG_DIM_TIL) + tilepos_x)) + (@as(u32, bg) * con.BG_DIM_TIL * con.BG_DIM_TIL);
 
     const dat: u16 = mem.TAM[tileidx * 2] | (@as(u16, mem.TAM[tileidx * 2 + 1]) << 8);
     return @bitCast(dat);
@@ -167,7 +167,7 @@ fn toTileAttrViewPos(bg: u32, screenpos: ScreenPos) ViewPos {
     var viewpos = ViewPos{ .x = screenpos.x, .y = screenpos.y };
     // viewpos = (viewpos / i32(reg.mosiac[bg])) * i32(reg.mosiac[bg]);
 
-    const index: u32 = if (@as(rpa.DMADir, @enumFromInt(reg.dma_dir_bg[bg])) == .top_to_bottom) screenpos.y else screenpos.x;
+    const index: u32 = if (@as(rpa.DmaDir, @enumFromInt(reg.dma_dir_bg[bg])) == .top_to_bottom) screenpos.y else screenpos.x;
 
     const xscroll: i32 = if (reg.xscroll_do_dma[bg]) reg.xscroll[bg][index] else reg.xscroll[bg][0];
     const yscroll: i32 = if (reg.yscroll_do_dma[bg]) reg.yscroll[bg][index] else reg.yscroll[bg][0];
@@ -197,74 +197,60 @@ fn toTileAttrViewPos(bg: u32, screenpos: ScreenPos) ViewPos {
 fn calcBGPixel(screenpos: ScreenPos, bg: u2) BGPixel {
     const viewpos_pre = toTileAttrViewPos(bg, screenpos); // XXX TMP CONST
 
-    // XXX BGSZ FIXED XXX
-    // const bgsz = reg.bgsz[bg] * 8;
-    const bgsz = 256;
+    const bgsz = @as(u32, reg.bgsz[bg] + 1) * 2 * con.TILE_GFX_DIM_PIX;
+    const bgoffs_x = @as(u32, reg.bgoffs_x[bg]) * 32;
+    const bgoffs_y = @as(u32, reg.bgoffs_y[bg]) * 32;
 
     const viewpos_pre_oob: bool = (viewpos_pre.x < 0 or viewpos_pre.y < 0 or viewpos_pre.x >= bgsz or viewpos_pre.y >= bgsz);
 
     if (!viewpos_pre_oob) {
         const viewpos = ViewPos{ .x = viewpos_pre.x, .y = viewpos_pre.y };
-        // const tile_attrs = fetchTileAttrs(bg, reg.bgsz[bg], reg.bg_offs[bg], viewpos);
-        // XXX TMP XXX
-        const tile_attrs = fetchTileAttrs(bg, 0, 0, viewpos);
+        const tile_attrs = fetchTileAttrs(bg, bgoffs_x, bgoffs_y, viewpos);
         const tilecol_idx = fetchTilePixel(viewpos, tile_attrs);
         return BGPixel{
             .p_col = lookupPaletteColor(tilecol_idx),
-            .isprio = tile_attrs.prio == 1,
-        };
-    } else {
-        // XXX TMP XXX
-        return BGPixel{
-            .p_col = 0x0000,
-            .isprio = false,
+            .is_prio = tile_attrs.prio == 1,
         };
     }
 
-    // switch (reg.oob_setting[bg]) {
-    //     .OOB_SETTING_CLAMP => {
-    //         viewpos_pre = Vec2i.clamp(Vec2i.init(0, 0), viewpos_pre, Vec2i.init(i32(bgsz), i32(bgsz)));
-    //         var viewpos = Vec2u.init(viewpos_pre.x(), viewpos_pre.y());
-    //         // else color is taken from "next" tile instead of the one on the border
-    //         if (viewpos.x >= bgsz) {
-    //             viewpos.x -= 1;
-    //         }
-    //         if (viewpos.y >= bgsz) {
-    //             viewpos.y -= 1;
-    //         }
-    //         const tile_attrs = fetchTileAttrs(bg, reg.bg_sz[bg], reg.bg_offs[bg], viewpos);
-    //         const tilecol_idx = fetchTilePixel(viewpos, tile_attrs);
-    //         return BGPixel(lookupPaletteColor(tilecol_idx), tile_attrs.prio);
-    //     },
-    //     .OOB_SETTING_COLOR => {
-    //         return BGPixel(reg.oob_data[bg] & 0xFFFF, false);
-    //     },
-    //     .OOB_SETTING_TILE => {
-    //         const dummy = bsp.Tile{
-    //             (reg.oob_data[bg] & 0x0FFF) >> 0,
-    //             (reg.oob_data[bg] & 0x1000) != 0,
-    //             (reg.oob_data[bg] & 0x2000) != 0,
-    //             (reg.oob_data[bg] & 0x4000) != 0,
-    //             (reg.oob_data[bg] & 0x8000) != 0,
-    //         };
-    //         const viewpos = Vec2u.init(viewpos_pre.x(), viewpos_pre.y());
-    //         const tilecol_idx = fetchTilePixel(viewpos, dummy);
+    switch (@as(rpa.OobSetting, @enumFromInt(reg.oob_setting[bg]))) {
+        .mirror => {
+            const mult_x = @divFloor(viewpos_pre.x, @as(i32, @intCast(bgsz)));
+            const mult_y = @divFloor(viewpos_pre.y, @as(i32, @intCast(bgsz)));
 
-    //         return BGPixel(lookupPaletteColor(tilecol_idx), dummy.prio);
-    //     },
-    //     .OOB_SETTING_WRAP => { // OOB_SETTING_WRAP
-    //         // manual modulo for negative values
-    //         if (viewpos_pre.x < 0 or viewpos_pre.y < 0) {
-    //             const diff = -viewpos_pre;
-    //             const mult = (diff / i32(bgsz)) + 1;
-    //             viewpos_pre += i32(bgsz) * mult;
-    //         }
-    //         const viewpos = Vec2u.init(viewpos_pre.x() % bgsz, viewpos_pre.y() % bgsz);
-    //         const tile_attrs = fetchTileAttrs(bg, reg.bg_sz[bg], reg.bg_offs[bg], viewpos);
-    //         const tilecol_idx = fetchTilePixel(viewpos, tile_attrs);
-    //         return BGPixel(lookupPaletteColor(tilecol_idx), tile_attrs.prio);
-    //     },
-    // }
+            var view_x = @mod(viewpos_pre.x, @as(i32, @intCast(bgsz)));
+            var view_y = @mod(viewpos_pre.y, @as(i32, @intCast(bgsz)));
+
+            if (@abs(mult_x) % 2 == 1) {
+                view_x = @as(i32, @intCast(bgsz)) - 1 - view_x;
+            }
+            if (@abs(mult_y) % 2 == 1) {
+                view_y = @as(i32, @intCast(bgsz)) - 1 - view_y;
+            }
+
+            const viewpos: ViewPos = .{ .x = view_x, .y = view_y };
+
+            const tile_attrs = fetchTileAttrs(bg, bgoffs_x, bgoffs_y, viewpos);
+            const tilecol_idx = fetchTilePixel(viewpos, tile_attrs);
+            return .{ .p_col = lookupPaletteColor(tilecol_idx), .is_prio = tile_attrs.prio == 1 };
+        },
+        .color => {
+            return .{ .p_col = reg.oob_data[bg], .is_prio = false };
+        },
+        .tile => {
+            const dummy: bsp.Tile = @bitCast(reg.oob_data[bg]);
+
+            const tilecol_idx = fetchTilePixel(.{ .x = @mod(viewpos_pre.x, con.TILE_GFX_DIM_PIX), .y = @mod(viewpos_pre.y, con.TILE_GFX_DIM_PIX) }, dummy);
+
+            return .{ .p_col = lookupPaletteColor(tilecol_idx), .is_prio = dummy.prio == 1 };
+        },
+        .wrap => {
+            const viewpos: ViewPos = .{ .x = @mod(viewpos_pre.x, @as(i32, @intCast(bgsz))), .y = @mod(viewpos_pre.y, @as(i32, @intCast(bgsz))) };
+            const tile_attrs = fetchTileAttrs(bg, bgoffs_x, bgoffs_y, viewpos);
+            const tilecol_idx = fetchTilePixel(viewpos, tile_attrs);
+            return .{ .p_col = lookupPaletteColor(tilecol_idx), .is_prio = tile_attrs.prio == 1 };
+        },
+    }
 }
 
 // ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -376,7 +362,7 @@ fn calcBGPixel(screenpos: ScreenPos, bg: u2) BGPixel {
 fn isPixelInWin(screenpos: ScreenPos, win: u32) bool {
     const do_start_dma = reg.win_start_do_dma[win];
     const do_end_dma = reg.win_end_do_dma[win];
-    const dma_dir: rpa.DMADir = @enumFromInt(reg.dma_dir_win[win]);
+    const dma_dir: rpa.DmaDir = @enumFromInt(reg.dma_dir_win[win]);
 
     const index = if (dma_dir == .left_to_right)
         screenpos.x
@@ -531,7 +517,7 @@ fn getFixcol(screenpos: ScreenPos, for_main: bool) u16 {
     const magic_num: u32 = if (for_main) 0 else 1;
     const do_dma_switch: bool = if (for_main) reg.fixcol_main_do_dma else reg.fixcol_sub_do_dma;
 
-    const dma_dir: rpa.DMADir = @enumFromInt(reg.dma_dir_fixcol[magic_num]);
+    const dma_dir: rpa.DmaDir = @enumFromInt(reg.dma_dir_fixcol[magic_num]);
     const index_raw = if (dma_dir == .top_to_bottom) screenpos.y else screenpos.x;
     const index: u32 = if (do_dma_switch) index_raw else 0;
 

@@ -119,17 +119,20 @@ pub var dma_dir_fixcol: [2]u1 = @splat(0);
 // /// what normalization should happen after color math?
 // pub var math_normalize: u2 = 0;
 
-// /// how should OOB tilemap positions be handled?
-// pub var oob_setting: [4]u2 = @splat(0);
+/// how should OOB tilemap positions be handled?
+pub var oob_setting: [4]u2 = @splat(0);
 
-// /// data to use when OOB tilemap pos is encountered
-// pub var oob_data: [con.BG_NUM]u16 = @splat(0);
+/// data to use when OOB tilemap pos is encountered
+pub var oob_data: [con.BG_NUM]u16 = @splat(0);
 
-// /// background size / 2 - 1
-// pub var bgsz: [con.BG_NUM]u8 = @splat(15);
+/// background size / 2 - 1 (in tiles)
+pub var bgsz: [con.BG_NUM]u8 = @splat(15);
 
-// /// background offset / 16 (u4 x + u4 y)
-// pub var bgoffs: [con.BG_NUM]u8 = @splat(0);
+/// background offset / 16 (x, in tiles)
+pub var bgoffs_x: [con.BG_NUM]u4 = @splat(0);
+
+/// background offset / 16 (y, in tiles)
+pub var bgoffs_y: [con.BG_NUM]u4 = @splat(0);
 
 // /// bitfield {TrTdTlTu, TdTcTbTa, TSTsTRTL}: controller state
 // pub var controller: [3]u8 = .{ 0, 0, 0 };

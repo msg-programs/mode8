@@ -96,84 +96,98 @@ pub const BgPosFixup = struct {
     }
 };
 
-// pub const TestBgOOB = struct {
-//     frame: u64 = 0,
-//     bg: u2,
+pub const TestBgOOB = struct {
+    frame: u64 = 0,
+    bg: u2,
 
-//     pub fn init(self: *TestBgOOB) void {
-//         std.debug.print("testing OOB settings and TAM offset for bg {}\n", .{self.bg});
-//         switch (self.bg) {
-//             0 => bsp.RenderParams.setDebugMode(.DEBUG_MODE_LAYER, .DEBUG_ARG_SHOW_BG_0),
-//             1 => bsp.RenderParams.setDebugMode(.DEBUG_MODE_LAYER, .DEBUG_ARG_SHOW_BG_1),
-//             2 => bsp.RenderParams.setDebugMode(.DEBUG_MODE_LAYER, .DEBUG_ARG_SHOW_BG_2),
-//             3 => bsp.RenderParams.setDebugMode(.DEBUG_MODE_LAYER, .DEBUG_ARG_SHOW_BG_3),
-//         }
-//         bsp.RenderParams.setBGSize(32, 32, 32, 32);
-//     }
+    pub fn init(self: *TestBgOOB) void {
+        std.debug.print("testing OOB settings and TAM offset for bg {}\n", .{self.bg});
+        reg.debug_mode = @intFromEnum(rpa.DebugMode.layer);
+        reg.debug_arg = switch (self.bg) {
+            0 => @intFromEnum(rpa.DebugArg.show_bg_0),
+            1 => @intFromEnum(rpa.DebugArg.show_bg_1),
+            2 => @intFromEnum(rpa.DebugArg.show_bg_2),
+            3 => @intFromEnum(rpa.DebugArg.show_bg_3),
+        };
+        bsp.RenderParams.setBgSize(self.bg, 32);
+        reg.xscroll_do_dma = @splat(false);
+        reg.yscroll_do_dma = @splat(false);
+    }
 
-//     pub fn tick(self: *TestBgOOB) bool {
-//         const side: u64 = util.fullsecOf(self.frame);
-//         if (side > 3) {
-//             bsp.RenderParams.setBGTAMOffset(self.bg, 0, 0);
-//             return true;
-//         }
+    pub fn tick(self: *TestBgOOB) bool {
+        const side: u64 = util.fullsecOf(self.frame);
+        if (side > 3) {
+            reg.bgoffs_x[self.bg] = 0;
+            reg.bgoffs_y[self.bg] = 0;
+            return true;
+        }
 
-//         const badsett = bsp.RenderParams.OOBData{
-//             .COLOR = 0,
-//         };
+        const noset: u2 = @intFromEnum(bsp.RenderParams.OobSetting.color);
+        const nodat: u16 = 0;
 
-//         const sett: bsp.RenderParams.OOBData = switch (side) {
-//             0 => .{ .WRAP = true },
-//             1 => .{ .TILE = bsp.Tile{ .gfxid = 256 } },
-//             2 => .{ .COLOR = @bitCast(bsp.Color.of(0xBF3445, false)) },
-//             3 => .{ .CLAMP = true },
-//             else => unreachable,
-//         };
+        const set: u2, const dat: u16 = switch (side) {
+            0 => .{ @intFromEnum(bsp.RenderParams.OobSetting.wrap), 0 },
+            1 => .{ @intFromEnum(bsp.RenderParams.OobSetting.tile), @bitCast(bsp.Tile{ .gfxid = 256 }) },
+            2 => .{ @intFromEnum(bsp.RenderParams.OobSetting.color), @bitCast(bsp.Color.of(0xBF3445, false)) },
+            3 => .{ @intFromEnum(bsp.RenderParams.OobSetting.mirror), 0 },
+            else => unreachable,
+        };
 
-//         switch (util.fullsecOf(self.frame)) {
-//             0 => bsp.RenderParams.setBGTAMOffset(self.bg, 0, 0),
-//             1 => bsp.RenderParams.setBGTAMOffset(self.bg, 1, 0),
-//             2 => bsp.RenderParams.setBGTAMOffset(self.bg, 0, 1),
-//             3 => bsp.RenderParams.setBGTAMOffset(self.bg, 1, 1),
-//             else => unreachable,
-//         }
+        switch (util.fullsecOf(self.frame)) {
+            0 => {
+                reg.bgoffs_x[self.bg] = 0;
+                reg.bgoffs_y[self.bg] = 0;
+            },
+            1 => {
+                reg.bgoffs_x[self.bg] = 1;
+                reg.bgoffs_y[self.bg] = 0;
+            },
+            2 => {
+                reg.bgoffs_x[self.bg] = 0;
+                reg.bgoffs_y[self.bg] = 1;
+            },
+            3 => {
+                reg.bgoffs_x[self.bg] = 1;
+                reg.bgoffs_y[self.bg] = 1;
+            },
+            else => unreachable,
+        }
 
-//         switch (self.bg) {
-//             0 => bsp.RenderParams.setOOBSetting(sett, badsett, badsett, badsett),
-//             1 => bsp.RenderParams.setOOBSetting(badsett, sett, badsett, badsett),
-//             2 => bsp.RenderParams.setOOBSetting(badsett, badsett, sett, badsett),
-//             3 => bsp.RenderParams.setOOBSetting(badsett, badsett, badsett, sett),
-//         }
-//         const delta: i16 = 8 * 8;
-//         const start: i16 = -(4 * 8);
-//         const end: i16 = (4 * 8);
-//         const cyc: f32 = util.linCycleOf(self.frame, util.FULL_SECOND * 1 - 1);
-//         const scrollf: f32 = cyc * delta;
-//         const scroll: i16 = @intFromFloat(scrollf);
+        for (0..4) |bg| {
+            reg.oob_setting[bg] = if (self.bg == bg) set else noset;
+            reg.oob_data[bg] = if (self.bg == bg) dat else nodat;
+        }
 
-//         switch (side) {
-//             0 => {
-//                 bsp.RenderParams.setXScroll(self.bg, .{ .direct = start + scroll });
-//                 bsp.RenderParams.setYScroll(self.bg, .{ .direct = start });
-//             },
-//             1 => {
-//                 bsp.RenderParams.setXScroll(self.bg, .{ .direct = end });
-//                 bsp.RenderParams.setYScroll(self.bg, .{ .direct = start + scroll });
-//             },
-//             2 => {
-//                 bsp.RenderParams.setXScroll(self.bg, .{ .direct = end - scroll });
-//                 bsp.RenderParams.setYScroll(self.bg, .{ .direct = end });
-//             },
-//             3 => {
-//                 bsp.RenderParams.setXScroll(self.bg, .{ .direct = start });
-//                 bsp.RenderParams.setYScroll(self.bg, .{ .direct = end - scroll });
-//             },
-//             else => unreachable,
-//         }
+        const delta: i16 = 8 * 8;
+        const start: i16 = -(4 * 8);
+        const end: i16 = (4 * 8);
+        const cyc: f32 = util.linCycleOf(self.frame, util.FULL_SECOND * 1 - 1);
+        const scrollf: f32 = cyc * delta;
+        const scroll: i16 = @intFromFloat(scrollf);
 
-//         return false;
-//     }
-// };
+        switch (side) {
+            0 => {
+                reg.xscroll[self.bg][0] = start + scroll;
+                reg.yscroll[self.bg][0] = start;
+            },
+            1 => {
+                reg.xscroll[self.bg][0] = end;
+                reg.yscroll[self.bg][0] = start + scroll;
+            },
+            2 => {
+                reg.xscroll[self.bg][0] = end - scroll;
+                reg.yscroll[self.bg][0] = end;
+            },
+            3 => {
+                reg.xscroll[self.bg][0] = start;
+                reg.yscroll[self.bg][0] = end - scroll;
+            },
+            else => unreachable,
+        }
+
+        return false;
+    }
+};
 
 // pub const TestBgSize = struct {
 //     frame: u64 = 0,

@@ -69,10 +69,10 @@ var fcmdf = FixcolTest.TestFixcolDMA{ .for_main = false, .flip_dma = true };
 var fcsdf = FixcolTest.TestFixcolDMA{ .for_main = true, .flip_dma = true };
 var bgds = BgTest.BgTestsDataSetup{};
 var bgmv1 = BgTest.BgPosFixup{ .xnow = 0, .ynow = 0, .xtarget = -32, .ytarget = -32 };
-// var bgoob0 = .{ .bg = 0 };
-// var bgoob1 = .{ .bg = 1 };
-// var bgoob2 = .{ .bg = 2 };
-// var bgoob3 = .{ .bg = 3 };
+var bgoob0 = BgTest.TestBgOOB{ .bg = 0 };
+var bgoob1 = BgTest.TestBgOOB{ .bg = 1 };
+var bgoob2 = BgTest.TestBgOOB{ .bg = 2 };
+var bgoob3 = BgTest.TestBgOOB{ .bg = 3 };
 // var bgmv2 = .{ .xnow = -32, .ynow = -32, .xtarget = 0, .ytarget = 0 };
 // var ... = .{ .bg = 0, .flip_dma = false };
 // var ... = .{ .bg = 1, .flip_dma = false };
@@ -151,10 +151,10 @@ const screens = [_]Mgr.ManagedScreen{
     .{ .test_fixcol_dma = &fcsdf },
     .{ .bg_tests_data_setup = &bgds },
     .{ .bg_pos_fixup = &bgmv1 },
-    // .{ .test_bg_oob = &},
-    // .{ .test_bg_oob = &},
-    // .{ .test_bg_oob = &},
-    // .{ .test_bg_oob = &},
+    .{ .test_bg_oob = &bgoob0 },
+    .{ .test_bg_oob = &bgoob1 },
+    .{ .test_bg_oob = &bgoob2 },
+    .{ .test_bg_oob = &bgoob3 },
     // .{ .bg_pos_fixup = &bgmv2},
     // .{ .test_bg_scroll_dma = &},
     // .{ .test_bg_scroll_dma = &},

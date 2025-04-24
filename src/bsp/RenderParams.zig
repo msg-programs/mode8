@@ -23,17 +23,10 @@ pub const RenderParams = struct {
         color,
     };
 
-    pub const DMADir = enum(u1) {
+    pub const DmaDir = enum(u1) {
         top_to_bottom,
         left_to_right,
     };
-
-    // pub fn DMAData(comptime T: type) type {
-    //     return union(enum) {
-    //         direct: T,
-    //         dma: [con.DMA_NUM]T,
-    //     };
-    // }
 
     pub const WinComposition = packed struct {
         neither: bool,
@@ -104,19 +97,12 @@ pub const RenderParams = struct {
     //     bleed,
     // };
 
-    // pub const OOBSetting = enum(u2) {
-    //     wrap,
-    //     tile,
-    //     color,
-    //     clamp,
-    // };
-
-    // pub const OOBData = union(OOBSetting) {
-    //     wrap: void,
-    //     tile: bsp.Tile,
-    //     color: u16,
-    //     clamp: void,
-    // };
+    pub const OobSetting = enum(u2) {
+        wrap,
+        tile,
+        color,
+        mirror,
+    };
 
     pub const DebugMode = enum(u4) {
         off,
@@ -145,37 +131,13 @@ pub const RenderParams = struct {
         show_sub,
     };
 
-    // pub fn setOOBSetting(bg: BG, data: OOBData) void {
-    //     const idx = @intFromEnum(bg);
-
-    //     switch (data) {
-    //         .wrap => reg.oob_setting[idx] = @intFromEnum(.wrap),
-    //         .clamp => reg.oob_setting[idx] = @intFromEnum(.clamp),
-    //         .color => |col| {
-    //             reg.oob_setting[idx] = @intFromEnum(.color);
-    //             reg.oob_data[idx] = @bitCast(col);
-    //         },
-    //         .tile => |til| {
-    //             reg.oob_setting[idx] = @intFromEnum(.tile);
-    //             reg.oob_data[idx] = @bitCast(til);
-    //         },
-    //     }
-    // }
-
-    // pub fn setBGSize(bg0_size: u10, bg1_size: u10, bg2_size: u10, bg3_size: u10) void {
-    //     const bg0: u10 = std.math.clamp(bg0_size, 2, 512);
-    //     const bg1: u10 = std.math.clamp(bg1_size, 2, 512);
-    //     const bg2: u10 = std.math.clamp(bg2_size, 2, 512);
-    //     const bg3: u10 = std.math.clamp(bg3_size, 2, 512);
-    //     reg.bgsz[0] = @truncate((bg0 / 2) - 1);
-    //     reg.bgsz[1] = @truncate((bg1 / 2) - 1);
-    //     reg.bgsz[2] = @truncate((bg2 / 2) - 1);
-    //     reg.bgsz[3] = @truncate((bg3 / 2) - 1);
-    // }
-
-    // pub fn setBGTAMOffset(bg: u2, x: u4, y: u4) void {
-    //     reg.bgoffs[bg] = bits.sto2x4in8(x, y);
-    // }
+    pub fn setBgSize(bg: u2, size: u10) void {
+        const sz: u10 = std.math.clamp(size, 2, 512);
+        // note: int cast is safe, as 512/2 = 256 -> 256-1 = 255 = 0xFF
+        // design decision: panic if the BG is set to a size that can't be divided by 2, as this isn't supported.
+        std.debug.assert(sz % 2 == 0);
+        reg.bgsz[bg] = @intCast(sz / 2 - 1);
+    }
 
     // pub fn setToMain(bg0: bool, bg1: bool, bg2: bool, bg3: bool, obj: bool) void {
     //     reg.to_main = bsp.bits.stoBoolx8in8(false, false, false, obj, bg3, bg2, bg1, bg0);
