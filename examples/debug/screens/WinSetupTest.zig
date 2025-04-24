@@ -25,8 +25,8 @@ pub const TestWinNoDMA = struct {
         reg.win_start[notwin][0] = 255;
         reg.win_end[notwin][0] = 0;
 
-        const not_dma_dir: rpa.DMADir = if (self.flip_dma) .top_to_bottom else .left_to_right;
-        const dma_dir: rpa.DMADir = if (self.flip_dma) .left_to_right else .top_to_bottom;
+        const not_dma_dir: rpa.DmaDir = if (self.flip_dma) .top_to_bottom else .left_to_right;
+        const dma_dir: rpa.DmaDir = if (self.flip_dma) .left_to_right else .top_to_bottom;
         if (self.win == 0) {
             reg.dma_dir_win[0] = @intFromEnum(dma_dir);
             reg.dma_dir_win[1] = @intFromEnum(not_dma_dir);
@@ -75,8 +75,8 @@ pub const TestWinDMA = struct {
         reg.win_start[notwin][0] = 255;
         reg.win_end[notwin][0] = 0;
 
-        const not_dma_dir: rpa.DMADir = if (self.flip_dma) .top_to_bottom else .left_to_right;
-        const dma_dir: rpa.DMADir = if (self.flip_dma) .left_to_right else .top_to_bottom;
+        const not_dma_dir: rpa.DmaDir = if (self.flip_dma) .top_to_bottom else .left_to_right;
+        const dma_dir: rpa.DmaDir = if (self.flip_dma) .left_to_right else .top_to_bottom;
         if (self.win == 0) {
             reg.dma_dir_win[0] = @intFromEnum(dma_dir);
             reg.dma_dir_win[1] = @intFromEnum(not_dma_dir);
@@ -298,8 +298,8 @@ pub const WinTestsDataSetup = struct {
         reg.win_start_do_dma = .{ true, true };
         reg.win_end_do_dma = .{ true, true };
 
-        reg.dma_dir_win[0] = @intFromEnum(rpa.DMADir.top_to_bottom);
-        reg.dma_dir_win[1] = @intFromEnum(rpa.DMADir.top_to_bottom);
+        reg.dma_dir_win[0] = @intFromEnum(rpa.DmaDir.top_to_bottom);
+        reg.dma_dir_win[1] = @intFromEnum(rpa.DmaDir.top_to_bottom);
 
         reg.debug_mode = @intFromEnum(rpa.DebugMode.windows_setup);
         reg.debug_arg = @intFromEnum(rpa.DebugArg.none);

@@ -20,8 +20,8 @@ pub const TestFixcolDMA = struct {
             reg.debug_arg = @intFromEnum(rpa.DebugArg.show_sub);
         }
 
-        const not_dma_dir: bsp.RenderParams.DMADir = if (self.flip_dma) .top_to_bottom else .left_to_right;
-        const dma_dir: bsp.RenderParams.DMADir = if (self.flip_dma) .left_to_right else .top_to_bottom;
+        const not_dma_dir: bsp.RenderParams.DmaDir = if (self.flip_dma) .top_to_bottom else .left_to_right;
+        const dma_dir: bsp.RenderParams.DmaDir = if (self.flip_dma) .left_to_right else .top_to_bottom;
 
         reg.dma_dir_fixcol[0] = @intFromEnum(if (self.flip_dma) dma_dir else not_dma_dir);
         reg.dma_dir_fixcol[1] = @intFromEnum(if (self.flip_dma) not_dma_dir else dma_dir);
