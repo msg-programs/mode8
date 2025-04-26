@@ -197,7 +197,7 @@ fn toTileAttrViewPos(bg: u32, screenpos: ScreenPos) ViewPos {
 fn calcBGPixel(screenpos: ScreenPos, bg: u2) BGPixel {
     const viewpos_pre = toTileAttrViewPos(bg, screenpos); // XXX TMP CONST
 
-    const bgsz = @as(u32, reg.bgsz[bg] + 1) * 2 * con.TILE_GFX_DIM_PIX;
+    const bgsz = (@as(u32, reg.bgsz[bg]) + 1) * 2 * con.TILE_GFX_DIM_PIX;
     const bgoffs_x = @as(u32, reg.bgoffs_x[bg]) * 32;
     const bgoffs_y = @as(u32, reg.bgoffs_y[bg]) * 32;
 

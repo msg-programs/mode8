@@ -73,25 +73,25 @@ var bgoob0 = BgTest.TestBgOOB{ .bg = 0 };
 var bgoob1 = BgTest.TestBgOOB{ .bg = 1 };
 var bgoob2 = BgTest.TestBgOOB{ .bg = 2 };
 var bgoob3 = BgTest.TestBgOOB{ .bg = 3 };
-// var bgmv2 = .{ .xnow = -32, .ynow = -32, .xtarget = 0, .ytarget = 0 };
-// var ... = .{ .bg = 0, .flip_dma = false };
-// var ... = .{ .bg = 1, .flip_dma = false };
-// var ... = .{ .bg = 2, .flip_dma = false };
-// var ... = .{ .bg = 3, .flip_dma = false };
-// var ... = .{ .bg = 0, .flip_dma = true };
-// var ... = .{ .bg = 1, .flip_dma = true };
-// var ... = .{ .bg = 2, .flip_dma = true };
-// var ... = .{ .bg = 3, .flip_dma = true };
-// var bgmv3 = .{ .xnow = 0, .ynow = 0, .xtarget = -64, .ytarget = -64 };
+var bgmv2 = BgTest.BgPosFixup{ .xnow = -32, .ynow = -32, .xtarget = 0, .ytarget = 0 };
+var bgscd0 = BgTest.TestBgScrollDMA{ .bg = 0, .flip_dma = false };
+var bgscd1 = BgTest.TestBgScrollDMA{ .bg = 1, .flip_dma = false };
+var bgscd2 = BgTest.TestBgScrollDMA{ .bg = 2, .flip_dma = false };
+var bgscd3 = BgTest.TestBgScrollDMA{ .bg = 3, .flip_dma = false };
+var bgscd0f = BgTest.TestBgScrollDMA{ .bg = 0, .flip_dma = true };
+var bgscd1f = BgTest.TestBgScrollDMA{ .bg = 1, .flip_dma = true };
+var bgscd2f = BgTest.TestBgScrollDMA{ .bg = 2, .flip_dma = true };
+var bgscd3f = BgTest.TestBgScrollDMA{ .bg = 3, .flip_dma = true };
+var bgmv3 = BgTest.BgPosFixup{ .xnow = 0, .ynow = 0, .xtarget = -64, .ytarget = -64 };
+var bgsz0 = BgTest.TestBgSize{ .bg = 0 };
+var bgsz1 = BgTest.TestBgSize{ .bg = 1 };
+var bgsz2 = BgTest.TestBgSize{ .bg = 2 };
+var bgsz3 = BgTest.TestBgSize{ .bg = 3 };
 // var ... = .{ .bg = 0 };
 // var ... = .{ .bg = 1 };
 // var ... = .{ .bg = 2 };
 // var ... = .{ .bg = 3 };
-// var ... = .{ .bg = 0 };
-// var ... = .{ .bg = 1 };
-// var ... = .{ .bg = 2 };
-// var ... = .{ .bg = 3 };
-// var bgmv4 = .{ .xnow = -64, .ynow = -64, .xtarget = 0, .ytarget = 0 };
+var bgmv4 = BgTest.BgPosFixup{ .xnow = -64, .ynow = -64, .xtarget = 0, .ytarget = 0 };
 // var ... = .{ .bg = 0 };
 // var ... = .{ .bg = 1 };
 // var ... = .{ .bg = 2 };
@@ -155,29 +155,29 @@ const screens = [_]Mgr.ManagedScreen{
     .{ .test_bg_oob = &bgoob1 },
     .{ .test_bg_oob = &bgoob2 },
     .{ .test_bg_oob = &bgoob3 },
-    // .{ .bg_pos_fixup = &bgmv2},
-    // .{ .test_bg_scroll_dma = &},
-    // .{ .test_bg_scroll_dma = &},
-    // .{ .test_bg_scroll_dma = &},
-    // .{ .test_bg_scroll_dma = &},
-    // .{ .test_bg_scroll_dma = &},
-    // .{ .test_bg_scroll_dma = &},
-    // .{ .test_bg_scroll_dma = &},
-    // .{ .test_bg_scroll_dma = &},
-    // .{ .bg_pos_fixup = &bgmv3},
-    // .{ .test_bg_size = &},
-    // .{ .test_bg_size = &},
-    // .{ .test_bg_size = &},
-    // .{ .test_bg_size = &},
+    .{ .bg_pos_fixup = &bgmv2 },
+    .{ .test_bg_scroll_dma = &bgscd0 }, // 40
+    .{ .test_bg_scroll_dma = &bgscd1 },
+    .{ .test_bg_scroll_dma = &bgscd2 },
+    .{ .test_bg_scroll_dma = &bgscd3 },
+    .{ .test_bg_scroll_dma = &bgscd0f },
+    .{ .test_bg_scroll_dma = &bgscd1f },
+    .{ .test_bg_scroll_dma = &bgscd2f },
+    .{ .test_bg_scroll_dma = &bgscd3f },
+    .{ .bg_pos_fixup = &bgmv3 },
+    .{ .test_bg_size = &bgsz0 },
+    .{ .test_bg_size = &bgsz1 }, // 50
+    .{ .test_bg_size = &bgsz2 },
+    .{ .test_bg_size = &bgsz3 },
     // .{ .test_bg_mosiac = &},
     // .{ .test_bg_mosiac = &},
     // .{ .test_bg_mosiac = &},
     // .{ .test_bg_mosiac = &},
-    // .{ .bg_pos_fixup = &bgmv4},
+    .{ .bg_pos_fixup = &bgmv4 },
     // .{ .test_bg_affine = &},
     // .{ .test_bg_affine = &},
+    // .{ .test_bg_affine = &}, // 60
     // .{ .test_bg_affine = &},
-    // .{ .test_bg_affine = &},
     // .{ .test_bg_affine_dma = &},
     // .{ .test_bg_affine_dma = &},
     // .{ .test_bg_affine_dma = &},
@@ -186,7 +186,7 @@ const screens = [_]Mgr.ManagedScreen{
     // .{ .test_bg_affine_dma = &},
     // .{ .test_bg_affine_dma = &},
     // .{ .test_bg_affine_dma = &},
-    // .{ .test_bg_prio_feat = &},
+    // .{ .test_bg_prio_feat = &}, // 70
     // .{ .test_obj_attrs = &},
     // .{ .test_obj_wrap = &},
     // .{ .compose_tests_data_setup = &},
@@ -195,7 +195,7 @@ const screens = [_]Mgr.ManagedScreen{
     // .{ .test_colwin = &},
     // .{ .test_colwin = &},
     // .{ .test_cmath_enable = &},
-    // .{ .test_cmath_sett = &},
+    // .{ .test_cmath_sett = &}, // 79
 };
 
 screen: u64,

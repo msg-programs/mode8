@@ -189,42 +189,43 @@ pub const TestBgOOB = struct {
     }
 };
 
-// pub const TestBgSize = struct {
-//     frame: u64 = 0,
-//     bg: u2,
+pub const TestBgSize = struct {
+    frame: u64 = 0,
+    bg: u2,
 
-//     pub fn init(self: *TestBgSize) void {
-//         std.debug.print("testing size setting for bg {} (using wrapping)\n", .{self.bg});
-//         switch (self.bg) {
-//             0 => bsp.RenderParams.setDebugMode(.DEBUG_MODE_LAYER, .DEBUG_ARG_SHOW_BG_0),
-//             1 => bsp.RenderParams.setDebugMode(.DEBUG_MODE_LAYER, .DEBUG_ARG_SHOW_BG_1),
-//             2 => bsp.RenderParams.setDebugMode(.DEBUG_MODE_LAYER, .DEBUG_ARG_SHOW_BG_2),
-//             3 => bsp.RenderParams.setDebugMode(.DEBUG_MODE_LAYER, .DEBUG_ARG_SHOW_BG_3),
-//         }
-//         const sett = bsp.RenderParams.OOBData{ .WRAP = true };
-//         bsp.RenderParams.setOOBSetting(sett, sett, sett, sett);
-//         bsp.RenderParams.setBGSize(32, 32, 32, 32);
-//     }
+    pub fn init(self: *TestBgSize) void {
+        std.debug.print("testing size setting for bg {} (using wrapping)\n", .{self.bg});
+        reg.debug_mode = @intFromEnum(rpa.DebugMode.layer);
+        reg.debug_arg = switch (self.bg) {
+            0 => @intFromEnum(rpa.DebugArg.show_bg_0),
+            1 => @intFromEnum(rpa.DebugArg.show_bg_1),
+            2 => @intFromEnum(rpa.DebugArg.show_bg_2),
+            3 => @intFromEnum(rpa.DebugArg.show_bg_3),
+        };
+        reg.oob_setting = @splat(@intFromEnum(rpa.OobSetting.wrap));
+        rpa.setBgSize(0, 32);
+        rpa.setBgSize(1, 32);
+        rpa.setBgSize(2, 32);
+        rpa.setBgSize(3, 32);
+    }
 
-//     pub fn tick(self: *TestBgSize) bool {
-//         const sizes = [_]u10{ 64, 128, 256, 512, 4, 8, 16, 32 };
+    pub fn tick(self: *TestBgSize) bool {
+        const sizes = [_]u10{ 64, 128, 256, 512, 4, 8, 16, 32 };
 
-//         if (util.halfsecOf(self.frame) >= sizes.len) {
-//             return true;
-//         }
+        if (util.halfsecOf(self.frame) >= sizes.len) {
+            return true;
+        }
 
-//         const sze = sizes[util.halfsecOf(self.frame)];
+        const sze = sizes[util.halfsecOf(self.frame)];
 
-//         switch (self.bg) {
-//             0 => bsp.RenderParams.setBGSize(sze, 32, 32, 32),
-//             1 => bsp.RenderParams.setBGSize(32, sze, 32, 32),
-//             2 => bsp.RenderParams.setBGSize(32, 32, sze, 32),
-//             3 => bsp.RenderParams.setBGSize(32, 32, 32, sze),
-//         }
+        rpa.setBgSize(0, if (self.bg == 0) sze else 32);
+        rpa.setBgSize(1, if (self.bg == 1) sze else 32);
+        rpa.setBgSize(2, if (self.bg == 2) sze else 32);
+        rpa.setBgSize(3, if (self.bg == 3) sze else 32);
 
-//         return false;
-//     }
-// };
+        return false;
+    }
+};
 
 // pub const TestBgMosiac = struct {
 //     frame: u64 = 0,
@@ -375,73 +376,73 @@ pub const TestBgOOB = struct {
 //     }
 // };
 
-// pub const TestBgScrollDMA = struct {
-//     frame: u64 = 0,
-//     bg: u2,
-//     flip_dma: bool,
+pub const TestBgScrollDMA = struct {
+    frame: u64 = 0,
+    bg: u2,
+    flip_dma: bool,
 
-//     pub fn init(self: *TestBgScrollDMA) void {
-//         std.debug.print("testing scroll settings with DMA for bg {} (dma flipped? {})\n", .{ self.bg, self.flip_dma });
+    pub fn init(self: *TestBgScrollDMA) void {
+        std.debug.print("testing scroll settings with DMA for bg {} (dma flipped? {})\n", .{ self.bg, self.flip_dma });
 
-//         const dma: bsp.RenderParams.DMADir = if (self.flip_dma) .Y else .X;
-//         const undma: bsp.RenderParams.DMADir = if (self.flip_dma) .X else .Y;
+        const dma: bsp.RenderParams.DmaDir = if (self.flip_dma) .left_to_right else .top_to_bottom;
+        const undma: bsp.RenderParams.DmaDir = if (self.flip_dma) .top_to_bottom else .left_to_right;
 
-//         switch (self.bg) {
-//             0 => {
-//                 bsp.RenderParams.setDebugMode(.DEBUG_MODE_LAYER, .DEBUG_ARG_SHOW_BG_0);
-//                 bsp.RenderParams.setDMADirBG(dma, undma, undma, undma);
-//             },
-//             1 => {
-//                 bsp.RenderParams.setDebugMode(.DEBUG_MODE_LAYER, .DEBUG_ARG_SHOW_BG_1);
-//                 bsp.RenderParams.setDMADirBG(undma, dma, undma, undma);
-//             },
-//             2 => {
-//                 bsp.RenderParams.setDebugMode(.DEBUG_MODE_LAYER, .DEBUG_ARG_SHOW_BG_2);
-//                 bsp.RenderParams.setDMADirBG(undma, undma, dma, undma);
-//             },
-//             3 => {
-//                 bsp.RenderParams.setDebugMode(.DEBUG_MODE_LAYER, .DEBUG_ARG_SHOW_BG_3);
-//                 bsp.RenderParams.setDMADirBG(undma, undma, undma, dma);
-//             },
-//         }
-//         const sett = bsp.RenderParams.OOBData{ .WRAP = true };
-//         bsp.RenderParams.setOOBSetting(sett, sett, sett, sett);
-//         bsp.RenderParams.setBGSize(32, 32, 32, 32);
-//         for (0..4) |i| {
-//             bsp.RenderParams.setXScroll(@truncate(i), .{ .direct = -256 });
-//             bsp.RenderParams.setYScroll(@truncate(i), .{ .direct = -256 });
-//         }
-//     }
+        reg.debug_mode = @intFromEnum(rpa.DebugMode.layer);
+        reg.debug_arg = switch (self.bg) {
+            0 => @intFromEnum(rpa.DebugArg.show_bg_0),
+            1 => @intFromEnum(rpa.DebugArg.show_bg_1),
+            2 => @intFromEnum(rpa.DebugArg.show_bg_2),
+            3 => @intFromEnum(rpa.DebugArg.show_bg_3),
+        };
 
-//     pub fn tick(self: *TestBgScrollDMA) bool {
-//         const cyc: f32 = util.linCycleOf(self.frame, util.FULL_SECOND * 1) * 2 * std.math.pi;
-//         const delta: f32 = 2.0 * std.math.pi * 4.0 / 256.0;
-//         const mag: f32 = 2.0;
+        reg.dma_dir_bg[0] = @intFromEnum(if (self.bg == 0) dma else undma);
+        reg.dma_dir_bg[1] = @intFromEnum(if (self.bg == 1) dma else undma);
+        reg.dma_dir_bg[2] = @intFromEnum(if (self.bg == 2) dma else undma);
+        reg.dma_dir_bg[3] = @intFromEnum(if (self.bg == 3) dma else undma);
 
-//         var values: [256]i32 = undefined;
+        reg.oob_setting = @splat(@intFromEnum(rpa.OobSetting.wrap));
+        rpa.setBgSize(0, 32);
+        rpa.setBgSize(1, 32);
+        rpa.setBgSize(2, 32);
+        rpa.setBgSize(3, 32);
 
-//         switch (util.fullsecOf(self.frame)) {
-//             0, 1 => {
-//                 for (0..256) |i| {
-//                     values[i] = @intFromFloat(@sin(delta * @as(f32, @floatFromInt(i)) + cyc) * mag * 2);
-//                 }
-//                 bsp.RenderParams.setXScroll(self.bg, .{ .dma = values });
-//                 bsp.RenderParams.setYScroll(self.bg, .{ .direct = 0 });
-//             },
-//             2, 3 => {
-//                 for (0..256) |i| {
-//                     values[i] = @intFromFloat(@cos(delta * @as(f32, @floatFromInt(i)) + cyc) * mag * 3);
-//                 }
-//                 bsp.RenderParams.setXScroll(self.bg, .{ .direct = 0 });
-//                 bsp.RenderParams.setYScroll(self.bg, .{ .dma = values });
-//             },
-//             else => {
-//                 return true;
-//             },
-//         }
-//         return false;
-//     }
-// };
+        for (0..4) |i| {
+            reg.xscroll[i][0] = -256;
+            reg.yscroll[i][0] = -256;
+            reg.xscroll_do_dma[i] = false;
+            reg.yscroll_do_dma[i] = false;
+        }
+    }
+
+    pub fn tick(self: *TestBgScrollDMA) bool {
+        const cyc: f32 = util.linCycleOf(self.frame, util.FULL_SECOND * 1) * 2 * std.math.pi;
+        const delta: f32 = 2.0 * std.math.pi * 4.0 / 256.0;
+        const mag: f32 = 2.0;
+
+        switch (util.fullsecOf(self.frame)) {
+            0, 1 => {
+                reg.xscroll_do_dma[self.bg] = true;
+                reg.yscroll_do_dma[self.bg] = false;
+                for (0..256) |i| {
+                    reg.xscroll[self.bg][i] = @intFromFloat(@sin(delta * @as(f32, @floatFromInt(i)) + cyc) * mag * 2);
+                }
+                reg.yscroll[self.bg][0] = 0;
+            },
+            2, 3 => {
+                reg.xscroll_do_dma[self.bg] = false;
+                reg.yscroll_do_dma[self.bg] = true;
+                reg.xscroll[self.bg][0] = 0;
+                for (0..256) |i| {
+                    reg.yscroll[self.bg][i] = @intFromFloat(@cos(delta * @as(f32, @floatFromInt(i)) + cyc) * mag * 3);
+                }
+            },
+            else => {
+                return true;
+            },
+        }
+        return false;
+    }
+};
 
 // pub const TestBgPrioFeat = struct {
 //     frame: u64 = 0,
