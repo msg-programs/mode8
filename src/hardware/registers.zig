@@ -49,8 +49,8 @@ pub var yscroll_do_dma: [con.BG_NUM]bool = @splat(false);
 // /// enable DMA for which background?
 // pub var affine_d_do_dma: [con.BG_NUM]bool = @splat(false);
 
-// /// set mosiac effect strength for background 0-3
-// pub var mosiac: [con.BG_NUM]u4 = @splat(0);
+/// set mosiac effect strength for background 0-3. 0 is no mosiac.
+pub var mosiac: [con.BG_NUM]u4 = @splat(0);
 
 /// set window 0-1 start. DMA-able
 pub var win_start: [con.WINDOW_NUM][con.DMA_NUM]u8 = @splat(@splat(0));

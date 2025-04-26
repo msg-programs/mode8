@@ -66,3 +66,9 @@ BG transformations and small BG sizes can result in the BG not covering the full
 - Structs:
     - `bsp.Color`
     - `bsp.Tile`
+
+## Mosiac effect
+Every BG may have a mosiac effect applied to it, where the BG is rendered as square tiles larger than 1 pixel. Every mosiac tile is filled with the color of the pixel at the top right corner of this tile.
+
+**Relevant Registers:**
+- `mosiac`: Size of the mosiac tiles - 1: 0 is off, 15 represents mosiac tiles of size 16x16

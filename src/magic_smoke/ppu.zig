@@ -165,7 +165,8 @@ fn fetchTileAttrs(bg: u2, bgoffs_x: u32, bgoffs_y: u32, viewpos: ViewPos) bsp.Ti
 // mosiac, affine xform and scrolling are implemented by remapping the screenpos into a viewpos
 fn toTileAttrViewPos(bg: u32, screenpos: ScreenPos) ViewPos {
     var viewpos = ViewPos{ .x = screenpos.x, .y = screenpos.y };
-    // viewpos = (viewpos / i32(reg.mosiac[bg])) * i32(reg.mosiac[bg]);
+    viewpos.x = @divFloor(viewpos.x, @as(u5, reg.mosiac[bg]) + 1) * (@as(u5, reg.mosiac[bg]) + 1);
+    viewpos.y = @divFloor(viewpos.y, @as(u5, reg.mosiac[bg]) + 1) * (@as(u5, reg.mosiac[bg]) + 1);
 
     const index: u32 = if (@as(rpa.DmaDir, @enumFromInt(reg.dma_dir_bg[bg])) == .top_to_bottom) screenpos.y else screenpos.x;
 

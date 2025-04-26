@@ -87,10 +87,10 @@ var bgsz0 = BgTest.TestBgSize{ .bg = 0 };
 var bgsz1 = BgTest.TestBgSize{ .bg = 1 };
 var bgsz2 = BgTest.TestBgSize{ .bg = 2 };
 var bgsz3 = BgTest.TestBgSize{ .bg = 3 };
-// var ... = .{ .bg = 0 };
-// var ... = .{ .bg = 1 };
-// var ... = .{ .bg = 2 };
-// var ... = .{ .bg = 3 };
+var bgm0 = BgTest.TestBgMosiac{ .bg = 0 };
+var bgm1 = BgTest.TestBgMosiac{ .bg = 1 };
+var bgm2 = BgTest.TestBgMosiac{ .bg = 2 };
+var bgm3 = BgTest.TestBgMosiac{ .bg = 3 };
 var bgmv4 = BgTest.BgPosFixup{ .xnow = -64, .ynow = -64, .xtarget = 0, .ytarget = 0 };
 // var ... = .{ .bg = 0 };
 // var ... = .{ .bg = 1 };
@@ -169,10 +169,10 @@ const screens = [_]Mgr.ManagedScreen{
     .{ .test_bg_size = &bgsz1 }, // 50
     .{ .test_bg_size = &bgsz2 },
     .{ .test_bg_size = &bgsz3 },
-    // .{ .test_bg_mosiac = &},
-    // .{ .test_bg_mosiac = &},
-    // .{ .test_bg_mosiac = &},
-    // .{ .test_bg_mosiac = &},
+    .{ .test_bg_mosiac = &bgm0 },
+    .{ .test_bg_mosiac = &bgm1 },
+    .{ .test_bg_mosiac = &bgm2 },
+    .{ .test_bg_mosiac = &bgm3 },
     .{ .bg_pos_fixup = &bgmv4 },
     // .{ .test_bg_affine = &},
     // .{ .test_bg_affine = &},

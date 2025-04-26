@@ -227,41 +227,43 @@ pub const TestBgSize = struct {
     }
 };
 
-// pub const TestBgMosiac = struct {
-//     frame: u64 = 0,
-//     bg: u2,
+pub const TestBgMosiac = struct {
+    frame: u64 = 0,
+    bg: u2,
 
-//     pub fn init(self: *TestBgMosiac) void {
-//         std.debug.print("testing mosiac setting for bg {}\n", .{self.bg});
-//         switch (self.bg) {
-//             0 => bsp.RenderParams.setDebugMode(.DEBUG_MODE_LAYER, .DEBUG_ARG_SHOW_BG_0),
-//             1 => bsp.RenderParams.setDebugMode(.DEBUG_MODE_LAYER, .DEBUG_ARG_SHOW_BG_1),
-//             2 => bsp.RenderParams.setDebugMode(.DEBUG_MODE_LAYER, .DEBUG_ARG_SHOW_BG_2),
-//             3 => bsp.RenderParams.setDebugMode(.DEBUG_MODE_LAYER, .DEBUG_ARG_SHOW_BG_3),
-//         }
-//         const sett = bsp.RenderParams.OOBData{ .WRAP = true };
-//         bsp.RenderParams.setOOBSetting(sett, sett, sett, sett);
-//         bsp.RenderParams.setBGSize(32, 32, 32, 32);
-//     }
+    pub fn init(self: *TestBgMosiac) void {
+        std.debug.print("testing mosiac setting for bg {}\n", .{self.bg});
+        reg.debug_mode = @intFromEnum(rpa.DebugMode.layer);
+        reg.debug_arg = switch (self.bg) {
+            0 => @intFromEnum(rpa.DebugArg.show_bg_0),
+            1 => @intFromEnum(rpa.DebugArg.show_bg_1),
+            2 => @intFromEnum(rpa.DebugArg.show_bg_2),
+            3 => @intFromEnum(rpa.DebugArg.show_bg_3),
+        };
 
-//     pub fn tick(self: *TestBgMosiac) bool {
-//         if (self.frame >= 16 * 4) {
-//             return true;
-//         }
+        reg.oob_setting = @splat(@intFromEnum(rpa.OobSetting.wrap));
+        bsp.RenderParams.setBgSize(0, 32);
+        bsp.RenderParams.setBgSize(1, 32);
+        bsp.RenderParams.setBgSize(2, 32);
+        bsp.RenderParams.setBgSize(3, 32);
+    }
 
-//         const stren_a: u4 = 15 - @as(u4, @truncate(self.frame / 4));
-//         const stren_b: u4 = @as(u4, @truncate(self.frame / 4));
+    pub fn tick(self: *TestBgMosiac) bool {
+        if (self.frame >= 16 * 4) {
+            return true;
+        }
 
-//         switch (self.bg) {
-//             0 => bsp.RenderParams.setMosiac(stren_b, 0, 0, 0),
-//             1 => bsp.RenderParams.setMosiac(0, stren_a, 0, 0),
-//             2 => bsp.RenderParams.setMosiac(0, 0, stren_b, 0),
-//             3 => bsp.RenderParams.setMosiac(0, 0, 0, stren_a),
-//         }
+        const stren_a: u4 = 15 - @as(u4, @truncate(self.frame / 4));
+        const stren_b: u4 = @as(u4, @truncate(self.frame / 4));
 
-//         return false;
-//     }
-// };
+        reg.mosiac[0] = if (self.bg == 0) stren_b else 0;
+        reg.mosiac[1] = if (self.bg == 1) stren_a else 0;
+        reg.mosiac[2] = if (self.bg == 2) stren_b else 0;
+        reg.mosiac[3] = if (self.bg == 3) stren_a else 0;
+
+        return false;
+    }
+};
 
 // pub const TestBgAffine = struct {
 //     frame: u64 = 0,
