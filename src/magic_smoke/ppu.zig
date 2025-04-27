@@ -173,25 +173,23 @@ fn toTileAttrViewPos(bg: u32, screenpos: ScreenPos) ViewPos {
     const xscroll: i32 = if (reg.xscroll_do_dma[bg]) reg.xscroll[bg][index] else reg.xscroll[bg][0];
     const yscroll: i32 = if (reg.yscroll_do_dma[bg]) reg.yscroll[bg][index] else reg.yscroll[bg][0];
 
-    // XXX TMP XXX
-    viewpos.x += xscroll;
-    viewpos.y += yscroll;
+    const x0: i32 = if (reg.affine_x0_do_dma[bg]) reg.affine_x0[bg][index] else reg.affine_x0[bg][0];
+    const y0: i32 = if (reg.affine_y0_do_dma[bg]) reg.affine_y0[bg][index] else reg.affine_y0[bg][0];
+    const a: f32 = if (reg.affine_a_do_dma[bg]) reg.affine_a[bg][index] else reg.affine_a[bg][0];
+    const b: f32 = if (reg.affine_b_do_dma[bg]) reg.affine_b[bg][index] else reg.affine_b[bg][0];
+    const c: f32 = if (reg.affine_c_do_dma[bg]) reg.affine_c[bg][index] else reg.affine_c[bg][0];
+    const d: f32 = if (reg.affine_d_do_dma[bg]) reg.affine_d[bg][index] else reg.affine_d[bg][0];
 
-    // const x0: i32 = if (reg.affine_x0_do_dma[bg]) reg.affine_x0[bg][index] else reg.affine_x0[bg][0];
-    // const y0: i32 = if (reg.affine_y0_do_dma[bg]) reg.affine_y0[bg][index] else reg.affine_y0[bg][0];
-    // const a: f32 = if (reg.affine_a_do_dma[bg]) reg.affine_a[bg][index] else reg.affine_a[bg][0];
-    // const b: f32 = if (reg.affine_b_do_dma[bg]) reg.affine_b[bg][index] else reg.affine_b[bg][0];
-    // const c: f32 = if (reg.affine_c_do_dma[bg]) reg.affine_c[bg][index] else reg.affine_c[bg][0];
-    // const d: f32 = if (reg.affine_d_do_dma[bg]) reg.affine_d[bg][index] else reg.affine_d[bg][0];
+    const affine_mat = math.mat2x2(&math.vec2(a, b), &math.vec2(c, d));
+    const affine_vec1: math.Vec2 = math.vec2(@floatFromInt(viewpos.x), @floatFromInt(viewpos.y)).add(&math.vec2(@floatFromInt(xscroll), @floatFromInt(yscroll))).sub(&math.vec2(@floatFromInt(x0), @floatFromInt(y0)));
+    const affine_vec2: math.Vec2 = math.vec2(@floatFromInt(x0), @floatFromInt(y0));
 
-    // const affine_mat = math.mat2x2(.{ a, b }, .{ c, d });
-    // const affine_vec1: math.Vec2 = math.vec2(@floatFromInt(viewpos.x()), @floatFromInt(viewpos.y())).add(math.vec2(@floatFromInt(xscroll), @floatFromInt(yscroll))).sub(math.vec2(@floatFromInt(x0), @floatFromInt(y0)));
-    // const affine_vec2: math.Vec2 = math.vec2.init(x0, y0);
+    const viewpos_pre: math.Vec2 = affine_mat.mulVec(&affine_vec1).add(&affine_vec2);
 
-    // const viewpos_pre: math.Vec2 = affine_mat.mulVec(affine_vec1).add(affine_vec2);
-    // viewpos = Vec2u.init(@intFromFloat(viewpos_pre.x()), @intFromFloat(viewpos_pre.y()));
-
-    return viewpos;
+    return .{
+        .x = @intFromFloat(viewpos_pre.x()),
+        .y = @intFromFloat(viewpos_pre.y()),
+    };
 }
 
 // given the screenpos, calculate the packed color for that pixel based on the specified BG.

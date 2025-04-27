@@ -11,14 +11,26 @@ Note that all register values here and in the follwing paragraphs are per-BG.
 - `dma_dir_bg`: DMA direction for all DMA-able BG registers
 
 ## BG transformation
-BGs may be moved ("scrolled") in the x/y directions.
+BGs may be moved ("scrolled") in the x/y directions. Aditionally, an affine transformation as defined by a 2x2 matrix and an origin point may be applied to the BGs.
+
+This is done by mapping the screen position to a tilemap view position, as defined by the following equation:
+
+|view_x|   |affine_a affine_b|   |screen_x + xscroll - affine_x0|   |affine_x0|
+|view_y| = |affine_c affine_d| * |screen_y + yscroll - affine_y0| + |affine_y0|
 
 **Relevant Registers:**
-- `xscroll, yscroll`: Move the BG in the x/y direction
+- `xscroll, yscroll`: Move the BG in the x/y direction (in pixel)
+- `affine_x0, affine_y0`: Affine transformation origin point (in pixel)
+- `affine_a`: Affine matrix parameter (horizontal scale)
+- `affine_b`: Affine matrix parameter (horizontal shear)
+- `affine_c`: Affine matrix parameter (vertical shear)
+- `affine_d`: Affine matrix parameter (vertical scale)
 - `xscroll_do_dma, yscroll_do_dma`: Should the `xscroll/yscroll` registers use DMA?
+- `affine_x0_do_dma, affine_y0_do_dma`: Should the affine origin use DMA?
+- `affine_a_do_dma, affine_b_do_dma, affine_c_do_dma, affine_d_do_dma`: Should the affine parameters use DMA?
 
 ## BG sizes
-The tilemap is always 512x512 tiles, but the area that is actually rendered may be shrunk. Note that the BG always stays square. Due to the register size, the size is always a multiple of 2. The smallest size is 2x2.
+The tilemap is always 512x512 tiles, but the area that is actually rendered may be limited. Note that the BG always stays square. Due to the register size, the size is always a multiple of 2. The smallest size is 2x2.
 
 **Relevant Registers:**
 - `bgsz`: Size of the BG. Should be set using the respective BSP function.

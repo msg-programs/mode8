@@ -265,118 +265,115 @@ pub const TestBgMosiac = struct {
     }
 };
 
-// pub const TestBgAffine = struct {
-//     frame: u64 = 0,
-//     bg: u2,
+pub const TestBgAffine = struct {
+    frame: u64 = 0,
+    bg: u2,
 
-//     pub fn init(self: *TestBgAffine) void {
-//         std.debug.print("testing affine settings for bg {}\n", .{self.bg});
-//         switch (self.bg) {
-//             0 => {
-//                 bsp.RenderParams.setDebugMode(.DEBUG_MODE_LAYER, .DEBUG_ARG_SHOW_BG_0);
-//             },
-//             1 => {
-//                 bsp.RenderParams.setDebugMode(.DEBUG_MODE_LAYER, .DEBUG_ARG_SHOW_BG_1);
-//             },
-//             2 => {
-//                 bsp.RenderParams.setDebugMode(.DEBUG_MODE_LAYER, .DEBUG_ARG_SHOW_BG_2);
-//             },
-//             3 => {
-//                 bsp.RenderParams.setDebugMode(.DEBUG_MODE_LAYER, .DEBUG_ARG_SHOW_BG_3);
-//             },
-//         }
-//         const sett = bsp.RenderParams.OOBData{ .COLOR = 0x8000 };
-//         bsp.RenderParams.setOOBSetting(sett, sett, sett, sett);
-//         bsp.RenderParams.setBGSize(32, 32, 32, 32);
+    pub fn init(self: *TestBgAffine) void {
+        std.debug.print("testing affine settings for bg {}\n", .{self.bg});
+        reg.debug_mode = @intFromEnum(rpa.DebugMode.layer);
+        reg.debug_arg = switch (self.bg) {
+            0 => @intFromEnum(rpa.DebugArg.show_bg_0),
+            1 => @intFromEnum(rpa.DebugArg.show_bg_1),
+            2 => @intFromEnum(rpa.DebugArg.show_bg_2),
+            3 => @intFromEnum(rpa.DebugArg.show_bg_3),
+        };
+        reg.oob_setting = @splat(@intFromEnum(rpa.OobSetting.color));
+        reg.oob_data = @splat(0x8000);
+        bsp.RenderParams.setBgSize(0, 32);
+        bsp.RenderParams.setBgSize(1, 32);
+        bsp.RenderParams.setBgSize(2, 32);
+        bsp.RenderParams.setBgSize(3, 32);
 
-//         bsp.RenderParams.setAffineX0(self.bg, .{ .direct = 128 });
-//         bsp.RenderParams.setAffineY0(self.bg, .{ .direct = 128 });
-//     }
+        reg.affine_x0_do_dma[self.bg] = false;
+        reg.affine_y0_do_dma[self.bg] = false;
+        reg.affine_a_do_dma[self.bg] = false;
+        reg.affine_b_do_dma[self.bg] = false;
+        reg.affine_c_do_dma[self.bg] = false;
+        reg.affine_d_do_dma[self.bg] = false;
+        reg.affine_x0[self.bg][0] = 128;
+        reg.affine_y0[self.bg][0] = 128;
+    }
 
-//     pub fn tick(self: *TestBgAffine) bool {
-//         const cyc: f32 = util.lerpCycleOf(self.frame, util.FULL_SECOND * 1 - 1);
-//         const scrollf: f32 = cyc * 0.5;
-//         const unscrollf: f32 = 0.5 - (cyc * 0.5);
+    pub fn tick(self: *TestBgAffine) bool {
+        const cyc: f32 = util.lerpCycleOf(self.frame, util.FULL_SECOND * 1 - 1);
+        const scrollf: f32 = cyc * 0.5;
+        const unscrollf: f32 = 0.5 - (cyc * 0.5);
 
-//         const val = if (util.fullsecOf(self.frame) % 2 == 0) scrollf else unscrollf;
+        const val = if (util.fullsecOf(self.frame) % 2 == 0) scrollf else unscrollf;
 
-//         switch (@divFloor(util.fullsecOf(self.frame), 2)) {
-//             0 => {
-//                 bsp.RenderParams.setAffineA(self.bg, .{ .direct = 1.0 - val });
-//             },
-//             1 => {
-//                 bsp.RenderParams.setAffineB(self.bg, .{ .direct = val });
-//             },
-//             2 => {
-//                 bsp.RenderParams.setAffineC(self.bg, .{ .direct = val });
-//             },
-//             3 => {
-//                 bsp.RenderParams.setAffineD(self.bg, .{ .direct = 1.0 - val });
-//             },
-//             else => return true,
-//         }
+        switch (@divFloor(util.fullsecOf(self.frame), 2)) {
+            0 => reg.affine_a[self.bg][0] = 1.0 - val,
+            1 => reg.affine_b[self.bg][0] = val,
+            2 => reg.affine_c[self.bg][0] = val,
+            3 => reg.affine_d[self.bg][0] = 1.0 - val,
+            else => return true,
+        }
 
-//         return false;
-//     }
-// };
+        return false;
+    }
+};
 
-// pub const TestBgAffineDMA = struct {
-//     frame: u64 = 0,
-//     bg: u2,
-//     flip_dma: bool,
+pub const TestBgAffineDMA = struct {
+    frame: u64 = 0,
+    bg: u2,
+    flip_dma: bool,
 
-//     pub fn init(self: *TestBgAffineDMA) void {
-//         std.debug.print("testing affine settings with DMA for bg {} (dma flipped? {})\n", .{ self.bg, self.flip_dma });
+    pub fn init(self: *TestBgAffineDMA) void {
+        std.debug.print("testing affine settings with DMA for bg {} (dma flipped? {})\n", .{ self.bg, self.flip_dma });
 
-//         const dma: bsp.RenderParams.DMADir = if (self.flip_dma) .Y else .X;
-//         const undma: bsp.RenderParams.DMADir = if (self.flip_dma) .X else .Y;
+        const dma: bsp.RenderParams.DmaDir = if (self.flip_dma) .left_to_right else .top_to_bottom;
+        const undma: bsp.RenderParams.DmaDir = if (self.flip_dma) .top_to_bottom else .left_to_right;
 
-//         switch (self.bg) {
-//             0 => {
-//                 bsp.RenderParams.setDebugMode(.DEBUG_MODE_LAYER, .DEBUG_ARG_SHOW_BG_0);
-//                 bsp.RenderParams.setDMADirBG(dma, undma, undma, undma);
-//             },
-//             1 => {
-//                 bsp.RenderParams.setDebugMode(.DEBUG_MODE_LAYER, .DEBUG_ARG_SHOW_BG_1);
-//                 bsp.RenderParams.setDMADirBG(undma, dma, undma, undma);
-//             },
-//             2 => {
-//                 bsp.RenderParams.setDebugMode(.DEBUG_MODE_LAYER, .DEBUG_ARG_SHOW_BG_2);
-//                 bsp.RenderParams.setDMADirBG(undma, undma, dma, undma);
-//             },
-//             3 => {
-//                 bsp.RenderParams.setDebugMode(.DEBUG_MODE_LAYER, .DEBUG_ARG_SHOW_BG_3);
-//                 bsp.RenderParams.setDMADirBG(undma, undma, undma, dma);
-//             },
-//         }
-//         const sett = bsp.RenderParams.OOBData{ .WRAP = true };
-//         bsp.RenderParams.setOOBSetting(sett, sett, sett, sett);
-//         bsp.RenderParams.setBGSize(32, 32, 32, 32);
+        reg.debug_mode = @intFromEnum(rpa.DebugMode.layer);
+        reg.debug_arg = switch (self.bg) {
+            0 => @intFromEnum(rpa.DebugArg.show_bg_0),
+            1 => @intFromEnum(rpa.DebugArg.show_bg_1),
+            2 => @intFromEnum(rpa.DebugArg.show_bg_2),
+            3 => @intFromEnum(rpa.DebugArg.show_bg_3),
+        };
 
-//         for (0..4) |i| {
-//             bsp.RenderParams.setAffineA(@truncate(i), .{ .direct = -10 });
-//             bsp.RenderParams.setAffineB(@truncate(i), .{ .direct = -10 });
-//             bsp.RenderParams.setAffineC(@truncate(i), .{ .direct = -10 });
-//             bsp.RenderParams.setAffineD(@truncate(i), .{ .direct = -10 });
-//             bsp.RenderParams.setAffineX0(@truncate(i), .{ .direct = -10 });
-//             bsp.RenderParams.setAffineY0(@truncate(i), .{ .direct = -10 });
-//         }
-//     }
+        reg.dma_dir_bg[0] = @intFromEnum(if (self.bg == 0) dma else undma);
+        reg.dma_dir_bg[1] = @intFromEnum(if (self.bg == 1) dma else undma);
+        reg.dma_dir_bg[2] = @intFromEnum(if (self.bg == 2) dma else undma);
+        reg.dma_dir_bg[3] = @intFromEnum(if (self.bg == 3) dma else undma);
 
-//     pub fn tick(self: *TestBgAffineDMA) bool {
-//         const cyc1: f32 = util.linCycleOf(self.frame, util.FULL_SECOND * 2) * 0.5 * std.math.pi + (@as(f32, @floatFromInt(self.bg)) * 0.5 * std.math.pi);
+        reg.oob_setting = @splat(@intFromEnum(rpa.OobSetting.wrap));
+        rpa.setBgSize(0, 32);
+        rpa.setBgSize(1, 32);
+        rpa.setBgSize(2, 32);
+        rpa.setBgSize(3, 32);
 
-//         bsp.RenderParams.setAffineA(self.bg, .{ .dma = .{@cos(cyc1)} ** 85 ++ .{@cos(-cyc1)} ** 85 ++ .{@cos(cyc1)} ** 86 });
-//         bsp.RenderParams.setAffineB(self.bg, .{ .dma = .{-@sin(cyc1)} ** 85 ++ .{-@sin(-cyc1)} ** 85 ++ .{-@sin(cyc1)} ** 86 });
-//         bsp.RenderParams.setAffineC(self.bg, .{ .dma = .{@sin(cyc1)} ** 85 ++ .{@sin(-cyc1)} ** 85 ++ .{@sin(cyc1)} ** 86 });
-//         bsp.RenderParams.setAffineD(self.bg, .{ .dma = .{@cos(cyc1)} ** 85 ++ .{@cos(-cyc1)} ** 85 ++ .{@cos(cyc1)} ** 86 });
+        for (0..4) |i| {
+            reg.affine_a[i][0] = -10;
+            reg.affine_b[i][0] = -10;
+            reg.affine_c[i][0] = -10;
+            reg.affine_d[i][0] = -10;
+            reg.affine_x0[i][0] = -10;
+            reg.affine_y0[i][0] = -10;
 
-//         bsp.RenderParams.setAffineX0(self.bg, .{ .dma = .{32} ** 85 ++ .{128} ** 85 ++ .{256} ** 86 });
-//         bsp.RenderParams.setAffineY0(self.bg, .{ .dma = .{32} ** 85 ++ .{128} ** 85 ++ .{256} ** 86 });
+            reg.affine_a_do_dma[i] = (self.bg == i);
+            reg.affine_b_do_dma[i] = (self.bg == i);
+            reg.affine_c_do_dma[i] = (self.bg == i);
+            reg.affine_d_do_dma[i] = (self.bg == i);
+            reg.affine_x0_do_dma[i] = (self.bg == i);
+            reg.affine_y0_do_dma[i] = (self.bg == i);
+        }
+    }
 
-//         return util.fullsecOf(self.frame) == 2;
-//     }
-// };
+    pub fn tick(self: *TestBgAffineDMA) bool {
+        const cyc1: f32 = util.linCycleOf(self.frame, util.FULL_SECOND * 2) * 0.5 * std.math.pi + (@as(f32, @floatFromInt(self.bg)) * 0.5 * std.math.pi);
+
+        reg.affine_a[self.bg] = .{@cos(cyc1)} ** 85 ++ .{@cos(-cyc1)} ** 85 ++ .{@cos(cyc1)} ** 86;
+        reg.affine_b[self.bg] = .{-@sin(cyc1)} ** 85 ++ .{-@sin(-cyc1)} ** 85 ++ .{-@sin(cyc1)} ** 86;
+        reg.affine_c[self.bg] = .{@sin(cyc1)} ** 85 ++ .{@sin(-cyc1)} ** 85 ++ .{@sin(cyc1)} ** 86;
+        reg.affine_d[self.bg] = .{@cos(cyc1)} ** 85 ++ .{@cos(-cyc1)} ** 85 ++ .{@cos(cyc1)} ** 86;
+        reg.affine_x0[self.bg] = .{32} ** 85 ++ .{128} ** 85 ++ .{256} ** 86;
+        reg.affine_y0[self.bg] = .{32} ** 85 ++ .{128} ** 85 ++ .{256} ** 86;
+
+        return util.fullsecOf(self.frame) == 2;
+    }
+};
 
 pub const TestBgScrollDMA = struct {
     frame: u64 = 0,

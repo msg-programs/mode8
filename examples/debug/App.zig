@@ -92,18 +92,18 @@ var bgm1 = BgTest.TestBgMosiac{ .bg = 1 };
 var bgm2 = BgTest.TestBgMosiac{ .bg = 2 };
 var bgm3 = BgTest.TestBgMosiac{ .bg = 3 };
 var bgmv4 = BgTest.BgPosFixup{ .xnow = -64, .ynow = -64, .xtarget = 0, .ytarget = 0 };
-// var ... = .{ .bg = 0 };
-// var ... = .{ .bg = 1 };
-// var ... = .{ .bg = 2 };
-// var ... = .{ .bg = 3 };
-// var ... = .{ .bg = 0, .flip_dma = false };
-// var ... = .{ .bg = 1, .flip_dma = false };
-// var ... = .{ .bg = 2, .flip_dma = false };
-// var ... = .{ .bg = 3, .flip_dma = false };
-// var ... = .{ .bg = 0, .flip_dma = true };
-// var ... = .{ .bg = 1, .flip_dma = true };
-// var ... = .{ .bg = 2, .flip_dma = true };
-// var ... = .{ .bg = 3, .flip_dma = true };
+var bgaff0 = BgTest.TestBgAffine{ .bg = 0 };
+var bgaff1 = BgTest.TestBgAffine{ .bg = 1 };
+var bgaff2 = BgTest.TestBgAffine{ .bg = 2 };
+var bgaff3 = BgTest.TestBgAffine{ .bg = 3 };
+var bgaffd0 = BgTest.TestBgAffineDMA{ .bg = 0, .flip_dma = false };
+var bgaffd1 = BgTest.TestBgAffineDMA{ .bg = 1, .flip_dma = false };
+var bgaffd2 = BgTest.TestBgAffineDMA{ .bg = 2, .flip_dma = false };
+var bgaffd3 = BgTest.TestBgAffineDMA{ .bg = 3, .flip_dma = false };
+var bgaffd0f = BgTest.TestBgAffineDMA{ .bg = 0, .flip_dma = true };
+var bgaffd1f = BgTest.TestBgAffineDMA{ .bg = 1, .flip_dma = true };
+var bgaffd2f = BgTest.TestBgAffineDMA{ .bg = 2, .flip_dma = true };
+var bgaffd3f = BgTest.TestBgAffineDMA{ .bg = 3, .flip_dma = true };
 // var ... = .{};
 // var ... = .{};
 // var ... = .{};
@@ -150,42 +150,42 @@ const screens = [_]Mgr.ManagedScreen{
     .{ .test_fixcol_dma = &fcmdf },
     .{ .test_fixcol_dma = &fcsdf },
     .{ .bg_tests_data_setup = &bgds },
-    .{ .bg_pos_fixup = &bgmv1 },
-    .{ .test_bg_oob = &bgoob0 },
-    .{ .test_bg_oob = &bgoob1 },
-    .{ .test_bg_oob = &bgoob2 },
-    .{ .test_bg_oob = &bgoob3 },
-    .{ .bg_pos_fixup = &bgmv2 },
-    .{ .test_bg_scroll_dma = &bgscd0 }, // 40
-    .{ .test_bg_scroll_dma = &bgscd1 },
-    .{ .test_bg_scroll_dma = &bgscd2 },
-    .{ .test_bg_scroll_dma = &bgscd3 },
-    .{ .test_bg_scroll_dma = &bgscd0f },
-    .{ .test_bg_scroll_dma = &bgscd1f },
-    .{ .test_bg_scroll_dma = &bgscd2f },
-    .{ .test_bg_scroll_dma = &bgscd3f },
-    .{ .bg_pos_fixup = &bgmv3 },
-    .{ .test_bg_size = &bgsz0 },
-    .{ .test_bg_size = &bgsz1 }, // 50
-    .{ .test_bg_size = &bgsz2 },
-    .{ .test_bg_size = &bgsz3 },
-    .{ .test_bg_mosiac = &bgm0 },
-    .{ .test_bg_mosiac = &bgm1 },
-    .{ .test_bg_mosiac = &bgm2 },
-    .{ .test_bg_mosiac = &bgm3 },
+    // .{ .bg_pos_fixup = &bgmv1 },
+    // .{ .test_bg_oob = &bgoob0 },
+    // .{ .test_bg_oob = &bgoob1 },
+    // .{ .test_bg_oob = &bgoob2 },
+    // .{ .test_bg_oob = &bgoob3 },
+    // .{ .bg_pos_fixup = &bgmv2 },
+    // .{ .test_bg_scroll_dma = &bgscd0 }, // 40
+    // .{ .test_bg_scroll_dma = &bgscd1 },
+    // .{ .test_bg_scroll_dma = &bgscd2 },
+    // .{ .test_bg_scroll_dma = &bgscd3 },
+    // .{ .test_bg_scroll_dma = &bgscd0f },
+    // .{ .test_bg_scroll_dma = &bgscd1f },
+    // .{ .test_bg_scroll_dma = &bgscd2f },
+    // .{ .test_bg_scroll_dma = &bgscd3f },
+    // .{ .bg_pos_fixup = &bgmv3 },
+    // .{ .test_bg_size = &bgsz0 },
+    // .{ .test_bg_size = &bgsz1 }, // 50
+    // .{ .test_bg_size = &bgsz2 },
+    // .{ .test_bg_size = &bgsz3 },
+    // .{ .test_bg_mosiac = &bgm0 },
+    // .{ .test_bg_mosiac = &bgm1 },
+    // .{ .test_bg_mosiac = &bgm2 },
+    // .{ .test_bg_mosiac = &bgm3 },
     .{ .bg_pos_fixup = &bgmv4 },
-    // .{ .test_bg_affine = &},
-    // .{ .test_bg_affine = &},
-    // .{ .test_bg_affine = &}, // 60
-    // .{ .test_bg_affine = &},
-    // .{ .test_bg_affine_dma = &},
-    // .{ .test_bg_affine_dma = &},
-    // .{ .test_bg_affine_dma = &},
-    // .{ .test_bg_affine_dma = &},
-    // .{ .test_bg_affine_dma = &},
-    // .{ .test_bg_affine_dma = &},
-    // .{ .test_bg_affine_dma = &},
-    // .{ .test_bg_affine_dma = &},
+    // .{ .test_bg_affine = &bgaff0 },
+    // .{ .test_bg_affine = &bgaff1 },
+    // .{ .test_bg_affine = &bgaff2 }, // 60
+    // .{ .test_bg_affine = &bgaff3 },
+    .{ .test_bg_affine_dma = &bgaffd0 },
+    .{ .test_bg_affine_dma = &bgaffd1 },
+    .{ .test_bg_affine_dma = &bgaffd2 },
+    .{ .test_bg_affine_dma = &bgaffd3 },
+    .{ .test_bg_affine_dma = &bgaffd0f },
+    .{ .test_bg_affine_dma = &bgaffd1f },
+    .{ .test_bg_affine_dma = &bgaffd2f },
+    .{ .test_bg_affine_dma = &bgaffd3f },
     // .{ .test_bg_prio_feat = &}, // 70
     // .{ .test_obj_attrs = &},
     // .{ .test_obj_wrap = &},

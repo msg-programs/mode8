@@ -13,41 +13,41 @@ pub var yscroll: [con.BG_NUM][con.DMA_NUM]i32 = @splat(@splat(0));
 /// enable DMA for which backgrounds?
 pub var yscroll_do_dma: [con.BG_NUM]bool = @splat(false);
 
-// /// affine transformation: origin x pos. DMA-able
-// pub var affine_x0: [con.BG_NUM][con.DMA_NUM]i32 = @splat(@splat(0));
+/// affine transformation: origin x pos. DMA-able
+pub var affine_x0: [con.BG_NUM][con.DMA_NUM]i32 = @splat(@splat(0));
 
-// /// enable DMA for which backgrounds?
-// pub var affine_x0_do_dma: [con.BG_NUM]bool = @splat(false);
+/// enable DMA for which backgrounds?
+pub var affine_x0_do_dma: [con.BG_NUM]bool = @splat(false);
 
-// /// affine transformation: origin y pos. DMA-able
-// pub var affine_y0: [con.BG_NUM][con.DMA_NUM]i32 = @splat(@splat(0));
+/// affine transformation: origin y pos. DMA-able
+pub var affine_y0: [con.BG_NUM][con.DMA_NUM]i32 = @splat(@splat(0));
 
-// /// enable DMA for which background?
-// pub var affine_y0_do_dma: [con.BG_NUM]bool = @splat(false);
+/// enable DMA for which background?
+pub var affine_y0_do_dma: [con.BG_NUM]bool = @splat(false);
 
-// /// affine transformation: 2x2 matrix top left value. DMA-able
-// pub var affine_a: [con.BG_NUM][con.DMA_NUM]f32 = @splat(@splat(1));
+/// affine transformation: 2x2 matrix top left value. DMA-able
+pub var affine_a: [con.BG_NUM][con.DMA_NUM]f32 = @splat(@splat(1));
 
-// /// enable DMA for which background?
-// pub var affine_a_do_dma: [con.BG_NUM]bool = @splat(false);
+/// enable DMA for which background?
+pub var affine_a_do_dma: [con.BG_NUM]bool = @splat(false);
 
-// /// affine transformation: 2x2 matrix top right value. DMA-able
-// pub var affine_b: [con.BG_NUM][con.DMA_NUM]f32 = @splat(@splat(0));
+/// affine transformation: 2x2 matrix top right value. DMA-able
+pub var affine_b: [con.BG_NUM][con.DMA_NUM]f32 = @splat(@splat(0));
 
-// /// enable DMA for which background?
-// pub var affine_b_do_dma: [con.BG_NUM]bool = @splat(false);
+/// enable DMA for which background?
+pub var affine_b_do_dma: [con.BG_NUM]bool = @splat(false);
 
-// /// affine transformation: 2x2 matrix bottom left value. DMA-able
-// pub var affine_c: [con.BG_NUM][con.DMA_NUM]f32 = @splat(@splat(0));
+/// affine transformation: 2x2 matrix bottom left value. DMA-able
+pub var affine_c: [con.BG_NUM][con.DMA_NUM]f32 = @splat(@splat(0));
 
-// /// enable DMA for which background?
-// pub var affine_c_do_dma: [con.BG_NUM]bool = @splat(false);
+/// enable DMA for which background?
+pub var affine_c_do_dma: [con.BG_NUM]bool = @splat(false);
 
-// /// affine transformation: 2x2 matrix bottom right value. DMA-able
-// pub var affine_d: [con.BG_NUM][con.DMA_NUM]f32 = @splat(@splat(1));
+/// affine transformation: 2x2 matrix bottom right value. DMA-able
+pub var affine_d: [con.BG_NUM][con.DMA_NUM]f32 = @splat(@splat(1));
 
-// /// enable DMA for which background?
-// pub var affine_d_do_dma: [con.BG_NUM]bool = @splat(false);
+/// enable DMA for which background?
+pub var affine_d_do_dma: [con.BG_NUM]bool = @splat(false);
 
 /// set mosiac effect strength for background 0-3. 0 is no mosiac.
 pub var mosiac: [con.BG_NUM]u4 = @splat(0);
