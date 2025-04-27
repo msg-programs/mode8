@@ -122,14 +122,14 @@ fn fetchTilePixel(viewpos: ViewPos, tile_attrs: bsp.Tile) u8 {
     var pixpos_y = @mod(view_y, con.TILE_GFX_DIM_PIX);
 
     // do mirroring of tile
-    if (tile_attrs.vflip == 1) {
+    if (tile_attrs.vflip) {
         pixpos_x = 7 - pixpos_x;
     }
-    if (tile_attrs.hflip == 1) {
+    if (tile_attrs.hflip) {
         pixpos_y = 7 - pixpos_y;
     }
 
-    if (tile_attrs.rot == 1) {
+    if (tile_attrs.rot) {
         const tmp = pixpos_y;
         pixpos_x = pixpos_y;
         pixpos_y = tmp;
@@ -208,7 +208,7 @@ fn calcBGPixel(screenpos: ScreenPos, bg: u2) BGPixel {
         const tilecol_idx = fetchTilePixel(viewpos, tile_attrs);
         return BGPixel{
             .p_col = lookupPaletteColor(tilecol_idx),
-            .is_prio = tile_attrs.prio == 1,
+            .is_prio = tile_attrs.prio,
         };
     }
 
@@ -231,7 +231,7 @@ fn calcBGPixel(screenpos: ScreenPos, bg: u2) BGPixel {
 
             const tile_attrs = fetchTileAttrs(bg, bgoffs_x, bgoffs_y, viewpos);
             const tilecol_idx = fetchTilePixel(viewpos, tile_attrs);
-            return .{ .p_col = lookupPaletteColor(tilecol_idx), .is_prio = tile_attrs.prio == 1 };
+            return .{ .p_col = lookupPaletteColor(tilecol_idx), .is_prio = tile_attrs.prio };
         },
         .color => {
             return .{ .p_col = reg.oob_data[bg], .is_prio = false };
@@ -241,13 +241,13 @@ fn calcBGPixel(screenpos: ScreenPos, bg: u2) BGPixel {
 
             const tilecol_idx = fetchTilePixel(.{ .x = @mod(viewpos_pre.x, con.TILE_GFX_DIM_PIX), .y = @mod(viewpos_pre.y, con.TILE_GFX_DIM_PIX) }, dummy);
 
-            return .{ .p_col = lookupPaletteColor(tilecol_idx), .is_prio = dummy.prio == 1 };
+            return .{ .p_col = lookupPaletteColor(tilecol_idx), .is_prio = dummy.prio };
         },
         .wrap => {
             const viewpos: ViewPos = .{ .x = @mod(viewpos_pre.x, @as(i32, @intCast(bgsz))), .y = @mod(viewpos_pre.y, @as(i32, @intCast(bgsz))) };
             const tile_attrs = fetchTileAttrs(bg, bgoffs_x, bgoffs_y, viewpos);
             const tilecol_idx = fetchTilePixel(viewpos, tile_attrs);
-            return .{ .p_col = lookupPaletteColor(tilecol_idx), .is_prio = tile_attrs.prio == 1 };
+            return .{ .p_col = lookupPaletteColor(tilecol_idx), .is_prio = tile_attrs.prio };
         },
     }
 }

@@ -6,10 +6,10 @@ const std = @import("std");
 pub const Tile = packed struct {
     gfxid: u10 = 0,
     atlid: u2 = 0,
-    prio: u1 = 0,
-    vflip: u1 = 0,
-    hflip: u1 = 0,
-    rot: u1 = 0,
+    prio: bool = false,
+    vflip: bool = false,
+    hflip: bool = false,
+    rot: bool = false,
 
     pub fn writeToTAM(self: Tile, bg: u2, xpos: u9, ypos: u9) void {
         const data: u16 = @bitCast(self);

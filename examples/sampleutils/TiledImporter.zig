@@ -80,10 +80,10 @@ pub const TiledMap = struct {
             const tile = bsp.Tile{
                 .atlid = atlid,
                 .gfxid = gid,
-                .hflip = hflip,
-                .vflip = vflip,
-                .prio = if (as_prio) 1 else 0,
-                .rot = rot,
+                .hflip = hflip == 1,
+                .vflip = vflip == 1,
+                .prio = as_prio,
+                .rot = rot == 1,
             };
             const xpos: u9 = @truncate(idx % self.content.width);
             const ypos: u9 = @truncate(idx / self.content.height);
