@@ -2,33 +2,30 @@
 # Glossary
 mode8's source and documentation uses the following terminology:
 
-## Namespace Names
+## Namespace names
 - Registers: `mode8.hardware.registers.*`
 - Constants: `mode8.hardware.constants.*`
 - Memory: `mode8.hardware.memory.*`
 
-# Rendering
+## Memory
+
+## Basics
+- Tile: Unit of BG construction, see Tile.md
+- BG (Background): Tilemap made from Tiles, see BG.md
+- DMA: = Direct memory access, see DMA.md
+- Obj (Object): Small, freely moveable graphic independent of all BGs, see Obj.md
+
+## Render pipeline
 - Window: A mask applied to layers, see Windows.md
-- DMA: See DMA.md
-- BG: A background made from a tilemap, see BG.md
 - Layer: Umbrella term for the four BGs + the Objs + the Fixcols (6 layers in total).
 - Buffer: The rendering pipeline uses two framebuffers (main and sub) at one point, see Compositing.md
+- Fixcol: Fixed fallback color used in the rendering pipeline, see Compositing.md
 - Color Math: The final step of the rendering pipeline, see Color Math.md
-- Fixcol: Fixed fallback color used in the rendering pipeline, see Fixcol.md
-
-
-<!-- # Rendering Primitives
-* Tile: The unit from which BGs are constructed.
-* BG/Background: A tilemap constructed from Tiles.
-* Obj/Object: A freely moveable graphic independent of all BGs.
 
 # Memory
-* TAM: Tile Attribute Memory. Holds the configuration for all Tiles that can be displayed.
-* OAM: Object Attribute Memory. Holds the configuration for all Objects that can be displayed..
-* TGM: Tile Graphics Memory. Holds the texture atlases used by Tiles.
-* OGM: Object Graphics Memory. Holds the texture atlases used by Objects
-* GCM: Global Color Memory. Holds the palette used by all graphics.
-
-# Composition
-* Fixcol: A fallback color that replaces transparency during composition.
--->
+See Memory.md
+- TAM (Tile Attribute Memory): Holds the configuration for all Tiles that can be displayed.
+- OAM (Object Attribute Memory): Holds the configuration for all Objects that can be displayed.
+- TGM (Tile Graphics Memory): Holds the texture atlases used by Tiles.
+- OGM (Object Graphics Memory): Holds the texture atlases used by Objects
+- GCM (Global Color Memory): Holds the palette used by all graphics.

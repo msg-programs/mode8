@@ -4,14 +4,14 @@ Windows are masks that are applied to layers at various points. All pixels insid
 **Further reading:**
 - Compositing.md (for info on how the windows are used)
 
-## The Window Pipeline
+## The window pipeline
 
 ### 1. Definition
 Windows are defined by a start value and an end value. If a pixel's coordinate is between the start and the end (both inclusive), it's inside the window, else it's not.
 
 When the `dma_dir_win` register is set to `.top_to_bottom`, the start and end values refer to columns and the pixel's X coord is used; if it's set to `.left_to_right`, the values refer to rows and the Y coord is used.
 
-**Relevant Registers:**
+**Relevant registers:**
 - `win_start`: Window 0/1 start value(s). DMA-able
 - `win_end`: Window 0/1 end value(s). DMA-able
 - `win_start_do_dma`: Should window 0/1's start value use DMA?.
@@ -21,7 +21,7 @@ When the `dma_dir_win` register is set to `.top_to_bottom`, the start and end va
 ### 2. Composition
 The two windows are then merged into a single, more complex window. The register that defines how this should happen supplies a value for every layer. The result is therefore six seperate windows, one for each BG, one for the Objs and the Color Window (see step 4).
 
-**Relevant Registers:**
+**Relevant registers:**
 - `win_compose`: Controls how the windows should be merged for a specific layer.
 
 **Relevant BSP definitions:**
@@ -31,14 +31,14 @@ The two windows are then merged into a single, more complex window. The register
 ### 3. Buffer layer application
 The composite windows are applied to the respective layers, i.e. the four BGs and the objs. As the layers are cloned to the main and sub buffer, the windows are also cloned any applied to the main/sub buffer seperately.
 
-**Relevant Registers:**
+**Relevant registers:**
 - `win_to_main`: Should the window be applied to the layer's clone in the main buffer?
 - `win_to_sub`: Should the window be applied to the layer's clone in the sub buffer?
 
 ### 4. Buffer final application
 Step 3 only covers five out of six windows, as the final one is applied differently. This window is referred to as the Color Window. It's applied after all layers in a buffer have been merged, but before any color math has taken place. It can not only be enabled or disabled, but also inverted or overridden with so that the full screen is inside the window.
 
-**Relevant Registers:**
+**Relevant registers:**
 - `col_win_apply`: The apply algorithm for the color window (main/sub buffer)
 
 **Relevant BSP definitions:**

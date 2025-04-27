@@ -10,7 +10,7 @@ mode8's builtin debug modes are used to display various intermediate stages of t
     - `bsp.RenderParams.DebugMode`
     - `bsp.RenderParams.DebugArg`
 
-## All Debug Modes
+## All debug modes
 - `.windows_setup`
     - Requires args: None
     - Shows the configuration of the windows before any merging or manipulation.
