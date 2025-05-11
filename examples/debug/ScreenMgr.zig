@@ -1,7 +1,7 @@
 const WST = @import("./screens/WinSetupTest.zig");
 const FCT = @import("./screens/FixcolTest.zig");
 const BGT = @import("./screens/BgTest.zig");
-// const OBT = @import("./screens/ObjTest.zig");
+const OBT = @import("./screens/ObjTest.zig");
 // const COM = @import("./screens/ComposeTest.zig");
 
 pub const ManagedScreen = union(enum) {
@@ -21,9 +21,9 @@ pub const ManagedScreen = union(enum) {
     test_bg_mosiac: *BGT.TestBgMosiac,
     test_bg_affine: *BGT.TestBgAffine,
     test_bg_affine_dma: *BGT.TestBgAffineDMA,
-    // test_bg_prio_feat: *BGT.TestBgPrioFeat,
-    // test_obj_attrs: *OBT.TestObjAttrs,
-    // test_obj_wrap: *OBT.TestObjWrap,
+    test_bg_prio_feat: *BGT.TestBgPrioFeat,
+    test_obj_attrs: *OBT.TestObjAttrs,
+    test_obj_wrap: *OBT.TestObjPos,
     // compose_tests_data_setup: *COM.ComposeTestsDataSetup,
     // test_buffer: *COM.TestBuffer,
     // test_colwin: *COM.TestColwin,

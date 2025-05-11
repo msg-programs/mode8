@@ -4,14 +4,14 @@ const mem = mode8.hardware.memory;
 const con = mode8.hardware.constants;
 
 pub const Obj = packed struct {
-    pos: u17 = 260,
+    pos: u17 = 0,
     gfxid: u9 = 0,
     atlid: u2 = 0,
-    vflip: u1 = 0,
-    hflip: u1 = 0,
+    vflip: bool = false,
+    hflip: bool = false,
     prio: u2 = 0,
-    size: u3 = 0,
-    rot: u1 = 0,
+    size: Size = .SQ_8,
+    rot: bool = false,
 
     pub const Size = enum(u3) {
         SQ_8,
@@ -24,11 +24,14 @@ pub const Obj = packed struct {
         RC_32x16,
     };
 
-    pub fn setPosXY(self: *Obj, x: u9, y: u9) void {
-        const corr_x: u32 = std.math.clamp(x, 0, 360);
-        const corr_y: u32 = std.math.clamp(y, 0, 360);
+    pub fn setPosXY(self: *Obj, x: i10, y: i10) void {
+        const clamp_x = std.math.clamp(x, -con.OBJ_DEADZONE_N_DIM_PIX, con.SCREEN_DIM_PIX - 1 + con.OBJ_DEADZONE_P_DIM_PIX);
+        const clamp_y = std.math.clamp(y, -con.OBJ_DEADZONE_N_DIM_PIX, con.SCREEN_DIM_PIX - 1 + con.OBJ_DEADZONE_P_DIM_PIX);
 
-        self.pos = @truncate(corr_x + con.OBJ_POS_DIM_PIX * corr_y);
+        const obj_x: u17 = @intCast(clamp_x + con.OBJ_DEADZONE_N_DIM_PIX);
+        const obj_y: u17 = @intCast(clamp_y + con.OBJ_DEADZONE_N_DIM_PIX);
+
+        self.pos = @intCast(obj_x + con.OBJ_POS_DIM_PIX * obj_y);
     }
 
     pub fn writeToOAM(self: Obj, i: u8) void {
@@ -54,13 +57,8 @@ pub const Obj = packed struct {
     }
 
     pub fn writeToOGM(atlid: u2, gfxid: u9, gfx: [64]u8) void {
-        // tile offset (atlas + gfx) --> binary offset (tile offs * tile sze)
-        // const atloffset: u32 = con.TILE_ATL_DIM_TIL * con.TILE_ATL_DIM_TIL * @as(u32, atlid);
-        // const gfxoffset: u32 = atloffset + (gfxid * con.TILE_ATL_DIM_TIL);
-        // const binoffset: u32 = con.TILE_GFX_SZE_BIT * gfxoffset / 8;
         const offset: u32 = (gfxid | (@as(u32, atlid) << 9)) * con.OBJ_GFX_UNIT_PIX_NUM;
         for (0..con.OBJ_GFX_UNIT_PIX_NUM) |idx| {
-            // mem.TGM[binoffset + idx] = gfx[idx] | (@as(u8, gfx[idx + 1]) << 4);
             mem.OGM[offset + idx] = gfx[idx];
         }
     }

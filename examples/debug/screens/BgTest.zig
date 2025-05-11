@@ -1,5 +1,6 @@
 const mode8 = @import("mode8");
 const bsp = mode8.bsp;
+const mem = mode8.hardware.memory;
 const reg = mode8.hardware.registers;
 const rpa = mode8.bsp.RenderParams;
 const PaletteImporter = @import("sampleutils").PaletteImporter;
@@ -46,17 +47,13 @@ pub const BgTestsDataSetup = struct {
         PaletteImporter.importPalAndObjects(alloc, data.pal, 0, data.gfx_obj3, 2) catch unreachable;
         PaletteImporter.importPalAndObjects(alloc, data.pal, 0, data.gfx_obj4, 3) catch unreachable;
 
-        // move objects away from the visible area
-        for (0..256) |i| {
-            var obj = bsp.Obj{};
-            obj.setPosXY(260, 260);
-            obj.writeToOAM(@truncate(i));
-        }
+        // make sure all objs are away from the visible area
+        @memset(mem.OAM[0..], 0);
     }
 
-    pub fn tick(self: *BgTestsDataSetup) bool {
-        // wait for a bit to reduce impact of loading lag on following animations
-        return self.frame > util.QURT_SECOND;
+    pub fn tick(_: *BgTestsDataSetup) bool {
+        // wait for a bit to reduce impact of loading lag on following animations --> don't
+        return true;
     }
 };
 
@@ -443,129 +440,141 @@ pub const TestBgScrollDMA = struct {
     }
 };
 
-// pub const TestBgPrioFeat = struct {
-//     frame: u64 = 0,
-//     x: i32 = 0,
-//     y: i32 = 0,
+pub const TestBgPrioFeat = struct {
+    frame: u64 = 0,
+    x: i32 = 0,
+    y: i32 = 0,
 
-//     pub fn init(_: *TestBgPrioFeat) void {
-//         std.debug.print("testing BG tilemap features, prios and obj/tile gfx atlases\n", .{});
+    pub fn init(_: *TestBgPrioFeat) void {
+        std.debug.print("testing BG tilemap features, prios and obj/tile gfx atlases\n", .{});
 
-//         bsp.RenderParams.setBGSize(512, 512, 512, 512);
-//         bsp.RenderParams.setDebugMode(.DEBUG_MODE_BUF_PRE_WIN, .DEBUG_ARG_SHOW_MAIN);
-//         bsp.RenderParams.setToMain(true, true, true, true, true);
+        rpa.setBgSize(0, 512);
+        rpa.setBgSize(1, 512);
+        rpa.setBgSize(2, 512);
+        rpa.setBgSize(3, 512);
+        reg.debug_mode = @intFromEnum(rpa.DebugMode.buf_pre_win);
+        reg.debug_arg = @intFromEnum(rpa.DebugArg.show_main);
 
-//         for (0..4) |i| {
-//             bsp.RenderParams.setXScroll(@truncate(i), .{ .direct = 448 * 8 });
-//             bsp.RenderParams.setYScroll(@truncate(i), .{ .direct = 32 * 8 });
-//             bsp.RenderParams.setAffineA(@truncate(i), .{ .direct = 1 });
-//             bsp.RenderParams.setAffineB(@truncate(i), .{ .direct = 0 });
-//             bsp.RenderParams.setAffineC(@truncate(i), .{ .direct = 0 });
-//             bsp.RenderParams.setAffineD(@truncate(i), .{ .direct = 1 });
-//             bsp.RenderParams.setAffineX0(@truncate(i), .{ .direct = 0 });
-//             bsp.RenderParams.setAffineY0(@truncate(i), .{ .direct = 0 });
-//         }
+        reg.to_main = @splat(true);
 
-//         var start = bsp.Obj{
-//             .gfxid = 160,
-//             .size = @intFromEnum(bsp.Obj.Size.SQ_8),
-//         };
-//         var end = bsp.Obj{
-//             .gfxid = 162,
-//             .size = @intFromEnum(bsp.Obj.Size.SQ_8),
-//         };
-//         var mid = bsp.Obj{
-//             .gfxid = 161,
-//             .size = @intFromEnum(bsp.Obj.Size.SQ_8),
-//         };
+        for (0..4) |i| {
+            reg.xscroll[i][0] = 448 * 8;
+            reg.xscroll_do_dma[i] = false;
+            reg.yscroll[i][0] = 32 * 8;
+            reg.yscroll_do_dma[i] = false;
+            reg.affine_a[i][0] = 1;
+            reg.affine_a_do_dma[i] = false;
+            reg.affine_b[i][0] = 0;
+            reg.affine_b_do_dma[i] = false;
+            reg.affine_c[i][0] = 0;
+            reg.affine_c_do_dma[i] = false;
+            reg.affine_d[i][0] = 1;
+            reg.affine_d_do_dma[i] = false;
+            reg.affine_x0[i][0] = 0;
+            reg.affine_x0_do_dma[i] = false;
+            reg.affine_y0[i][0] = 0;
+            reg.affine_y0_do_dma[i] = false;
+        }
 
-//         var nums = [_]bsp.Obj{
-//             bsp.Obj{
-//                 .gfxid = 144,
-//                 .size = @intFromEnum(bsp.Obj.Size.SQ_8),
-//                 .prio = 0,
-//             },
-//             bsp.Obj{
-//                 .gfxid = 145,
-//                 .size = @intFromEnum(bsp.Obj.Size.SQ_8),
-//                 .prio = 1,
-//             },
-//             bsp.Obj{
-//                 .gfxid = 146,
-//                 .size = @intFromEnum(bsp.Obj.Size.SQ_8),
-//                 .prio = 2,
-//             },
-//             bsp.Obj{
-//                 .gfxid = 147,
-//                 .size = @intFromEnum(bsp.Obj.Size.SQ_8),
-//                 .prio = 3,
-//             },
-//         };
+        var start = bsp.Obj{
+            .gfxid = 160,
+            .size = .SQ_8,
+        };
+        var end = bsp.Obj{
+            .gfxid = 162,
+            .size = .SQ_8,
+        };
+        var mid = bsp.Obj{
+            .gfxid = 161,
+            .size = .SQ_8,
+        };
 
-//         for (0..4) |prio| {
-//             const yoffs: u9 = @truncate(2 * prio + 8);
+        var nums = [_]bsp.Obj{
+            bsp.Obj{
+                .gfxid = 144,
+                .size = .SQ_8,
+                .prio = 0,
+            },
+            bsp.Obj{
+                .gfxid = 145,
+                .size = .SQ_8,
+                .prio = 1,
+            },
+            bsp.Obj{
+                .gfxid = 146,
+                .size = .SQ_8,
+                .prio = 2,
+            },
+            bsp.Obj{
+                .gfxid = 147,
+                .size = .SQ_8,
+                .prio = 3,
+            },
+        };
 
-//             start.prio = @truncate(prio);
-//             start.setPosXY(14 * 8 - 4, yoffs * 8 + 4);
-//             start.writeToOAM(@truncate(0 + prio * 20));
+        for (0..4) |prio| {
+            const yoffs: u9 = @truncate(2 * prio + 8);
 
-//             nums[prio].setPosXY(15 * 8 - 4, yoffs * 8 + 4);
-//             nums[prio].writeToOAM(@truncate(1 + prio * 20));
+            start.prio = @truncate(prio);
+            start.setPosXY(14 * 8 - 4, yoffs * 8 + 4);
+            start.writeToOAM(@truncate(0 + prio * 20));
 
-//             end.prio = @truncate(prio);
-//             end.setPosXY(31 * 8 - 4, yoffs * 8 + 4);
-//             end.writeToOAM(@truncate(2 + prio * 20));
+            nums[prio].setPosXY(15 * 8 - 4, yoffs * 8 + 4);
+            nums[prio].writeToOAM(@truncate(1 + prio * 20));
 
-//             mid.prio = @truncate(prio);
-//             for (16..31, 3..) |xoffs, idx| {
-//                 mid.setPosXY(@truncate(xoffs * 8 - 4), yoffs * 8 + 4);
-//                 mid.writeToOAM(@truncate(idx + prio * 20));
-//             }
-//         }
+            end.prio = @truncate(prio);
+            end.setPosXY(31 * 8 - 4, yoffs * 8 + 4);
+            end.writeToOAM(@truncate(2 + prio * 20));
 
-//         for (1..4) |i| {
-//             var obj_first = bsp.Obj{
-//                 .gfxid = 0,
-//                 .atlid = @truncate(i),
-//                 .size = @intFromEnum(bsp.Obj.Size.SQ_8),
-//             };
-//             var obj_last = bsp.Obj{
-//                 .gfxid = 511,
-//                 .atlid = @truncate(i),
-//                 .size = @intFromEnum(bsp.Obj.Size.SQ_8),
-//             };
-//             obj_first.setPosXY((1 + @as(u9, @truncate(i))) * 8, 29 * 8);
-//             obj_last.setPosXY((1 + @as(u9, @truncate(i))) * 8, 30 * 8);
-//             obj_first.writeToOAM(255 - (@as(u8, @truncate(i)) * 2));
-//             obj_last.writeToOAM(255 - ((@as(u8, @truncate(i)) * 2) - 1));
-//         }
-//         for (1..4) |i| {
-//             const tile_first = bsp.Tile{
-//                 .gfxid = 0,
-//                 .atlid = @truncate(i),
-//             };
-//             const tile_last = bsp.Tile{
-//                 .gfxid = 1023,
-//                 .atlid = @truncate(i),
-//             };
-//             tile_first.writeToTAM(0, (449 + @as(u9, @truncate(i))), 27 + 32);
-//             tile_last.writeToTAM(0, (449 + @as(u9, @truncate(i))), 28 + 32);
-//         }
-//     }
+            mid.prio = @truncate(prio);
+            for (16..31, 3..) |xoffs, idx| {
+                mid.setPosXY(@as(i10, @intCast(xoffs * 8)) - 4, yoffs * 8 + 4);
+                mid.writeToOAM(@truncate(idx + prio * 20));
+            }
+        }
 
-//     pub fn tick(self: *TestBgPrioFeat) bool {
-//         switch (util.fullsecOf(self.frame)) {
-//             0 => bsp.RenderParams.setPrioRemap(false, false, false, false),
-//             1 => bsp.RenderParams.setPrioRemap(true, false, false, false),
-//             2 => bsp.RenderParams.setPrioRemap(false, true, false, false),
-//             3 => bsp.RenderParams.setPrioRemap(false, false, true, false),
-//             4 => bsp.RenderParams.setPrioRemap(false, false, false, true),
-//             5 => bsp.RenderParams.setPrioRemap(false, false, true, true),
-//             6 => bsp.RenderParams.setPrioRemap(false, true, true, true),
-//             7 => bsp.RenderParams.setPrioRemap(true, true, true, true),
-//             else => return true,
-//         }
+        for (1..4) |i| {
+            var obj_first = bsp.Obj{
+                .gfxid = 0,
+                .atlid = @truncate(i),
+                .size = .SQ_8,
+            };
+            var obj_last = bsp.Obj{
+                .gfxid = 511,
+                .atlid = @truncate(i),
+                .size = .SQ_8,
+            };
+            obj_first.setPosXY((1 + @as(u9, @truncate(i))) * 8, 29 * 8);
+            obj_last.setPosXY((1 + @as(u9, @truncate(i))) * 8, 30 * 8);
+            obj_first.writeToOAM(255 - (@as(u8, @truncate(i)) * 2));
+            obj_last.writeToOAM(255 - ((@as(u8, @truncate(i)) * 2) - 1));
+        }
+        for (1..4) |i| {
+            const tile_first = bsp.Tile{
+                .gfxid = 0,
+                .atlid = @truncate(i),
+            };
+            const tile_last = bsp.Tile{
+                .gfxid = 1023,
+                .atlid = @truncate(i),
+            };
+            tile_first.writeToTAM(0, (449 + @as(u9, @truncate(i))), 27 + 32);
+            tile_last.writeToTAM(0, (449 + @as(u9, @truncate(i))), 28 + 32);
+        }
+    }
 
-//         return false;
-//     }
-// };
+    pub fn tick(self: *TestBgPrioFeat) bool {
+        switch (util.fullsecOf(self.frame)) {
+            0 => reg.prio_remap = .{ false, false, false, false },
+            1 => reg.prio_remap = .{ true, false, false, false },
+            2 => reg.prio_remap = .{ false, true, false, false },
+            3 => reg.prio_remap = .{ false, false, true, false },
+            4 => reg.prio_remap = .{ false, false, false, true },
+            5 => reg.prio_remap = .{ false, false, true, true },
+            6 => reg.prio_remap = .{ false, true, true, true },
+            7 => reg.prio_remap = .{ true, true, true, true },
+            else => return true,
+        }
+        return false;
+    }
+};

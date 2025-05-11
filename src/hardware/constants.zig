@@ -17,7 +17,13 @@ pub const SCREEN_DIM_PIX = 256;
 // ==== OBJ CONSTANTS =========================================================
 
 /// size of the (square) area where objs can be positioned
-pub const OBJ_POS_DIM_PIX = 360;
+pub const OBJ_POS_DIM_PIX = 320;
+
+/// size of the space between the screen and the end of the obj area in each dimension
+pub const OBJ_DEADZONE_P_DIM_PIX = 1;
+
+/// size of the space between the start of the obj area and the screen in each dimension
+pub const OBJ_DEADZONE_N_DIM_PIX = 64;
 
 /// how many objs can at most be rendered at once
 pub const MAX_OBJS_NUM = 256;

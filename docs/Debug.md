@@ -28,4 +28,8 @@ mode8's builtin debug modes are used to display various intermediate stages of t
     - Shows the fixcol used for the main/sub buffer
 - `.layer`
     - Requires args: One of `.show_bg_0, .show_bg_1, .show_bg_2, .show_bg_3, .show_objs`
-    - Shows the respective layer before any compositing, but after the layer's settings for mosiac, affine, offset, etc. are applied.
+    - For BGs, shows the respective layer before any composition, but after the layer's settings for mosiac, affine, offset, etc. are applied.
+    - For Objs, shows just the objs witout anything else.
+- `.buf_pre_win`
+    - Requires args: One of `.show_main, .show_sub`
+    - Shows the main/sub buffer's contents before the windows are applied. This respects Obj/BG priority settings.

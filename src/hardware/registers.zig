@@ -67,11 +67,11 @@ pub var win_end_do_dma: [con.WINDOW_NUM]bool = @splat(false);
 /// how to compose windows 0-1 together
 pub var win_compose: [6]u4 = @splat(0);
 
-// /// send this background to the main buffer
-// pub var to_main: [5]bool = @splat(false);
+/// send this background to the main buffer
+pub var to_main: [5]bool = @splat(false);
 
-// /// send this background to the sub buffer
-// pub var to_sub: [5]bool = @splat(false);
+/// send this background to the sub buffer
+pub var to_sub: [5]bool = @splat(false);
 
 /// send the window data to the main buffer
 pub var win_to_main: [5]bool = @splat(false);
@@ -94,8 +94,8 @@ pub var fixcol_sub_do_dma: bool = false;
 /// window apply mode for buffers, 0 = main 1 = sub
 pub var col_win_apply: [2]u4 = @splat(0);
 
-// /// which of the high-prio background tiles to layer above all objs
-// pub var prio_remap: [4]bool = @splat(false);
+/// which of the high-prio background tiles to layer above all objs
+pub var prio_remap: [4]bool = @splat(false);
 
 // /// bool: should the sub buffer be overridden with the sub buffer fixed color?
 // pub var fix_sub: bool = 0;

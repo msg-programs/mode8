@@ -31,17 +31,6 @@ pub var BUFFER: [con.SCREEN_DIM_PIX][con.SCREEN_DIM_PIX]Color = @splat(@splat(Co
 
 // ok this is way worse for the CPU than it ever was for the GPU but... eh gotta start somewhere
 
-const OBJ_DIMS_PIX: [8][2]u32 = .{
-    .{ 8, 8 },
-    .{ 16, 16 },
-    .{ 32, 32 },
-    .{ 64, 64 },
-    .{ 8, 16 },
-    .{ 16, 8 },
-    .{ 16, 32 },
-    .{ 32, 16 },
-};
-
 // ///////////////////////////////////////////////////////////////////////////////////////////////////
 // // STRUCT TYPES
 // ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -94,10 +83,10 @@ fn unpackColor(p_col: u16) Color {
     };
 }
 
-// // given a packed color, check if it's opaque
-// fn isPackedColorOpaque(p_col: u16) bool {
-//     return (p_col & 0x8000) != 0;
-// }
+// given a packed color, check if it's opaque
+fn isPackedColorOpaque(p_col: u16) bool {
+    return (p_col & 0x8000) != 0;
+}
 
 // given a palette index, return the packed color stored there
 fn lookupPaletteColor(idx: u8) u16 {
@@ -131,8 +120,8 @@ fn fetchTilePixel(viewpos: ViewPos, tile_attrs: bsp.Tile) u8 {
 
     if (tile_attrs.rot) {
         const tmp = pixpos_y;
-        pixpos_x = pixpos_y;
-        pixpos_y = tmp;
+        pixpos_y = pixpos_x;
+        pixpos_x = tmp;
     }
 
     const gfxid = tile_attrs.gfxid | (@as(u12, tile_attrs.atlid) << 10);
@@ -252,107 +241,6 @@ fn calcBGPixel(screenpos: ScreenPos, bg: u2) BGPixel {
     }
 }
 
-// ///////////////////////////////////////////////////////////////////////////////////////////////////
-// // OBJ FUNCTIONS
-// ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-// // given an object's index, get its attributes from the OAM
-// fn fetchObjAttrs(obj_idx: u32) bsp.Obj {
-//     const packed_1 = mem.OAM[obj_idx] | (mem.OAM[obj_idx + 1] << 8) | (mem.OAM[obj_idx + 2] << 16) | (mem.OAM[obj_idx + 3] << 24);
-//     const oamoffs2 = obj_idx / 2;
-//     const oam2shift = 4 * (obj_idx % 2);
-//     const packed_2 = (mem.OAM[256 + oamoffs2] >> oam2shift) & 0xF; // argh
-
-//     return .{
-//         // correct for obj playfield (360^2) vs screen dim (256^2)
-//         (packed_1 & 0x01FFFF),
-//         (packed_1 & 0x0FFE0000) >> 17,
-//         (packed_1 & 0x10000000) != 0,
-//         (packed_1 & 0x20000000) != 0,
-//         (packed_1 & 0xC0000000) >> 30,
-//         (packed_2 & 0x7),
-//         (packed_2 & 0x8) != 0,
-//     };
-// }
-
-// // given the screenpos and an Obj struct, find the packed color of the pixel at that position.
-// // this implements flipping and rotation.
-// // note that this uses the screenpos as the obj playfield is independent of the BGs.
-// fn fetchObjPixel(screenpos: Vec2u, obj_attrs: bsp.Obj) ?u16 {
-//     // what a horrible day to be a GPU 2: electric boogaloo
-
-//     // shift obj to top right corner, move screenpos accordingly
-//     const objpos = Vec2u.init((obj_attrs.pos % con.OBJ_POS_DIM_PIX), (obj_attrs.pos / con.OBJ_POS_DIM_PIX));
-
-//     var relpos = screenpos.sub(objpos);
-//     if (screenpos.x() < obj_attrs.pos.x) {
-//         relpos.v[0] = screenpos.x() + con.OBJ_POS_DIM_PIX - objpos.x();
-//     }
-//     if (screenpos.y() < obj_attrs.pos.y) {
-//         relpos.v[1] = screenpos.y() + con.OBJ_POS_DIM_PIX - objpos.y();
-//     }
-
-//     const objsize = OBJ_DIMS_PIX[obj_attrs.size];
-
-//     if (obj_attrs.rot) {
-//         const t = relpos.x;
-//         relpos.x = relpos.y;
-//         relpos.y = t;
-//     }
-//     if (obj_attrs.vflip) {
-//         relpos.x = objsize.x - 1 - relpos.x;
-//     }
-//     if (obj_attrs.hflip) {
-//         relpos.y = objsize.y - 1 - relpos.y;
-//     }
-
-//     if (relpos.x < 0 or relpos.y < 0) {
-//         return null;
-//     }
-//     if (relpos.x >= objsize.x or relpos.y >= objsize.y) {
-//         return null;
-//     }
-
-//     const tilepos: Vec2u = relpos / 8;
-//     const gfxid_offset = tilepos.x + tilepos.y * 16;
-
-//     const pixpos: Vec2u = relpos % 8;
-//     const pixidx = pixpos.y * con.OBJ_GFX_UNIT_DIM_PIX + pixpos.x + (obj_attrs.gfxid + gfxid_offset) * con.OBJ_GFX_UNIT_PIX_NUM;
-//     const ogmoffs_u32 = pixidx / 4;
-//     const ogmshift = 8 * (pixidx % 4);
-//     return (mem.OGM[ogmoffs_u32] >> ogmshift) & 0xFF;
-// }
-
-// // given the screenpos, search for the obj with the highest prio (highest OAM index == tiebreaker).
-// // get the obj's prio and the packed color at that screenpos.
-// fn calcObjsPixel(screenpos: Vec2u) ObjPixel {
-//     var candidate = ObjPixel{
-//         0x0000,
-//         0,
-//     };
-
-//     // what a horrible day to be a GPU
-//     for (0..con.MAX_OBJS_NUM) |i| {
-//         const oam_data = fetchObjAttrs(i);
-
-//         const objcol_index = fetchObjPixel(screenpos, oam_data);
-//         if (objcol_index == null) {
-//             continue;
-//         }
-//         const col = lookupPaletteColor(objcol_index);
-
-//         if (!isPackedColorOpaque(col)) {
-//             continue;
-//         }
-//         if (oam_data.prio < candidate.prio) {
-//             continue;
-//         }
-//         candidate.p_col = col;
-//         candidate.prio = oam_data.prio;
-//     }
-//     return candidate;
-// }
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // WINDOW FUNCTIONS
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -419,94 +307,94 @@ fn isPixelInColWin(is_main: bool, data_in: bool) bool {
     };
 }
 
-// ///////////////////////////////////////////////////////////////////////////////////////////////////
-// // THE LONG ONE
-// ///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// THE LONG ONE
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
-// // resolve BG and obj prios to produce the final color for a pixel
-// fn resolvePrios(cols: [5]u32, bg_is_prio: [4]bool, obj_prio: u32, fixcol: u32) BufferPixel {
+// resolve BG and obj prios to produce the final color for a pixel
+fn resolvePrios(cols: [5]u16, bg_is_prio: [4]bool, obj_prio: u2, fixcol: u16) BufferPixel {
 
-//     // what a horrible day to be a GPU 3: revenge of the if chain (something something yandere simulator. ha ha.)
+    // what a horrible day to be a GPU 3: revenge of the if chain (something something yandere simulator. ha ha.)
 
-//     // precalc this. the compiler will probably figure this out itself but it feels right.
-//     const is_opaque: [5]bool = .{
-//         isPackedColorOpaque(cols[0]),
-//         isPackedColorOpaque(cols[1]),
-//         isPackedColorOpaque(cols[2]),
-//         isPackedColorOpaque(cols[3]),
-//         isPackedColorOpaque(cols[4]),
-//     };
+    // precalc this. the compiler will probably figure this out itself but it feels right.
+    const is_opaque: [5]bool = .{
+        isPackedColorOpaque(cols[0]),
+        isPackedColorOpaque(cols[1]),
+        isPackedColorOpaque(cols[2]),
+        isPackedColorOpaque(cols[3]),
+        isPackedColorOpaque(cols[4]),
+    };
 
-//     // this could probably be reduced using some analysis.
-//     // if you want do that for some reason, open a PR :)
+    // this could probably be reduced using some analysis.
+    // if you want do that for some reason, open a PR :)
 
-//     if (reg.prio_remap[3] and bg_is_prio[3] and is_opaque[3]) {
-//         return .{ cols[3], 3 };
-//     }
+    if (reg.prio_remap[3] and bg_is_prio[3] and is_opaque[3]) {
+        return .{ .p_col = cols[3], .origin = 3 };
+    }
 
-//     if (reg.prio_remap[2] and bg_is_prio[2] and is_opaque[2]) {
-//         return .{ cols[2], 2 };
-//     }
+    if (reg.prio_remap[2] and bg_is_prio[2] and is_opaque[2]) {
+        return .{ .p_col = cols[2], .origin = 2 };
+    }
 
-//     if (reg.prio_remap[1] and bg_is_prio[1] and is_opaque[1]) {
-//         return .{ cols[1], 1 };
-//     }
+    if (reg.prio_remap[1] and bg_is_prio[1] and is_opaque[1]) {
+        return .{ .p_col = cols[1], .origin = 1 };
+    }
 
-//     if (reg.prio_remap[0] and bg_is_prio[0] and is_opaque[0]) {
-//         return .{ cols[0], 0 };
-//     }
+    if (reg.prio_remap[0] and bg_is_prio[0] and is_opaque[0]) {
+        return .{ .p_col = cols[0], .origin = 0 };
+    }
 
-//     if (obj_prio == 3 and is_opaque[4]) {
-//         return .{ cols[4], 4 };
-//     }
+    if (obj_prio == 3 and is_opaque[4]) {
+        return .{ .p_col = cols[4], .origin = 4 };
+    }
 
-//     if (bg_is_prio[3] and is_opaque[3]) {
-//         return .{ cols[3], 3 };
-//     }
+    if (bg_is_prio[3] and is_opaque[3]) {
+        return .{ .p_col = cols[3], .origin = 3 };
+    }
 
-//     if (bg_is_prio[2] and is_opaque[2]) {
-//         return .{ cols[2], 2 };
-//     }
+    if (bg_is_prio[2] and is_opaque[2]) {
+        return .{ .p_col = cols[2], .origin = 2 };
+    }
 
-//     if (obj_prio == 2 and is_opaque[4]) {
-//         return .{ cols[4], 4 };
-//     }
+    if (obj_prio == 2 and is_opaque[4]) {
+        return .{ .p_col = cols[4], .origin = 4 };
+    }
 
-//     if (!bg_is_prio[3] and is_opaque[3]) {
-//         return .{ cols[3], 3 };
-//     }
+    if (!bg_is_prio[3] and is_opaque[3]) {
+        return .{ .p_col = cols[3], .origin = 3 };
+    }
 
-//     if (!bg_is_prio[2] and is_opaque[2]) {
-//         return .{ cols[2], 2 };
-//     }
+    if (!bg_is_prio[2] and is_opaque[2]) {
+        return .{ .p_col = cols[2], .origin = 2 };
+    }
 
-//     if (obj_prio == 1 and is_opaque[4]) {
-//         return .{ cols[4], 4 };
-//     }
+    if (obj_prio == 1 and is_opaque[4]) {
+        return .{ .p_col = cols[4], .origin = 4 };
+    }
 
-//     if (bg_is_prio[1] and is_opaque[1]) {
-//         return .{ cols[1], 1 };
-//     }
+    if (bg_is_prio[1] and is_opaque[1]) {
+        return .{ .p_col = cols[1], .origin = 1 };
+    }
 
-//     if (bg_is_prio[0] and is_opaque[0]) {
-//         return .{ cols[0], 0 };
-//     }
+    if (bg_is_prio[0] and is_opaque[0]) {
+        return .{ .p_col = cols[0], .origin = 0 };
+    }
 
-//     if (obj_prio == 0 and is_opaque[4]) {
-//         return .{ cols[4], 4 };
-//     }
+    if (obj_prio == 0 and is_opaque[4]) {
+        return .{ .p_col = cols[4], .origin = 4 };
+    }
 
-//     if (!bg_is_prio[1] and is_opaque[1]) {
-//         return .{ cols[1], 1 };
-//     }
+    if (!bg_is_prio[1] and is_opaque[1]) {
+        return .{ .p_col = cols[1], .origin = 1 };
+    }
 
-//     if (!bg_is_prio[0] and is_opaque[0]) {
-//         return .{ cols[0], 0 };
-//     }
+    if (!bg_is_prio[0] and is_opaque[0]) {
+        return .{ .p_col = cols[0], .origin = 0 };
+    }
 
-//     // fallthrough: set to fixcol
-//     return .{ fixcol, 5 };
-// }
+    // fallthrough: set to fixcol
+    return .{ .p_col = fixcol, .origin = 5 };
+}
 
 // ///////////////////////////////////////////////////////////////////////////////////////////////////
 // // FIXCOL FUNCTION
@@ -630,16 +518,16 @@ fn getFixcol(screenpos: ScreenPos, for_main: bool) u16 {
 // // UTIL
 // ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-// // array select x5
-// fn arrselx5(T: type, no: [5]T, yes: [5]T, decide: [5]bool) [5]T {
-//     return .{
-//         if (decide[0]) yes[0] else no[0],
-//         if (decide[1]) yes[1] else no[1],
-//         if (decide[2]) yes[2] else no[2],
-//         if (decide[3]) yes[3] else no[3],
-//         if (decide[4]) yes[4] else no[4],
-//     };
-// }
+// array select x5
+fn arrselx5(T: type, no: [5]T, yes: [5]T, decide: [5]bool) [5]T {
+    return .{
+        if (decide[0]) yes[0] else no[0],
+        if (decide[1]) yes[1] else no[1],
+        if (decide[2]) yes[2] else no[2],
+        if (decide[3]) yes[3] else no[3],
+        if (decide[4]) yes[4] else no[4],
+    };
+}
 
 // ///////////////////////////////////////////////////////////////////////////////////////////////////
 // // MAIN
@@ -666,8 +554,8 @@ fn shaderMain(screenpos: ScreenPos) void {
     // // SETUP
     // /////////////////////////////////////////////
 
-    // // used for vector select() calls
-    // const no_p_cols: [5]u16 = .{ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000 };
+    // used for vector select() calls
+    const no_p_cols: [5]u16 = .{ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000 };
     const no_wins: [5]bool = .{ false, false, false, false, false };
 
     // used for bad debug config
@@ -709,22 +597,19 @@ fn shaderMain(screenpos: ScreenPos) void {
     const bg1_data: BGPixel = calcBGPixel(screenpos, 1);
     const bg2_data: BGPixel = calcBGPixel(screenpos, 2);
     const bg3_data: BGPixel = calcBGPixel(screenpos, 3);
-    // const obj_data: ObjPixel = calcObjsPixel(screen_x, screen_y);
+    const obj_data: ObjPixel = .{ .p_col = lookupPaletteColor(obj_step.palcols[screenpos.x][screenpos.y]), .prio = obj_step.prios[screenpos.x][screenpos.y] };
 
     // colors array for efficient processing later
-    const p_cols: [5]u16 = .{ bg0_data.p_col, bg1_data.p_col, bg2_data.p_col, bg3_data.p_col, bg3_data.p_col }; // XXX FOR NOW ONLY obj_data.p_col };
+    const p_cols: [5]u16 = .{ bg0_data.p_col, bg1_data.p_col, bg2_data.p_col, bg3_data.p_col, obj_data.p_col };
 
-    // // prio array for use in priority calculation later
-    // // objs have 4 prio settings, so handle them differently.
-    // const bg_prios: [4]bool = .{ bg0_data.isprio, bg1_data.isprio, bg2_data.isprio, bg3_data.isprio };
-    // const obj_prio: u32 = obj_data.prio;
+    // prio array for use in priority calculation later
+    // objs have 4 prio settings, so handle them differently.
+    const bg_prios: [4]bool = .{ bg0_data.is_prio, bg1_data.is_prio, bg2_data.is_prio, bg3_data.is_prio };
+    const obj_prio = obj_data.prio;
 
-    // // should the color be sent to the main/sub buffer?
-    // const tm: Helper = @bitCast(reg.to_main);
-    // const sm: Helper = @bitCast(reg.to_sub);
-
-    // const p_cols_main: [5]u16 = arrselx5(u16, no_p_cols, p_cols, tm[0..6]);
-    // const p_cols_sub: [5]u16 = arrselx5(u16, no_p_cols, p_cols, sm[0..6]);
+    // should the color be sent to the main/sub buffer?
+    const p_cols_main: [5]u16 = arrselx5(u16, no_p_cols, p_cols, reg.to_main);
+    const p_cols_sub: [5]u16 = arrselx5(u16, no_p_cols, p_cols, reg.to_sub);
 
     // // apply windows to buffers layer-wise
     // const wind_p_cols_main: [5]u16 = arrselx5(u16, p_cols_main, no_p_cols, main_wins);
@@ -782,12 +667,14 @@ fn shaderMain(screenpos: ScreenPos) void {
         .layer => {
             // show just a single layer before entering the composition pipeline,
             // i.e. transformation, size, affine, mosaic
+            // or, show just the objs
             const col = switch (debug_arg) {
                 else => errcol,
                 .show_bg_0 => unpackColor(p_cols[0]),
                 .show_bg_1 => unpackColor(p_cols[1]),
                 .show_bg_2 => unpackColor(p_cols[2]),
                 .show_bg_3 => unpackColor(p_cols[3]),
+                .show_objs => unpackColor(obj_data.p_col),
             };
             setPx(screenpos, col);
             return;
@@ -882,19 +769,19 @@ fn shaderMain(screenpos: ScreenPos) void {
             }
             return;
         },
-        // rpa.DebugMode.DEBUG_MODE_BUF_PRE_WIN => {
-        //     // main/sub buffer layers combined by priority, without the windows applied
-        //     if (reg.debug_arg == .DEBUG_ARG_SHOW_MAIN) {
-        //         const pcol: u32 = resolvePrios(p_cols_main, bg_prios, obj_prio, fixcol_main).p_col;
-        //         setPx(screen_x, screen_y, unpackColor(pcol));
-        //     } else if (reg.debug_arg == .DEBUG_ARG_SHOW_SUB) {
-        //         const pcol: u32 = resolvePrios(p_cols_sub, bg_prios, obj_prio, fixcol_sub).p_col;
-        //         setPx(screen_x, screen_y, unpackColor(pcol));
-        //     } else {
-        //         setPx(screen_x, screen_y, errcol);
-        //     }
-        //     return;
-        // },
+        .buf_pre_win => {
+            // main/sub buffer layers combined by priority, without the windows applied
+            if (debug_arg == .show_main) {
+                const pcol = resolvePrios(p_cols_main, bg_prios, obj_prio, fixcol_main).p_col;
+                setPx(screenpos, unpackColor(pcol));
+            } else if (debug_arg == .show_sub) {
+                const pcol = resolvePrios(p_cols_sub, bg_prios, obj_prio, fixcol_sub).p_col;
+                setPx(screenpos, unpackColor(pcol));
+            } else {
+                setPx(screenpos, errcol);
+            }
+            return;
+        },
         // rpa.DebugMode.DEBUG_MODE_BUF_POST_WIN => {
         //     // main/sub buffer layers combined by priority, with the windows applied
         //     if (reg.debug_arg == .DEBUG_ARG_SHOW_MAIN) {
@@ -932,7 +819,105 @@ fn shaderMain(screenpos: ScreenPos) void {
     }
 }
 
+const obj_step = struct {
+    pub var palcols: [con.SCREEN_DIM_PIX][con.SCREEN_DIM_PIX]u8 = @splat(@splat(0));
+    pub var prios: [con.SCREEN_DIM_PIX][con.SCREEN_DIM_PIX]u2 = @splat(@splat(0));
+
+    fn getObj(obj_id: usize) bsp.Obj {
+        std.debug.assert(obj_id < con.MAX_OBJS_NUM);
+
+        const Helper = packed struct {
+            a: u8,
+            b: u8,
+            c: u8,
+            d: u8,
+            z: u4,
+        };
+
+        const oamoffs2 = obj_id / 2;
+        const oam2shift = 4 * (obj_id % 2);
+
+        return @bitCast(Helper{
+            .a = mem.OAM[(obj_id * 4) + 0],
+            .b = mem.OAM[(obj_id * 4) + 1],
+            .c = mem.OAM[(obj_id * 4) + 2],
+            .d = mem.OAM[(obj_id * 4) + 3],
+            .z = @truncate((mem.OAM[(256 * 4) + oamoffs2] >> @intCast(oam2shift))),
+        });
+    }
+
+    fn drawObj(obj: bsp.Obj, obj_x: i32, obj_y: i32, obj_w: u8, obj_h: u8) void {
+        const ow = if (obj.rot) obj_h else obj_w;
+        const oh = if (obj.rot) obj_w else obj_h;
+
+        for (0..ow) |ox| {
+            for (0..oh) |oy| {
+                const screen_x = @as(i32, @intCast(ox)) + obj_x;
+                const screen_y = @as(i32, @intCast(oy)) + obj_y;
+
+                if (screen_x < 0) continue;
+                if (screen_y < 0) continue;
+                if (screen_x >= con.SCREEN_DIM_PIX) continue;
+                if (screen_y >= con.SCREEN_DIM_PIX) continue;
+
+                var rx = ox;
+                var ry = oy;
+
+                if (obj.rot) {
+                    const t = rx;
+                    rx = ry;
+                    ry = t;
+                }
+
+                if (obj.vflip) {
+                    rx = obj_w - 1 - rx;
+                }
+                if (obj.hflip) {
+                    ry = obj_h - 1 - ry;
+                }
+
+                const tilepos_x = rx / 8;
+                const tilepos_y = ry / 8;
+                const pixpos_x = rx % 8;
+                const pixpos_y = ry % 8;
+
+                const gfxid_offs = tilepos_x + tilepos_y * 16;
+                const pixidx = pixpos_y * con.OBJ_GFX_UNIT_DIM_PIX + pixpos_x + ((@as(u32, obj.gfxid) | @as(u32, obj.atlid) << 9) + gfxid_offs) * con.OBJ_GFX_UNIT_PIX_NUM;
+                if (isPackedColorOpaque(lookupPaletteColor(mem.OGM[pixidx]))) {
+                    obj_step.prios[@intCast(screen_x)][@intCast(screen_y)] = obj.prio;
+                    obj_step.palcols[@intCast(screen_x)][@intCast(screen_y)] = mem.OGM[pixidx];
+                }
+            }
+        }
+    }
+
+    fn tick() void {
+        palcols = @splat(@splat(0));
+        for (0..con.MAX_OBJS_NUM) |obj_id| {
+            const obj = getObj(obj_id);
+
+            // coords are in screen space
+            const obj_x: i32 = @as(i32, @intCast(obj.pos % con.OBJ_POS_DIM_PIX)) - con.OBJ_DEADZONE_N_DIM_PIX;
+            const obj_y: i32 = @as(i32, @intCast(obj.pos / con.OBJ_POS_DIM_PIX)) - con.OBJ_DEADZONE_N_DIM_PIX;
+
+            const obj_dims: [8][2]u8 = .{
+                .{ 8, 8 },
+                .{ 16, 16 },
+                .{ 32, 32 },
+                .{ 64, 64 },
+                .{ 8, 16 },
+                .{ 16, 8 },
+                .{ 16, 32 },
+                .{ 32, 16 },
+            };
+            const obj_dim = obj_dims[@intFromEnum(obj.size)];
+            drawObj(obj, obj_x, obj_y, obj_dim[0], obj_dim[1]);
+        }
+    }
+};
+
 pub fn tick() void {
+    obj_step.tick();
     for (0..con.SCREEN_DIM_PIX) |y| {
         for (0..con.SCREEN_DIM_PIX) |x| {
             shaderMain(.{ .x = @intCast(x), .y = @intCast(y) });
