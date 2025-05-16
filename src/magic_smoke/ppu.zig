@@ -638,12 +638,12 @@ fn shaderMain(screenpos: ScreenPos) void {
     };
     const sub_result_pre_fixed: u16 = if (isPackedColorOpaque(sub_result_pre.p_col)) sub_result_pre.p_col else fixcol_sub;
 
-    // // apply fixcol override
-    // const sub_result: u16 = if (reg.fix_sub != 0) fixcol_sub else sub_result_pre_fixed;
+    // apply fixcol override
+    const sub_result: u16 = if (reg.fix_sub) fixcol_sub else sub_result_pre_fixed;
 
-    // // apply color window
-    // const wind_main_result: BufferPixel = BufferPixel(if (col_win_main) 0x0000 else main_result_fixed.p_col, main_result_fixed.origin);
-    // const wind_sub_result: u32 = if (col_win_sub) 0x0000 else sub_result;
+    // apply color window
+    const wind_main_result: BufferPixel = .{ .p_col = if (col_win_main) 0x0000 else main_result_fixed.p_col, .origin = main_result_fixed.origin };
+    const wind_sub_result: u16 = if (col_win_sub) 0x0000 else sub_result;
 
     // // COLOR MATH AND OUTPUT
     // /////////////////////////////////////////////
@@ -793,18 +793,18 @@ fn shaderMain(screenpos: ScreenPos) void {
             }
             return;
         },
-        // rpa.DebugMode.DEBUG_MODE_BUF_COLMATH_IN => {
-        //     // main/sub buffer data to be fed into color math
-        //     // post-win step + transparency fixed + color window applied
-        //     if (reg.debug_arg == .DEBUG_ARG_SHOW_MAIN) {
-        //         setPx(screen_x, screen_y, unpackColor(wind_main_result.p_col));
-        //     } else if (reg.debug_arg == .DEBUG_ARG_SHOW_SUB) {
-        //         setPx(screen_x, screen_y, unpackColor(wind_sub_result));
-        //     } else {
-        //         setPx(screen_x, screen_y, errcol);
-        //     }
-        //     return;
-        // },
+        .buf_colmath_in => {
+            // main/sub buffer data to be fed into color math
+            // post-win step + transparency fixed + color window applied
+            if (debug_arg == .show_main) {
+                setPx(screenpos, unpackColor(wind_main_result.p_col));
+            } else if (debug_arg == .show_sub) {
+                setPx(screenpos, unpackColor(wind_sub_result));
+            } else {
+                setPx(screenpos, errcol);
+            }
+            return;
+        },
         .fixcol_setup => {
             // show fixcols for main and sub buffer
             if (debug_arg == .show_main) {

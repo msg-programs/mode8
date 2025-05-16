@@ -112,8 +112,9 @@ var ow = ObjTest.TestObjPos{};
 var ctds = ComTest.ComposeTestsDataSetup{};
 var bm = ComTest.TestBuffer{ .to_main = true };
 var bs = ComTest.TestBuffer{ .to_main = false };
-// var ... = .{ .is_main = true };
-// var ... = .{ .is_main = false };
+var cwm = ComTest.TestColwin{ .is_main = true };
+var cws = ComTest.TestColwin{ .is_main = false };
+// var ... = .{};
 // var ... = .{};
 // var ... = .{};
 
@@ -192,12 +193,13 @@ const screens = [_]Mgr.ManagedScreen{
     // .{ .test_obj_attrs = &oa },
     // .{ .test_obj_wrap = &ow },
     .{ .compose_tests_data_setup = &ctds },
-    .{ .test_buffer = &bm },
-    .{ .test_buffer = &bs },
-    // .{ .test_colwin = &},
-    // .{ .test_colwin = &},
+    // .{ .test_buffer = &bm },
+    // .{ .test_buffer = &bs },
+    .{ .test_colwin = &cwm },
+    .{ .test_colwin = &cws },
     // .{ .test_cmath_enable = &},
     // .{ .test_cmath_sett = &}, // 79
+    // .{ .final = &}, // 80
 };
 
 screen: u64,

@@ -19,7 +19,7 @@ mode8's source and documentation uses the following terminology:
 - Window: A mask applied to layers, see Windows.md
 - Layer: Umbrella term for the four BGs + the Objs + the Fixcols (6 layers in total).
 - Buffer: The rendering pipeline uses two framebuffers (main and sub) at one point, see Composition.md
-- Fixcol: Fixed fallback color used in the rendering pipeline, see Fixcol.md
+- Fixcol: Fixed fallback color used in the rendering pipeline, see Composition.md, Step 4
 - Color Math: The final step of the rendering pipeline, see Color Math.md
 - Composition: All steps of the rendering pipeline that reduce the window, BG and Obj data into a final image, see Composition.md
 

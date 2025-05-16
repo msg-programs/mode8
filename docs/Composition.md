@@ -4,8 +4,8 @@ BGs and Objs aren't rendered to the screen directly. Instead, the layers' color 
 **Further reading:**
 - Tile.md (for general info on Tiles)
 - Obj.md (for general info on Objs)
-- Fixcol.md (for general info on the Fixcols)
-- Windows.md (for details on how the window data is constructed and applied)
+- Color.md (for general info on Colors)
+- Windows.md (for details on windows, especially the color window)
 - Color Math.md (for details on how color math works)
 
 ## 1. Main and sub buffer
@@ -42,9 +42,20 @@ The layer's priorities are as such (top is highest):
 **Relevant registers:**
 - `prio_remap`: Should this BG's prio tiles have higher prio?
 
-## 4. TODO
+## 4. Fixcol application
+After all layers in the main/sub are merged together, there might be transparent pixels. These are replaced with a fixed color for the respective buffer. This color is referred to as "Fixcol".
+The sub buffer may also be replaced by the Fixcol entirely by enabling a the Fix/Sub flag.
 
-## 5. TODO
+**Relevant registers:**
+`fixcol_main`/`fixcol_sub`: Fixcol for the main/sub buffer. DMA-able.
+`fixcol_main_do_dma`/`fixcol_sub_do_dma`: Should the Fixcol for the main/sub buffer use DMA?
+`dma_dir_fixcol`: Change the DMA direction for the fixcols.
+`fix_sub`: Should the subscreen be filled with the sub fixcol?
+
+## 5. Color window application
+Here, the color window is applied. Refer to Window.md for further details.
+
+This step may re-introduce transparent pixels. They are treated as opaque black from here on.
 
 ## 6. Color math
-Finally, the two buffers are merged using color math. See the 
+Finally, the two buffers are merged using color math to get the final image. See Color Math.md for further details.

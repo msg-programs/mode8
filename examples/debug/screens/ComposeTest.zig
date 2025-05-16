@@ -56,12 +56,12 @@ pub const TestBuffer = struct {
             reg.yscroll[i][0] = 64 * 8;
         }
 
-        reg.win_compose[0] = @bitCast(bsp.RenderParams.WinComposition{ .neither = false, .win0 = true, .win1 = false, .both = false });
-        reg.win_compose[1] = @bitCast(bsp.RenderParams.WinComposition{ .neither = false, .win0 = false, .win1 = true, .both = false });
-        reg.win_compose[2] = @bitCast(bsp.RenderParams.WinComposition{ .neither = true, .win0 = false, .win1 = false, .both = false });
-        reg.win_compose[3] = @bitCast(bsp.RenderParams.WinComposition{ .neither = false, .win0 = false, .win1 = false, .both = true });
-        reg.win_compose[4] = @bitCast(bsp.RenderParams.WinComposition{ .neither = false, .win0 = true, .win1 = true, .both = false });
-        reg.win_compose[5] = @bitCast(bsp.RenderParams.WinComposition{ .neither = true, .win0 = false, .win1 = false, .both = true });
+        reg.win_compose[0] = @bitCast(rpa.WinComposition{ .neither = false, .win0 = true, .win1 = false, .both = false });
+        reg.win_compose[1] = @bitCast(rpa.WinComposition{ .neither = false, .win0 = false, .win1 = true, .both = false });
+        reg.win_compose[2] = @bitCast(rpa.WinComposition{ .neither = true, .win0 = false, .win1 = false, .both = false });
+        reg.win_compose[3] = @bitCast(rpa.WinComposition{ .neither = false, .win0 = false, .win1 = false, .both = true });
+        reg.win_compose[4] = @bitCast(rpa.WinComposition{ .neither = false, .win0 = true, .win1 = true, .both = false });
+        reg.win_compose[5] = @bitCast(rpa.WinComposition{ .neither = true, .win0 = false, .win1 = false, .both = true });
 
         reg.fixcol_main_do_dma = false;
         reg.fixcol_sub_do_dma = false;
@@ -110,62 +110,70 @@ pub const TestBuffer = struct {
     }
 };
 
-// pub const TestColwin = struct {
-//     frame: u64 = 0,
-//     is_main: bool,
+pub const TestColwin = struct {
+    frame: u64 = 0,
+    is_main: bool,
 
-//     pub fn init(self: *TestColwin) void {
-//         std.debug.print("testing color window and fix/sub (for main? {})\n", .{self.is_main});
+    pub fn init(self: *TestColwin) void {
+        std.debug.print("testing color window and fix/sub (for main? {})\n", .{self.is_main});
 
-//         for (0..4) |i| {
-//             bsp.RenderParams.setXScroll(@truncate(i), .{ .direct = 448 * 8 });
-//             bsp.RenderParams.setYScroll(@truncate(i), .{ .direct = 64 * 8 });
-//         }
+        reg.xscroll_do_dma = @splat(false);
+        reg.yscroll_do_dma = @splat(false);
 
-//         const c0 = bsp.RenderParams.WinComposition{ .neither = false, .win0 = true, .win1 = false, .both = false };
-//         const c1 = bsp.RenderParams.WinComposition{ .neither = false, .win0 = false, .win1 = true, .both = false };
-//         const c2 = bsp.RenderParams.WinComposition{ .neither = true, .win0 = false, .win1 = false, .both = false };
-//         const c3 = bsp.RenderParams.WinComposition{ .neither = false, .win0 = false, .win1 = false, .both = true };
-//         const c4 = bsp.RenderParams.WinComposition{ .neither = false, .win0 = true, .win1 = true, .both = false };
-//         const c5 = bsp.RenderParams.WinComposition{ .neither = true, .win0 = false, .win1 = false, .both = true };
+        for (0..4) |i| {
+            rpa.setBgSize(@intCast(i), 512);
+            reg.xscroll[i][0] = 448 * 8;
+            reg.yscroll[i][0] = 64 * 8;
+        }
 
-//         bsp.RenderParams.setWinCompose(c0, c1, c2, c3, c4, c5);
+        reg.win_compose[0] = @bitCast(rpa.WinComposition{ .neither = false, .win0 = true, .win1 = false, .both = false });
+        reg.win_compose[1] = @bitCast(rpa.WinComposition{ .neither = false, .win0 = false, .win1 = true, .both = false });
+        reg.win_compose[2] = @bitCast(rpa.WinComposition{ .neither = true, .win0 = false, .win1 = false, .both = false });
+        reg.win_compose[3] = @bitCast(rpa.WinComposition{ .neither = false, .win0 = false, .win1 = false, .both = true });
+        reg.win_compose[4] = @bitCast(rpa.WinComposition{ .neither = false, .win0 = true, .win1 = true, .both = false });
+        reg.win_compose[5] = @bitCast(rpa.WinComposition{ .neither = true, .win0 = false, .win1 = false, .both = true });
 
-//         bsp.RenderParams.setFixcolMain(.{ .direct = @bitCast(bsp.Color{ .a = 1, .r = 6, .g = 5, .b = 5 }) });
-//         bsp.RenderParams.setFixcolSub(.{ .direct = @bitCast(bsp.Color{ .a = 1, .r = 5, .g = 5, .b = 6 }) });
-//         bsp.RenderParams.setDebugMode(.DEBUG_MODE_BUF_COLMATH_IN, if (self.is_main) .DEBUG_ARG_SHOW_MAIN else .DEBUG_ARG_SHOW_SUB);
-//         bsp.RenderParams.setToMain(true, true, true, true, true);
-//         bsp.RenderParams.setToSub(true, true, true, true, true);
-//         bsp.RenderParams.setWinToMain(true, true, true, true, true);
-//         bsp.RenderParams.setWinToSub(true, true, true, true, true);
-//     }
+        reg.fixcol_main_do_dma = false;
+        reg.fixcol_sub_do_dma = false;
 
-//     pub fn tick(self: *TestColwin) bool {
-//         if (util.fullsecOf(self.frame) > 3) {
-//             return true;
-//         }
+        reg.fixcol_main[0] = @bitCast(bsp.Color{ .a = 1, .r = 6, .g = 5, .b = 5 });
+        reg.fixcol_sub[0] = @bitCast(bsp.Color{ .a = 1, .r = 5, .g = 5, .b = 6 });
 
-//         const algo: bsp.RenderParams.ColWinApplyAlgo = switch (util.fullsecOf(self.frame)) {
-//             0 => .ALWAYS_ON,
-//             1 => .DIRECT,
-//             2 => .INVERTED,
-//             3 => .ALWAYS_OFF,
-//             else => unreachable,
-//         };
+        reg.debug_mode = @intFromEnum(rpa.DebugMode.buf_colmath_in);
+        reg.debug_arg = @intFromEnum(if (self.is_main) rpa.DebugArg.show_main else rpa.DebugArg.show_sub);
 
-//         if (self.is_main) {
-//             bsp.RenderParams.setColWinApply(algo, .ALWAYS_OFF);
-//         } else {
-//             if (util.halfsecOf(self.frame) % 2 == 0) {
-//                 bsp.RenderParams.setFixSub(false);
-//             } else {
-//                 bsp.RenderParams.setFixSub(true);
-//             }
-//             bsp.RenderParams.setColWinApply(.ALWAYS_OFF, algo);
-//         }
-//         return false;
-//     }
-// };
+        reg.win_to_main = @splat(true);
+        reg.win_to_sub = @splat(true);
+        reg.to_main = @splat(true);
+        reg.to_sub = @splat(true);
+    }
+
+    pub fn tick(self: *TestColwin) bool {
+        if (util.fullsecOf(self.frame) > 3) {
+            return true;
+        }
+
+        const algo: rpa.ColWinApplyAlgo = switch (util.fullsecOf(self.frame)) {
+            0 => .always_on,
+            1 => .direct,
+            2 => .inverted,
+            3 => .always_off,
+            else => unreachable,
+        };
+
+        if (self.is_main) {
+            reg.col_win_apply = .{ @intFromEnum(algo), @intFromEnum(rpa.ColWinApplyAlgo.always_off) };
+        } else {
+            if (util.halfsecOf(self.frame) % 2 == 0) {
+                reg.fix_sub = false;
+            } else {
+                reg.fix_sub = true;
+            }
+            reg.col_win_apply = .{ @intFromEnum(rpa.ColWinApplyAlgo.always_off), @intFromEnum(algo) };
+        }
+        return false;
+    }
+};
 
 // pub const TestColorMathEnable = struct {
 //     frame: u64 = 0,

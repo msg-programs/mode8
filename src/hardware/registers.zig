@@ -97,8 +97,8 @@ pub var col_win_apply: [2]u4 = @splat(0);
 /// which of the high-prio background tiles to layer above all objs
 pub var prio_remap: [4]bool = @splat(false);
 
-// /// bool: should the sub buffer be overridden with the sub buffer fixed color?
-// pub var fix_sub: bool = 0;
+/// bool: should the sub buffer be overridden with the sub buffer fixed color?
+pub var fix_sub: bool = false;
 
 /// should DMA be applied horizontally or vertically? (for BGs)
 pub var dma_dir_bg: [4]u1 = @splat(0);

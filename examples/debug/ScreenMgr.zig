@@ -26,7 +26,7 @@ pub const ManagedScreen = union(enum) {
     test_obj_wrap: *OBT.TestObjPos,
     compose_tests_data_setup: *COM.ComposeTestsDataSetup,
     test_buffer: *COM.TestBuffer,
-    // test_colwin: *COM.TestColwin,
+    test_colwin: *COM.TestColwin,
     // test_cmath_enable: *COM.TestColorMathEnable,
     // test_cmath_sett: *COM.TestColorMathSettings,
 
