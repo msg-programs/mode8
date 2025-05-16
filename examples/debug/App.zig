@@ -13,6 +13,7 @@ const WinSetupTest = @import("screens/WinSetupTest.zig");
 const FixcolTest = @import("screens/FixcolTest.zig");
 const BgTest = @import("screens/BgTest.zig");
 const ObjTest = @import("screens/ObjTest.zig");
+const ComTest = @import("screens/ComposeTest.zig");
 
 const App = @This();
 pub const mach_module = .app;
@@ -108,9 +109,9 @@ var bgaffd3f = BgTest.TestBgAffineDMA{ .bg = 3, .flip_dma = true };
 var bgpf = BgTest.TestBgPrioFeat{};
 var oa = ObjTest.TestObjAttrs{};
 var ow = ObjTest.TestObjPos{};
-// var ... = .{};
-// var ... = .{ .to_main = true };
-// var ... = .{ .to_main = false };
+var ctds = ComTest.ComposeTestsDataSetup{};
+var bm = ComTest.TestBuffer{ .to_main = true };
+var bs = ComTest.TestBuffer{ .to_main = false };
 // var ... = .{ .is_main = true };
 // var ... = .{ .is_main = false };
 // var ... = .{};
@@ -125,7 +126,7 @@ const screens = [_]Mgr.ManagedScreen{
     // .{ .test_win_dma = &wnd1 },
     // .{ .test_win_dma = &wnd0f },
     // .{ .test_win_dma = &wnd1f },
-    // .{ .win_tests_data_setup = &wtds },
+    .{ .win_tests_data_setup = &wtds },
     // .{ .test_win_compose = &wc0 },
     // .{ .test_win_compose = &wc1 }, // 10
     // .{ .test_win_compose = &wc2 },
@@ -189,10 +190,10 @@ const screens = [_]Mgr.ManagedScreen{
     // .{ .test_bg_affine_dma = &bgaffd3f },
     // .{ .test_bg_prio_feat = &bgpf }, // 70
     // .{ .test_obj_attrs = &oa },
-    .{ .test_obj_wrap = &ow },
-    // .{ .compose_tests_data_setup = &},
-    // .{ .test_buffer = &},
-    // .{ .test_buffer = &},
+    // .{ .test_obj_wrap = &ow },
+    .{ .compose_tests_data_setup = &ctds },
+    .{ .test_buffer = &bm },
+    .{ .test_buffer = &bs },
     // .{ .test_colwin = &},
     // .{ .test_colwin = &},
     // .{ .test_cmath_enable = &},

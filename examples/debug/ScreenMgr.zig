@@ -2,7 +2,7 @@ const WST = @import("./screens/WinSetupTest.zig");
 const FCT = @import("./screens/FixcolTest.zig");
 const BGT = @import("./screens/BgTest.zig");
 const OBT = @import("./screens/ObjTest.zig");
-// const COM = @import("./screens/ComposeTest.zig");
+const COM = @import("./screens/ComposeTest.zig");
 
 pub const ManagedScreen = union(enum) {
     test_win_nodma: *WST.TestWinNoDMA,
@@ -24,8 +24,8 @@ pub const ManagedScreen = union(enum) {
     test_bg_prio_feat: *BGT.TestBgPrioFeat,
     test_obj_attrs: *OBT.TestObjAttrs,
     test_obj_wrap: *OBT.TestObjPos,
-    // compose_tests_data_setup: *COM.ComposeTestsDataSetup,
-    // test_buffer: *COM.TestBuffer,
+    compose_tests_data_setup: *COM.ComposeTestsDataSetup,
+    test_buffer: *COM.TestBuffer,
     // test_colwin: *COM.TestColwin,
     // test_cmath_enable: *COM.TestColorMathEnable,
     // test_cmath_sett: *COM.TestColorMathSettings,

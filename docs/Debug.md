@@ -33,3 +33,6 @@ mode8's builtin debug modes are used to display various intermediate stages of t
 - `.buf_pre_win`
     - Requires args: One of `.show_main, .show_sub`
     - Shows the main/sub buffer's contents before the windows are applied. This respects Obj/BG priority settings.
+- `.buf_post_win`
+    - Requires args: One of `.show_main, .show_sub`
+    - Shows the main/sub buffer's contents after the windows are applied. This respects Obj/BG priority settings.

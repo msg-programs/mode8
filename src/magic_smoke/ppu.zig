@@ -183,7 +183,7 @@ fn toTileAttrViewPos(bg: u32, screenpos: ScreenPos) ViewPos {
 
 // given the screenpos, calculate the packed color for that pixel based on the specified BG.
 fn calcBGPixel(screenpos: ScreenPos, bg: u2) BGPixel {
-    const viewpos_pre = toTileAttrViewPos(bg, screenpos); // XXX TMP CONST
+    const viewpos_pre = toTileAttrViewPos(bg, screenpos);
 
     const bgsz = (@as(u32, reg.bgsz[bg]) + 1) * 2 * con.TILE_GFX_DIM_PIX;
     const bgoffs_x = @as(u32, reg.bgoffs_x[bg]) * 32;
@@ -611,9 +611,9 @@ fn shaderMain(screenpos: ScreenPos) void {
     const p_cols_main: [5]u16 = arrselx5(u16, no_p_cols, p_cols, reg.to_main);
     const p_cols_sub: [5]u16 = arrselx5(u16, no_p_cols, p_cols, reg.to_sub);
 
-    // // apply windows to buffers layer-wise
-    // const wind_p_cols_main: [5]u16 = arrselx5(u16, p_cols_main, no_p_cols, main_wins);
-    // const wind_p_cols_sub: [5]u16 = arrselx5(u16, p_cols_sub, no_p_cols, sub_wins);
+    // apply windows to buffers layer-wise
+    const wind_p_cols_main: [5]u16 = arrselx5(u16, p_cols_main, no_p_cols, main_wins);
+    const wind_p_cols_sub: [5]u16 = arrselx5(u16, p_cols_sub, no_p_cols, sub_wins);
 
     // get fallback color ("fixcol") for buffers
     // fixcol is always a packed color, but the consistent naming feels wrong...
@@ -621,22 +621,22 @@ fn shaderMain(screenpos: ScreenPos) void {
     const fixcol_main: u16 = getFixcol(screenpos, true);
     const fixcol_sub: u16 = getFixcol(screenpos, false);
 
-    // // apply priority logic.
-    // // result: the final color for this buffer + its source layer
-    // const main_result: BufferPixel = resolvePrios(wind_p_cols_main, bg_prios, obj_prio, fixcol_main);
-    // const sub_result_pre: BufferPixel = resolvePrios(wind_p_cols_sub, bg_prios, obj_prio, fixcol_sub);
+    // apply priority logic.
+    // result: the final color for this buffer + its source layer
+    const main_result: BufferPixel = resolvePrios(wind_p_cols_main, bg_prios, obj_prio, fixcol_main);
+    const sub_result_pre: BufferPixel = resolvePrios(wind_p_cols_sub, bg_prios, obj_prio, fixcol_sub);
 
-    // // MAIN/SUB BUFFER AFTER PRIO RESOLVE
-    // /////////////////////////////////////////////
+    // MAIN/SUB BUFFER AFTER PRIO RESOLVE
+    /////////////////////////////////////////////
 
-    // // replace transparent pixels with fixcol. unsure if actually needed as resolvePrios does this,
-    // // but better safe than sorry...
-    // // also discard unneeded origin value for sub buffer
-    // const main_result_fixed: BufferPixel = .{
-    //     .p_col = if (isPackedColorOpaque(main_result.p_col)) main_result.p_col else fixcol_main,
-    //     .origin = main_result.origin,
-    // };
-    // const sub_result_pre_fixed: u16 = if (isPackedColorOpaque(sub_result_pre.p_col)) sub_result_pre.p_col else fixcol_sub;
+    // replace transparent pixels with fixcol. unsure if actually needed as resolvePrios does this,
+    // but better safe than sorry...
+    // also discard unneeded origin value for sub buffer
+    const main_result_fixed: BufferPixel = .{
+        .p_col = if (isPackedColorOpaque(main_result.p_col)) main_result.p_col else fixcol_main,
+        .origin = main_result.origin,
+    };
+    const sub_result_pre_fixed: u16 = if (isPackedColorOpaque(sub_result_pre.p_col)) sub_result_pre.p_col else fixcol_sub;
 
     // // apply fixcol override
     // const sub_result: u16 = if (reg.fix_sub != 0) fixcol_sub else sub_result_pre_fixed;
@@ -782,17 +782,17 @@ fn shaderMain(screenpos: ScreenPos) void {
             }
             return;
         },
-        // rpa.DebugMode.DEBUG_MODE_BUF_POST_WIN => {
-        //     // main/sub buffer layers combined by priority, with the windows applied
-        //     if (reg.debug_arg == .DEBUG_ARG_SHOW_MAIN) {
-        //         setPx(screen_x, screen_y, unpackColor(main_result_fixed.p_col));
-        //     } else if (reg.debug_arg == .DEBUG_ARG_SHOW_SUB) {
-        //         setPx(screen_x, screen_y, unpackColor(sub_result_pre_fixed));
-        //     } else {
-        //         setPx(screen_x, screen_y, errcol);
-        //     }
-        //     return;
-        // },
+        .buf_post_win => {
+            // main/sub buffer layers combined by priority, with the windows applied
+            if (debug_arg == .show_main) {
+                setPx(screenpos, unpackColor(main_result_fixed.p_col));
+            } else if (debug_arg == .show_sub) {
+                setPx(screenpos, unpackColor(sub_result_pre_fixed));
+            } else {
+                setPx(screenpos, errcol);
+            }
+            return;
+        },
         // rpa.DebugMode.DEBUG_MODE_BUF_COLMATH_IN => {
         //     // main/sub buffer data to be fed into color math
         //     // post-win step + transparency fixed + color window applied
