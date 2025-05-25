@@ -4,7 +4,6 @@ mode8 renders four independent tilemap layers, referred to as BGs 0-3 (BackGroun
 **Further reading:**
 - Tile.md (for general info on Tiles)
 - Color.md (for general info on colors)
-- Memory.md (for info on the TAM)
 
 **Relevant registers:**
 Note that all register values here and in the follwing paragraphs are per-BG.
@@ -46,7 +45,7 @@ Tile (0,0) of every BG is the top left corner. This normally corresponds to the 
 
 This may be used to e.g. fill the tilemap with many small rooms and then only showing one of them at a time using the BG size and offset. Rooms adjacent in the tilemap will never be rendered.
 
-Care must be taken when offsetting to near the edges of the tilemap. If the BG's size is too large, the TAM is accessed in unexpected ways (wrapping, showing data for other BGs). mode8 can and will also attempt to read past the end of the TAM in extreme scenarios. This is not considered to be a bug and will not be fixed.
+Care must be taken when offsetting to near the edges of the tilemap. If the BG's size is too large, the TAM is accessed in unexpected ways (wrapping, showing data for other BGs). mode8 can and will also attempt to read past the end of the TAM in extreme scenarios. This is not considered to be a bug.
 
 **Relevant registers:**
 `bgoffs_x, bgoffs_y`: BG offset in the x/y direction; in steps of 16 tiles.

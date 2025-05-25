@@ -1,8 +1,7 @@
 # Tiles
 A Tile is the 8x8 pixel unit from which BGs are constructed. The graphics for all tiles is stored in the TGM; the tilemaps that make up the BGs are stored in the TAM.
 
-**Further reading:**
-- Memory.md (for general info on the TAM, TGM, atlasses and graphics IDs)
+- BG.md (for info on how Tiles are used)
 
 ## BSP Tile
 The BSP provides a struct to handle Objs: `bsp.Tile`.
@@ -23,3 +22,6 @@ It also contains the following functions:
     - `gfx` contains the palette indices of the tile's pixels from left to right, top to bottom.
 
 The Tile struct is defined as `packed` and may therefore be `@bitCast`ed to and from a `u16`
+
+## Graphics
+Every Tile may use one of the four atlasses stored in the TGM to define its graphics. These Atlasses  measure 32x32 tiles (256x256 px). The `gfxid` determines which tile to use.

@@ -51,9 +51,9 @@ pub const BgTestsDataSetup = struct {
         @memset(mem.OAM[0..], 0);
     }
 
-    pub fn tick(_: *BgTestsDataSetup) bool {
-        // wait for a bit to reduce impact of loading lag on following animations --> don't
-        return true;
+    pub fn tick(self: *BgTestsDataSetup) bool {
+        // wait for a bit to reduce impact of loading lag on following animations
+        return self.frame >= util.QURT_SECOND;
     }
 };
 

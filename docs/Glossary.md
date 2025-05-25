@@ -24,7 +24,6 @@ mode8's source and documentation uses the following terminology:
 - Composition: All steps of the rendering pipeline that reduce the window, BG and Obj data into a final image, see Composition.md
 
 # Memory
-See Memory.md
 - TAM (Tile Attribute Memory): Holds the configuration for all Tiles that can be displayed.
 - OAM (Object Attribute Memory): Holds the configuration for all Objects that can be displayed.
 - TGM (Tile Graphics Memory): Holds the texture atlases used by Tiles.

@@ -7,13 +7,6 @@ const bits = mode8.bsp.bits;
 const Color = mode8.bsp.Color;
 
 pub const RenderParams = struct {
-    // pub const BG = enum(u2) {
-    //     bg_0,
-    //     bg_1,
-    //     bg_2,
-    //     bg_3,
-    // };
-
     pub const Layer = enum(u3) {
         bg_0,
         bg_1,
@@ -42,60 +35,60 @@ pub const RenderParams = struct {
         always_off,
     };
 
-    // pub const MathComposeAlgo = enum(u4) {
-    //     /// highest priority color is used directly
-    //     normal,
+    pub const MathComposeAlgo = enum(u4) {
+        /// highest priority color is used directly
+        normal,
 
-    //     /// add colors together component-wise
-    //     add,
+        /// add colors together component-wise
+        add,
 
-    //     /// subtract sub buffer color from main buffer color component-wise
-    //     subtract,
+        /// subtract sub buffer color from main buffer color component-wise
+        subtract,
 
-    //     /// multiply colors together and then divides by maximum value component-wise
-    //     multiply,
+        /// multiply colors together and then divides by maximum value component-wise
+        multiply,
 
-    //     /// divice main buffer color by sub-buffer color component-wise
-    //     divide,
+        /// divice main buffer color by sub-buffer color component-wise
+        divide,
 
-    //     /// subtract larger value from smaller value component-wise
-    //     difference,
+        /// subtract larger value from smaller value component-wise
+        difference,
 
-    //     /// if sub buffer is light/dark, replace darker/lighter colors in the main buffer with sub buffer color
-    //     pinlight,
+        /// if sub buffer is light/dark, replace darker/lighter colors in the main buffer with sub buffer color
+        pinlight,
 
-    //     /// multiply compliments and take compliment of result component-wise
-    //     screen,
+        /// multiply compliments and take compliment of result component-wise
+        screen,
 
-    //     /// use darker color component-wise
-    //     darken,
+        /// use darker color component-wise
+        darken,
 
-    //     /// use lighter color component-wise
-    //     lighten,
+        /// use lighter color component-wise
+        lighten,
 
-    //     /// MULTIPLY if sub buffer is light, else SCREEN
-    //     overlay,
+        /// MULTIPLY if sub buffer is light, else SCREEN
+        overlay,
 
-    //     /// LIGHTEN if sub buffer is light, else DARKEN
-    //     softlight,
+        /// LIGHTEN if sub buffer is light, else DARKEN
+        softlight,
 
-    //     /// reserved
-    //     _,
-    // };
+        /// reserved
+        _,
+    };
 
-    // pub const MathNormalizeFunc = enum(u2) {
-    //     /// clamp result to 0..31 component-wise
-    //     clamp,
+    pub const MathNormalizeFunc = enum(u2) {
+        /// clamp result to 0..31 component-wise
+        clamp,
 
-    //     /// half result and clamp to 0..31 component-wise
-    //     half,
+        /// half result and clamp to 0..31 component-wise
+        half,
 
-    //     /// double result and clamp to 0..31 component-wise
-    //     double,
+        /// double result and clamp to 0..31 component-wise
+        double,
 
-    //     /// bleed excess to other color channels
-    //     bleed,
-    // };
+        /// bleed excess to other color channels
+        bleed,
+    };
 
     pub const OobSetting = enum(u2) {
         wrap,
@@ -138,96 +131,4 @@ pub const RenderParams = struct {
         std.debug.assert(sz % 2 == 0);
         reg.bgsz[bg] = @intCast(sz / 2 - 1);
     }
-
-    // pub fn setToMain(bg0: bool, bg1: bool, bg2: bool, bg3: bool, obj: bool) void {
-    //     reg.to_main = bsp.bits.stoBoolx8in8(false, false, false, obj, bg3, bg2, bg1, bg0);
-    // }
-
-    // pub fn setToSub(bg0: bool, bg1: bool, bg2: bool, bg3: bool, obj: bool) void {
-    //     reg.to_sub = bsp.bits.stoBoolx8in8(false, false, false, obj, bg3, bg2, bg1, bg0);
-    // }
-
-    // pub fn setFixcolMain(val: DMAData(u16)) void {
-    //     switch (val) {
-    //         .direct => |v| {
-    //             reg.fixcol_main_do_dma = 0;
-    //             reg.fixcol_main[0] = v;
-    //         },
-    //         .dma => |v| {
-    //             reg.fixcol_main_do_dma = 1;
-    //             std.mem.copyForwards(u16, &reg.fixcol_main, &v);
-    //         },
-    //     }
-    // }
-
-    // pub fn setFixcolSub(val: DMAData(u16)) void {
-    //     switch (val) {
-    //         .direct => |v| {
-    //             reg.fixcol_sub_do_dma = 0;
-    //             reg.fixcol_sub[0] = v;
-    //         },
-    //         .dma => |v| {
-    //             reg.fixcol_sub_do_dma = 1;
-    //             std.mem.copyForwards(u16, &reg.fixcol_sub, &v);
-    //         },
-    //     }
-    // }
-
-    // pub fn setMosiac(bg0_str: u4, bg1_str: u4, bg2_str: u4, bg3_str: u4) void {
-    //     reg.mosiac[0] = bg0_str | (@as(u8, bg1_str) << @as(u8, 4));
-    //     reg.mosiac[1] = bg2_str | (@as(u8, bg3_str) << @as(u8, 4));
-    // }
-
-    // pub fn setPrioRemap(bg0: bool, bg1: bool, bg2: bool, bg3: bool) void {
-    //     reg.prio_remap = 0;
-    //     reg.prio_remap |= if (bg0) 1 << 0 else 0;
-    //     reg.prio_remap |= if (bg1) 1 << 1 else 0;
-    //     reg.prio_remap |= if (bg2) 1 << 2 else 0;
-    //     reg.prio_remap |= if (bg3) 1 << 3 else 0;
-    // }
-
-    // pub fn setDMADirBG(bg0: DMADir, bg1: DMADir, bg2: DMADir, bg3: DMADir) void {
-    //     reg.dma_dir = 0;
-    //     reg.dma_dir |= (@as(u8, @intFromEnum(bg0)) << @as(u8, 0));
-    //     reg.dma_dir |= (@as(u8, @intFromEnum(bg1)) << @as(u8, 1));
-    //     reg.dma_dir |= (@as(u8, @intFromEnum(bg2)) << @as(u8, 2));
-    //     reg.dma_dir |= (@as(u8, @intFromEnum(bg3)) << @as(u8, 3));
-    // }
-
-    // pub fn setDMADirOther(win0: DMADir, win1: DMADir, fixcol_main: DMADir, fixcol_sub: DMADir) void {
-    //     reg.dma_dir_ex = 0;
-    //     reg.dma_dir_ex |= (@as(u8, @intFromEnum(win0)) << @as(u8, 0));
-    //     reg.dma_dir_ex |= (@as(u8, @intFromEnum(win1)) << @as(u8, 1));
-    //     reg.dma_dir_ex |= (@as(u8, @intFromEnum(fixcol_main)) << @as(u8, 2));
-    //     reg.dma_dir_ex |= (@as(u8, @intFromEnum(fixcol_sub)) << @as(u8, 3));
-    // }
-
-    // pub fn setFixSub(yes: bool) void {
-    //     reg.fix_sub = if (yes) 1 else 0;
-    // }
-
-    // pub fn setMathEnable(bg0: bool, bg1: bool, bg2: bool, bg3: bool, obj: bool, col: bool) void {
-    //     reg.math_enable = bsp.bits.sto1x8in8(
-    //         0,
-    //         0,
-    //         @intFromBool(col),
-    //         @intFromBool(obj),
-    //         @intFromBool(bg3),
-    //         @intFromBool(bg2),
-    //         @intFromBool(bg1),
-    //         @intFromBool(bg0),
-    //     );
-    // }
-
-    // pub fn setMathAlgo(algo: MathComposeAlgo) void {
-    //     reg.math_algo = @intFromEnum(algo);
-    // }
-
-    // pub fn setMathNormalize(func: MathNormalizeFunc) void {
-    //     reg.math_normalize = @intFromEnum(func);
-    // }
-
-    // pub fn setDebugMode(mode: DebugMode, arg: DebugArg) void {
-    //     reg.debug = bsp.bits.sto2x4in8(@intFromEnum(mode), @intFromEnum(arg));
-    // }
 };

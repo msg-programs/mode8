@@ -110,14 +110,14 @@ pub var dma_dir_win: [con.WINDOW_NUM]u1 = @splat(0);
 /// should DMA for fixcols be applied horizontally or vertically?
 pub var dma_dir_fixcol: [2]u1 = @splat(0);
 
-// /// for which layers should color math be enabled?
-// pub var math_enable: [6]bool = @splat(false);
+/// for which layers should color math be enabled?
+pub var math_enable: [6]bool = @splat(false);
 
-// /// what algorithm is used for color math?
-// pub var math_algo: u4 = 0;
+/// what algorithm is used for color math?
+pub var math_algo: u4 = 0;
 
-// /// what normalization should happen after color math?
-// pub var math_normalize: u2 = 0;
+/// what normalization should happen after color math?
+pub var math_normalize: u2 = 0;
 
 /// how should OOB tilemap positions be handled?
 pub var oob_setting: [4]u2 = @splat(0);

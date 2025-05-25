@@ -11,6 +11,9 @@ mode8's builtin debug modes are used to display various intermediate stages of t
     - `bsp.RenderParams.DebugArg`
 
 ## All debug modes
+- `.off`
+    - Requires args: None
+    - Disables all debug rendering, shows the final image
 - `.windows_setup`
     - Requires args: None
     - Shows the configuration of the windows before any merging or manipulation.

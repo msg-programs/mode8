@@ -2,7 +2,6 @@
 An Obj (object) is a freely moveable graphic, independent of the BGs. The graphics for all Objs is stored in the OGM; the data for the Objs is stored in the OAM. mode8 supports up to 256 Objs at one time.
 
 **Further reading:**
-- Memory.md (for general info on the OAM, OGM, atlasses and graphics IDs)
 - Compositing.md (for more info on how the prio setting interacts with BGs)
 
 ## Positioning
@@ -51,4 +50,9 @@ It also contains the following functions:
         - The bottom right corner of the playfield is at 256/256
     - Note that coords outside the range [-63, 256] inclusive are clamped
 
-The Obj struct is defined as `packed` and may therefore be `@bitCast`ed to and from a `u36`. Note that this isn't helpful for interacting with the OAM directly, see Memory.md for details.
+The Obj struct is defined as `packed` and may therefore be `@bitCast`ed to and from a `u36`. Note that this isn't helpful for interacting with the OAM directly, see below.
+
+## Graphics
+Every Obj may use one of the four atlasses stored in the OGM to define its graphics. Atlasses for Objs are divided into 8x8 chunks and measure 16x32 chunks (128x256 px). The `gfxid` determines which chunks to use for the Obj by specifying the respective chunk. For larger Objs, nearby chunks are used. An Obj of size `SQ_16` with the `gfxid` set to 2 would use chunks 2, 3, 18 and 19 (i.e. the ones to the right and below the top left chunk).
+
+Note that certain combinations of Obj sizes and graphics IDs can cause mode8 to access the OGM in unexpected ways (wrappping, showing graphics from other atlasses). mode8 can and will also attempt to read past the end of the OGM in extrame cases. This is not considered to be a bug.

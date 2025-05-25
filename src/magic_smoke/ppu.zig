@@ -27,6 +27,8 @@ const Color = packed struct {
     a: u8 = 255,
 };
 
+const ColorF = @Vector(3, f32);
+
 pub var BUFFER: [con.SCREEN_DIM_PIX][con.SCREEN_DIM_PIX]Color = @splat(@splat(Color{ .r = 0, .g = 0, .b = 0 }));
 
 // ok this is way worse for the CPU than it ever was for the GPU but... eh gotta start somewhere
@@ -414,105 +416,126 @@ fn getFixcol(screenpos: ScreenPos, for_main: bool) u16 {
         reg.fixcol_sub[index];
 }
 
-// ///////////////////////////////////////////////////////////////////////////////////////////////////
-// // COLOR MATH
-// ///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// COLOR MATH
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
-// fn brightness(col: Color) f32 {
-//     // SO says that this is incorrect, but it should be good enough tbh.
-//     return col.x() * 0.2126 + col.y() * 0.7152 + col.z() * 0.0722;
-// }
+fn brightness(col: ColorF) f32 {
+    // SO says that this is incorrect, but it should be good enough tbh.
+    const vec: ColorF = .{ 0.2126, 0.7152, 0.0722 };
+    return @reduce(.Add, col * vec);
+}
 
-// fn luma(col: Color) f32 {
-//     // SO says that this is incorrect, but it should be good enough tbh.
-//     return col.x() * 0.299 + col.y() * 0.298 + col.z() * 0.114;
-// }
+fn luma(col: ColorF) f32 {
+    // SO says that this is incorrect, but it should be good enough tbh.
+    const vec: ColorF = .{ 0.299, 0.298, 0.114 };
+    return @reduce(.Add, col * vec);
+}
 
-// fn mixPinlight(main: Color, sub: Color) Color {
-//     const lm = brightness(main);
-//     const ls = brightness(sub);
-//     if (ls > 0.5) {
-//         if (lm < ls) {
-//             return sub;
-//         } else {
-//             return main;
-//         }
-//     } else {
-//         if (lm > ls) {
-//             return sub;
-//         } else {
-//             return main;
-//         }
-//     }
-// }
+fn mixPinlight(main: ColorF, sub: ColorF) ColorF {
+    const lm = brightness(main);
+    const ls = brightness(sub);
+    if (ls > 0.5) {
+        if (lm < ls) {
+            return sub;
+        } else {
+            return main;
+        }
+    } else {
+        if (lm > ls) {
+            return sub;
+        } else {
+            return main;
+        }
+    }
+}
 
-// fn mixOverlay(main: Color, sub: Color) Color {
-//     if (brightness(sub) > 0.5) {
-//         return main.mul(sub);
-//     } else {
-//         const one = Color.init(1.0, 1.0, 1.0, 1.0);
-//         const unmain = Color.sub(one, main);
-//         const unsub = Color.sub(one, sub);
-//         return one.sub(unmain.mul(unsub));
-//     }
-// }
+fn mixOverlay(main: ColorF, sub: ColorF) ColorF {
+    if (brightness(sub) > 0.5) {
+        return main * sub;
+    } else {
+        const one: ColorF = .{ 1.0, 1.0, 1.0 };
+        const unmain = one - main;
+        const unsub = one - sub;
+        return one - (unmain * unsub);
+    }
+}
 
-// fn mixSoftlight(main: Color, sub: Color) Color {
-//     if (brightness(sub) > 0.5) {
-//         return Color.max(main, sub);
-//     } else {
-//         return Color.min(main, sub);
-//     }
-// }
+fn mixSoftlight(main: ColorF, sub: ColorF) ColorF {
+    if (brightness(sub) > 0.5) {
+        return @max(main, sub);
+    } else {
+        return @min(main, sub);
+    }
+}
 
-// fn doColorMath(main: BufferPixel, sub: u32) Color {
-//     const is_main_opaque: bool = isPackedColorOpaque(main.p_col);
-//     const is_sub_opaque: bool = isPackedColorOpaque(sub);
+fn doColorMath(main: BufferPixel, sub: u16) Color {
+    const is_main_opaque: bool = isPackedColorOpaque(main.p_col);
+    const is_sub_opaque: bool = isPackedColorOpaque(sub);
 
-//     if (!is_main_opaque and !is_sub_opaque) {
-//         return Color.init(0, 0, 0, 1);
-//     }
-//     if (!is_main_opaque) {
-//         return unpackColor(sub);
-//     }
-//     if (!is_sub_opaque) {
-//         return unpackColor(main.p_col);
-//     }
+    if (!is_main_opaque and !is_sub_opaque) {
+        return .{ .r = 0, .g = 0, .b = 0, .a = 1 };
+    }
+    if (!is_main_opaque) {
+        return unpackColor(sub);
+    }
+    if (!is_sub_opaque) {
+        return unpackColor(main.p_col);
+    }
 
-//     if (!((reg.math_enable & (1 << main.origin)) != 0)) {
-//         return unpackColor(main.p_col);
-//     }
+    if (!reg.math_enable[main.origin]) {
+        return unpackColor(main.p_col);
+    }
 
-//     const a: Color = unpackColor(main.p_col);
-//     const b: Color = unpackColor(sub);
+    const c: Color = unpackColor(main.p_col);
+    const d: Color = unpackColor(sub);
 
-//     const rescol = switch (reg.math_algo) {
-//         .ADD => b + a,
-//         .SUBTRACT => b - a,
-//         .MULTIPLY => (b * a),
-//         .DIVIDE => b / a,
-//         .DIFFERENCE => @max(b, a) - @min(b, a),
-//         .PINLIGHT => mixPinlight(b, a),
-//         .SCREEN => 1.0 - ((1.0 - b) * (1.0 - a)),
-//         .DARKEN => @min(b, a),
-//         .LIGHTEN => @max(b, a),
-//         .OVERLAY => mixOverlay(b, a),
-//         .SOFTLIGHT => mixSoftlight(b, a),
-//         else => a,
-//     };
+    const a: ColorF = .{ @as(f32, @floatFromInt(c.r)) / 255.0, @as(f32, @floatFromInt(c.g)) / 255.0, @as(f32, @floatFromInt(c.b)) / 255.0 };
+    const b: ColorF = .{ @as(f32, @floatFromInt(d.r)) / 255.0, @as(f32, @floatFromInt(d.g)) / 255.0, @as(f32, @floatFromInt(d.b)) / 255.0 };
 
-//     return switch (reg.math_normalize) {
-//         .CLAMP_RESULT => rescol.max(Color.init(0, 0, 0, 0)).min(Color.init(1, 1, 1, 1)),
-//         .HALF_RESULT => rescol.divScalar(2).max(Color.init(0, 0, 0, 0)).min(Color.init(1, 1, 1, 1)),
-//         .DOUBLE_RESULT => rescol.mulScalar(2).max(Color.init(0, 0, 0, 0)).min(Color.init(1, 1, 1, 1)),
-//         .BLEED_RESULT => {
-//             // https://www.quizcanners.com/single-post/2018/04/02/Color-Bleeding-in-Shader
-//             // value 0f 0.01 determined by testing with the debug example
-//             const mix = rescol.gbra + rescol.brga;
-//             rescol = rescol + (mix * mix * 0.01);
-//         },
-//     };
-// }
+    const one: ColorF = .{ 1.0, 1.0, 1.0 };
+    const zero: ColorF = .{ 0.0, 0.0, 0.0 };
+
+    const math_algo: rpa.MathComposeAlgo = @enumFromInt(reg.math_algo);
+    const math_normalize: rpa.MathNormalizeFunc = @enumFromInt(reg.math_normalize);
+
+    const rescol: ColorF = switch (math_algo) {
+        .add => b + a,
+        .subtract => b - a,
+        .multiply => b * a,
+        .divide => b / a,
+        .difference => @max(b, a) - @min(b, a),
+        .pinlight => mixPinlight(b, a),
+        .screen => one - ((one - b) * (one - a)),
+        .lighten => @max(b, a),
+        .darken => @min(b, a),
+        .overlay => mixOverlay(b, a),
+        .softlight => mixSoftlight(b, a),
+        .normal => a,
+        else => unreachable,
+    };
+
+    const res2 = switch (math_normalize) {
+        .clamp => @min(@max(rescol, zero), one),
+        .half => @min(@max(rescol / @as(ColorF, @splat(2)), zero), one),
+        .double => @min(@max(rescol * @as(ColorF, @splat(2)), zero), one),
+        .bleed => blk: {
+            // https://www.quizcanners.com/single-post/2018/04/02/Color-Bleeding-in-Shader
+            // value 0f 0.01 determined by testing with the debug example
+            const p1 = @shuffle(f32, rescol, undefined, ColorF{ 1, 2, 0 });
+            const p2 = @shuffle(f32, rescol, undefined, ColorF{ 2, 0, 1 });
+            const mix = p1 + p2;
+            const r = rescol + (mix * mix * @as(ColorF, @splat(0.01)));
+            break :blk @min(@max(r, zero), one);
+        },
+    };
+
+    return .{
+        .r = @intFromFloat(res2[0] * 255.0),
+        .g = @intFromFloat(res2[1] * 255.0),
+        .b = @intFromFloat(res2[2] * 255.0),
+    };
+}
 
 // ///////////////////////////////////////////////////////////////////////////////////////////////////
 // // UTIL
@@ -648,8 +671,8 @@ fn shaderMain(screenpos: ScreenPos) void {
     // // COLOR MATH AND OUTPUT
     // /////////////////////////////////////////////
 
-    // // do color math
-    // const fincol: math.Vec4 = doColorMath(wind_main_result, wind_sub_result);
+    // do color math
+    const fincol = doColorMath(wind_main_result, wind_sub_result);
 
     // DEBUG AND OUTPUT
     /////////////////////////////////////////////
@@ -659,11 +682,11 @@ fn shaderMain(screenpos: ScreenPos) void {
 
     switch (debug_mode) {
         else => unreachable,
-        // rpa.DebugMode.DEBUG_MODE_NONE => {
-        //     // normal case: no debug, just output
-        //     setPx(screen_x, screen_y, fincol);
-        //     return;
-        // },
+        .off => {
+            // normal case: no debug, just output
+            setPx(screenpos, fincol);
+            return;
+        },
         .layer => {
             // show just a single layer before entering the composition pipeline,
             // i.e. transformation, size, affine, mosaic

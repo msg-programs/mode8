@@ -3,8 +3,7 @@ mode8 uses palettes of 16-bit colors for Tiles, Objs and Fixcols. A color consis
 
 Tile and Obj graphics don't use colors directly; instead, they reference a global color palette containing 256 colors.
 
-# BSP Color
-
+## BSP Color
 The BSP provides a struct to handle colors: `bsp.Color`. It contains the following functions:
 - `bsp.Color.writeToGCM(self: Color, idx: u8) void`:
     - Writes the Color `self` to the GCM as palette color number `idx`
@@ -14,3 +13,6 @@ The BSP provides a struct to handle colors: `bsp.Color`. It contains the followi
     - Note: mode8's colors can't represent all colors that a `u24` can. The function will silently adjust the color to a similar one that can be used.
 
 The Color struct is defined as `packed` and may therefore be `@bitCast`ed to and from a `u16`
+
+## GCM
+The global color palette mentioned above is stored in the Global Color Memory buffer (GCM). This buffer is 512 bytes long so that it may hold 256 Colors (each 2 bytes). Colors are stroed sequentially; see `bsp.Color.writeToGCM` for details on how colors are stored in the GCM.

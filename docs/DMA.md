@@ -4,7 +4,7 @@ mode8 is heavily inspired by the SNES console, which had a feature called "H-Bla
 ## DMA-able registers
 In order to simulate this feature, some registers are defined like this:
 - Example 1: `foo_register: [con.DMA_NUM]u8`
-- Example 2: `bar_register: [con.NUM_BAR][con.DMA_NUM]u8`
+- Example 2: `bar_register: [NUM_BAR][con.DMA_NUM]u8`
 
 Instead of a constant value for the entire image, there is an array of size `con.DMA_NUM` that holds the values for each row. Row 0 is at the top of the screen.
 Such registers are referred to as "DMA-able".
@@ -12,7 +12,7 @@ Such registers are referred to as "DMA-able".
 ## DMA flags
 DMA needs to be turned on using a seperate flag that looks like this:
 - Example 1: `foo_register_do_dma: bool`
-- Example 2: `bar_register_do_dma: [con.NUM_BAR]bool`
+- Example 2: `bar_register_do_dma: [NUM_BAR]bool`
 
 If DMA is turned off, the first value in the DMA array is used for the entire screen (`foo_register[0]`, `bar_register[...][0]`);
 
@@ -20,7 +20,7 @@ If DMA is turned off, the first value in the DMA array is used for the entire sc
 mode8 allows for both horizontal DMA like the SNES and vertical DMA.
 To switch between the two settings, a seperate flag needs to be set:
 - Example 1: `dma_dir_foo: u1`
-- Example 2: `dma_dir_bar: [con.NUM_BAR]u1`
+- Example 2: `dma_dir_bar: [NUM_BAR]u1`
 
 The BSP defines an enum that can be used to set such variables:
 - `bsp.RenderParams.DMADir`

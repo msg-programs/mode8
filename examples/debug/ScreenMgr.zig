@@ -27,8 +27,8 @@ pub const ManagedScreen = union(enum) {
     compose_tests_data_setup: *COM.ComposeTestsDataSetup,
     test_buffer: *COM.TestBuffer,
     test_colwin: *COM.TestColwin,
-    // test_cmath_enable: *COM.TestColorMathEnable,
-    // test_cmath_sett: *COM.TestColorMathSettings,
+    test_cmath_enable: *COM.TestColorMathEnable,
+    test_cmath_sett: *COM.TestColorMathSettings,
 
     pub fn init(self: ManagedScreen) void {
         switch (self) {
