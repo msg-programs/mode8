@@ -37,24 +37,6 @@ pub var BUFFER: [con.SCREEN_DIM_PIX][con.SCREEN_DIM_PIX]Color = @splat(@splat(Co
 // // STRUCT TYPES
 // ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-// struct Tile {
-//     gfxid: u32,
-//     prio: bool,
-//     vflip: bool,
-//     hflip: bool,
-//     rot: bool,
-// };
-
-// struct Obj {
-//     pos: vec2u,
-//     gfxid: u32,
-//     vflip: bool,
-//     hflip: bool,
-//     prio: u32,
-//     size: u32,
-//     rot: bool,
-// };
-
 const BGPixel = struct {
     p_col: u16,
     is_prio: bool,
@@ -241,72 +223,6 @@ fn calcBGPixel(screenpos: ScreenPos, bg: u2) BGPixel {
             return .{ .p_col = lookupPaletteColor(tilecol_idx), .is_prio = tile_attrs.prio };
         },
     }
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// WINDOW FUNCTIONS
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-// given the screenpos, check if it's inside the specified window
-fn isPixelInWin(screenpos: ScreenPos, win: u32) bool {
-    const do_start_dma = reg.win_start_do_dma[win];
-    const do_end_dma = reg.win_end_do_dma[win];
-    const dma_dir: rpa.DmaDir = @enumFromInt(reg.dma_dir_win[win]);
-
-    const index = if (dma_dir == .left_to_right)
-        screenpos.x
-    else
-        screenpos.y;
-
-    const start = if (do_start_dma)
-        reg.win_start[win][index]
-    else
-        reg.win_start[win][0];
-
-    const end = if (do_end_dma)
-        reg.win_end[win][index]
-    else
-        reg.win_end[win][0];
-
-    return if (dma_dir == .left_to_right)
-        (start <= screenpos.y and screenpos.y <= end)
-    else
-        (start <= screenpos.x and screenpos.x <= end);
-}
-
-// combine the window data obtained above (valid for all layers) according to a layer's setting.
-fn combineWinsForLayer(layer: rpa.Layer, w0: bool, w1: bool) bool {
-    // panics on bad layer arg, should never happen as the user can't control this
-    return switch (reg.win_compose[@intFromEnum(layer)]) { // over   1   0 out
-        0 => false, //    0   0   0   0
-        1 => (!w0) and (!w1), //    0   0   0   1
-        2 => w0 and !(w1), //    0   0   1   0
-        3 => !w1, //    0   0   1   1
-        4 => (!w0) and w1, //    0   1   0   0
-        5 => !w0, //    0   1   0   1
-        6 => (w0 or w1) and (!(w0 and w1)), //    0   1   1   0
-        7 => (!w0) or (!w1), //    0   1   1   1
-        8 => w0 and w1, //    1   0   0   0
-        9 => !((w0 or w1) and (!(w0 and w1))), //    1   0   0   1
-        10 => w0, //    1   0   1   0
-        11 => w0 or (!w1), //    1   0   1   1
-        12 => w1, //    1   1   0   0
-        13 => (!w0) or w1, //    1   1   0   1
-        14 => w0 or w1, //    1   1   1   0
-        15 => true, //    1   1   1   1
-    };
-}
-
-fn isPixelInColWin(is_main: bool, data_in: bool) bool {
-    const idx: usize = if (is_main) 0 else 1;
-    const setting: rpa.ColWinApplyAlgo = @enumFromInt(reg.col_win_apply[idx]);
-
-    return switch (setting) {
-        .always_on => true,
-        .direct => data_in,
-        .inverted => !data_in,
-        .always_off => false,
-    };
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -587,35 +503,27 @@ fn shaderMain(screenpos: ScreenPos) void {
     // WINDOW PREPARATION
     /////////////////////////////////////////////
 
-    // is the pixel in window 0/1?
-    const px_in_win0: bool = isPixelInWin(screenpos, 0);
-    const px_in_win1: bool = isPixelInWin(screenpos, 1);
-
-    // combine win 0/1 according to the layer's merging rules:
-    // is a layer's pixel inside the layer windows?
+    // fetch merged window data from window step
     const layer_wins: [5]bool = .{
-        combineWinsForLayer(.bg_0, px_in_win0, px_in_win1),
-        combineWinsForLayer(.bg_1, px_in_win0, px_in_win1),
-        combineWinsForLayer(.bg_2, px_in_win0, px_in_win1),
-        combineWinsForLayer(.bg_3, px_in_win0, px_in_win1),
-        combineWinsForLayer(.obj, px_in_win0, px_in_win1),
+        win_step.windat[0][screenpos.x][screenpos.y],
+        win_step.windat[1][screenpos.x][screenpos.y],
+        win_step.windat[2][screenpos.x][screenpos.y],
+        win_step.windat[3][screenpos.x][screenpos.y],
+        win_step.windat[4][screenpos.x][screenpos.y],
     };
 
     // does a window apply to a layer sent to the main/sub buffer?
     const main_wins: [5]bool = @select(bool, reg.win_to_main, layer_wins, no_wins);
     const sub_wins: [5]bool = @select(bool, reg.win_to_sub, layer_wins, no_wins);
 
-    // color window is used in a different way than the others, combine seperately
-    const col_win: bool = combineWinsForLayer(.color, px_in_win0, px_in_win1);
+    // fetch color window data (merged + colwinapply'd) from window step
+    const col_win_main: bool = win_step.windat[6][screenpos.x][screenpos.y];
+    const col_win_sub: bool = win_step.windat[7][screenpos.x][screenpos.y];
 
-    // is a buffer's pixel inside the color window?
-    const col_win_main: bool = isPixelInColWin(true, col_win);
-    const col_win_sub: bool = isPixelInColWin(false, col_win);
+    // COLOR MAIN/SUB BUFFER
+    /////////////////////////////////////////////
 
-    // // COLOR MAIN/SUB BUFFER
-    // /////////////////////////////////////////////
-
-    // // BG and obj data: color and prio of the color's source
+    // BG and obj data: color and prio of the color's source
     const bg0_data: BGPixel = calcBGPixel(screenpos, 0);
     const bg1_data: BGPixel = calcBGPixel(screenpos, 1);
     const bg2_data: BGPixel = calcBGPixel(screenpos, 2);
@@ -704,10 +612,12 @@ fn shaderMain(screenpos: ScreenPos) void {
         },
         .windows_setup => {
             // show how the windows are set up based on the start/end data
+            const w0 = win_step.isPixelInWin(0, screenpos);
+            const w1 = win_step.isPixelInWin(1, screenpos);
             const col = Color{
-                .r = if (px_in_win0) 255 else 0,
-                .g = if (px_in_win1) 255 else 0,
-                .b = if (!px_in_win0 and !px_in_win1) 64 else 0,
+                .r = if (w0) 255 else 0,
+                .g = if (w1) 255 else 0,
+                .b = if (!w0 and !w1) 64 else 0,
             };
             setPx(screenpos, col);
             return;
@@ -719,7 +629,7 @@ fn shaderMain(screenpos: ScreenPos) void {
                 .show_bg_2 => layer_wins[@intFromEnum(rpa.Layer.bg_2)],
                 .show_bg_3 => layer_wins[@intFromEnum(rpa.Layer.bg_3)],
                 .show_objs => layer_wins[@intFromEnum(rpa.Layer.obj)],
-                .show_col => col_win,
+                .show_col => win_step.windat[5][screenpos.x][screenpos.y],
                 else => {
                     setPx(screenpos, errcol);
                     return;
@@ -842,6 +752,89 @@ fn shaderMain(screenpos: ScreenPos) void {
     }
 }
 
+const win_step = struct {
+    pub var windat: [8][con.SCREEN_DIM_PIX][con.SCREEN_DIM_PIX]bool = @splat(@splat(@splat(false)));
+
+    // given the screenpos, check if it's inside the specified window
+    pub fn isPixelInWin(comptime win: u1, screenpos: ScreenPos) bool {
+        const do_start_dma = reg.win_start_do_dma[win];
+        const do_end_dma = reg.win_end_do_dma[win];
+        const dma_dir: rpa.DmaDir = @enumFromInt(reg.dma_dir_win[win]);
+
+        const index = if (dma_dir == .left_to_right)
+            screenpos.x
+        else
+            screenpos.y;
+
+        const start = if (do_start_dma)
+            reg.win_start[win][index]
+        else
+            reg.win_start[win][0];
+
+        const end = if (do_end_dma)
+            reg.win_end[win][index]
+        else
+            reg.win_end[win][0];
+
+        return if (dma_dir == .left_to_right)
+            (start <= screenpos.y and screenpos.y <= end)
+        else
+            (start <= screenpos.x and screenpos.x <= end);
+    }
+
+    // combine the window data obtained above (valid for all layers) according to a layer's setting.
+    fn combineWinsForLayer(layer: rpa.Layer, w0: bool, w1: bool) bool {
+        // panics on bad layer arg, should never happen as the user can't control this
+        return switch (reg.win_compose[@intFromEnum(layer)]) { // over   1   0 out
+            0 => false, //    0   0   0   0
+            1 => (!w0) and (!w1), //    0   0   0   1
+            2 => w0 and !(w1), //    0   0   1   0
+            3 => !w1, //    0   0   1   1
+            4 => (!w0) and w1, //    0   1   0   0
+            5 => !w0, //    0   1   0   1
+            6 => (w0 or w1) and (!(w0 and w1)), //    0   1   1   0
+            7 => (!w0) or (!w1), //    0   1   1   1
+            8 => w0 and w1, //    1   0   0   0
+            9 => !((w0 or w1) and (!(w0 and w1))), //    1   0   0   1
+            10 => w0, //    1   0   1   0
+            11 => w0 or (!w1), //    1   0   1   1
+            12 => w1, //    1   1   0   0
+            13 => (!w0) or w1, //    1   1   0   1
+            14 => w0 or w1, //    1   1   1   0
+            15 => true, //    1   1   1   1
+        };
+    }
+
+    fn isPixelInColWin(is_main: bool, data_in: bool) bool {
+        const idx: usize = if (is_main) 0 else 1;
+        const setting: rpa.ColWinApplyAlgo = @enumFromInt(reg.col_win_apply[idx]);
+
+        return switch (setting) {
+            .always_on => true,
+            .direct => data_in,
+            .inverted => !data_in,
+            .always_off => false,
+        };
+    }
+
+    pub fn tick() void {
+        for (0..con.SCREEN_DIM_PIX) |y| {
+            for (0..con.SCREEN_DIM_PIX) |x| {
+                const win0 = isPixelInWin(0, .{ .x = @intCast(x), .y = @intCast(y) });
+                const win1 = isPixelInWin(1, .{ .x = @intCast(x), .y = @intCast(y) });
+                windat[0][x][y] = combineWinsForLayer(.bg_0, win0, win1);
+                windat[1][x][y] = combineWinsForLayer(.bg_1, win0, win1);
+                windat[2][x][y] = combineWinsForLayer(.bg_2, win0, win1);
+                windat[3][x][y] = combineWinsForLayer(.bg_3, win0, win1);
+                windat[4][x][y] = combineWinsForLayer(.obj, win0, win1);
+                windat[5][x][y] = combineWinsForLayer(.color, win0, win1);
+                windat[6][x][y] = isPixelInColWin(true, windat[5][x][y]);
+                windat[7][x][y] = isPixelInColWin(false, windat[5][x][y]);
+            }
+        }
+    }
+};
+
 const obj_step = struct {
     pub var palcols: [con.SCREEN_DIM_PIX][con.SCREEN_DIM_PIX]u8 = @splat(@splat(0));
     pub var prios: [con.SCREEN_DIM_PIX][con.SCREEN_DIM_PIX]u2 = @splat(@splat(0));
@@ -940,6 +933,7 @@ const obj_step = struct {
 };
 
 pub fn tick() void {
+    win_step.tick();
     obj_step.tick();
     for (0..con.SCREEN_DIM_PIX) |y| {
         for (0..con.SCREEN_DIM_PIX) |x| {
